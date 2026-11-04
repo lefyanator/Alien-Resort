@@ -1,8 +1,8 @@
 local X={}
-local Players=game:GetService('Players')
 local Config=require(script.Parent.Config)
 local G=require(script.Parent.Geometry)
 local TweenService=game:GetService('TweenService')
+local Interaction=require(script.Parent.Interaction)
 local foundation={Foundation=true,Floor=true,EntryStep=true}
 local structure={BackWall=true,WindowSill=true,WindowHeader=true,Glass=true,WindowFrame=true,FrontWall=true,DoorHeader=true,DoorFrame=true,RoofCornice=true,Roof=true,RoofCap=true,EntranceCanopy=true,BuildingName=true,Dome=true,Skylight=true}
 function X.StagePrice(u,stage)
@@ -59,7 +59,10 @@ function X.Robot(character)
     weld('Antenna',Vector3.new(.15,.65,.15),CFrame.new(0,1.05,0),G.Colors.dark)
     local tip=weld('AntennaTip',Vector3.new(.4,.4,.4),CFrame.new(0,1.45,0),G.Colors.coral) tip.Shape=Enum.PartType.Ball
 end
-function X.Start(S,root,refresh)
+function X.New(S,root,refresh)
+    local X=setmetatable({},{__index=X})
+    local origin=S.Origin
+    local function localPart(parent,name,size,cf,color) return part(parent,name,size,cf+origin,color) end
     local extras=Instance.new('Folder') extras.Name='SessionExtras' extras.Parent=root
     local rooms={root.StarterRoom,root.Upgrades.Room2,root.Upgrades.Room3}
     local function dirty(room,value)
@@ -81,21 +84,19 @@ function X.Start(S,root,refresh)
         dirty(room,false)
         local sparkle=Instance.new('Sparkles') sparkle.SparkleColor=G.Colors.teal sparkle.Parent=room.Floor
         game:GetService('Debris'):AddItem(sparkle,2)
-        if manual then p.leaderstats.Tokens.Value+=3 end
+        if manual then p.leaderstats.Tokens.Value+=Config.CleanReward end
         refresh() return true
     end
     for _,room in rooms do
-        local prompt=Instance.new('ProximityPrompt') prompt.Name='CleanPrompt' prompt.ActionText='Clean room (+3 tokens)' prompt.ObjectText='Guest room' prompt.HoldDuration=3 prompt.MaxActivationDistance=12 prompt.RequiresLineOfSight=false prompt.Enabled=false prompt.Parent=room.Floor
-        prompt.Triggered:Connect(function(p)
+        local prompt=Instance.new('ProximityPrompt') prompt.Name='CleanPrompt' prompt.ActionText='Clean room (+3 tokens)' prompt.ObjectText='Guest room' prompt.HoldDuration=Config.CleanSeconds prompt.MaxActivationDistance=12 prompt.RequiresLineOfSight=false prompt.Enabled=false prompt.Parent=room.Floor
+        Interaction.Bind(prompt,function(p) return p==S.Owner and p:GetAttribute('ProfileReady') end,function(p)
             local hrp=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
             -- HoldDuration already enforced the wait; Began can miss on some touch devices.
             if p==S.Owner and hrp and (hrp.Position-room.Floor.Position).Magnitude<=16 then finish(room,p,true) end
         end)
     end
-    local remote=Instance.new('RemoteEvent') remote.Name='ResortShop' remote.Parent=game.ReplicatedStorage
-    local cooldown={}
     function X.Buy(p,id,restoring)
-        if p~=S.Owner or type(id)~='string' then return false,'owner' end
+        if p~=S.Owner or not p:GetAttribute('ProfileReady') or type(id)~='string' then return false,'owner' end
         local item for _,v in Config.Shop do if v.Id==id then item=v break end end
         if not item then return false,'item' end
         if item.Duration then if X.Boost(p,id) then return false,'active' end
@@ -107,19 +108,19 @@ function X.Start(S,root,refresh)
             p:SetAttribute('Owns'..id,true)
             if id=='Garden' then
                 for _,x in {-43,43} do
-                    part(extras,'FlowerBox',Vector3.new(8,1.2,3),CFrame.new(x,6,-17),G.Colors.cream)
+                    localPart(extras,'FlowerBox',Vector3.new(8,1.2,3),CFrame.new(x,6,-17),G.Colors.cream)
                     for i=1,5 do
                         local pos=Vector3.new(x-4+i*1.3,8,-17)
-                        part(extras,'FlowerStem',Vector3.new(.15,2,.15),CFrame.new(pos-Vector3.new(0,1,0)),Color3.fromRGB(59,143,83))
-                        for j=1,5 do local a=j*math.pi*2/5 local petal=part(extras,'Petal',Vector3.new(.9,.9,.3),CFrame.new(pos+Vector3.new(math.cos(a)*.45,math.sin(a)*.45,0)),G.Colors.coral) petal.Shape=Enum.PartType.Ball end
-                        local centre=part(extras,'FlowerCentre',Vector3.new(.5,.5,.4),CFrame.new(pos-Vector3.new(0,0,.15)),Color3.fromRGB(255,220,70)) centre.Shape=Enum.PartType.Ball
+                        localPart(extras,'FlowerStem',Vector3.new(.15,2,.15),CFrame.new(pos-Vector3.new(0,1,0)),Color3.fromRGB(59,143,83))
+                        for j=1,5 do local a=j*math.pi*2/5 local petal=localPart(extras,'Petal',Vector3.new(.9,.9,.3),CFrame.new(pos+Vector3.new(math.cos(a)*.45,math.sin(a)*.45,0)),G.Colors.coral) petal.Shape=Enum.PartType.Ball end
+                        local centre=localPart(extras,'FlowerCentre',Vector3.new(.5,.5,.4),CFrame.new(pos-Vector3.new(0,0,.15)),Color3.fromRGB(255,220,70)) centre.Shape=Enum.PartType.Ball
                     end
                 end
             elseif id=='Tables' then
                 for _,x in {37,45} do
-                    part(extras,'TableStem',Vector3.new(.5,3,.5),CFrame.new(x,7,-39),G.Colors.dark)
-                    local top=part(extras,'TableTop',Vector3.new(.5,5,5),CFrame.new(x,8.5,-39)*CFrame.Angles(0,0,math.pi/2),G.Colors.cream) top.Shape=Enum.PartType.Cylinder
-                    for _,dz in {-3.5,3.5} do part(extras,'Seat',Vector3.new(2,1,2),CFrame.new(x,7,-39+dz),G.Colors.coral) part(extras,'SeatBack',Vector3.new(2,2,.4),CFrame.new(x,8,-39+dz+(dz>0 and 1 or -1)),G.Colors.coral) end
+                    localPart(extras,'TableStem',Vector3.new(.5,3,.5),CFrame.new(x,7,-39),G.Colors.dark)
+                    local top=localPart(extras,'TableTop',Vector3.new(.5,5,5),CFrame.new(x,8.5,-39)*CFrame.Angles(0,0,math.pi/2),G.Colors.cream) top.Shape=Enum.PartType.Cylinder
+                    for _,dz in {-3.5,3.5} do localPart(extras,'Seat',Vector3.new(2,1,2),CFrame.new(x,7,-39+dz),G.Colors.coral) localPart(extras,'SeatBack',Vector3.new(2,2,.4),CFrame.new(x,8,-39+dz+(dz>0 and 1 or -1)),G.Colors.coral) end
                 end
             end
         end
@@ -127,12 +128,6 @@ function X.Start(S,root,refresh)
         p:SetAttribute('ResortNotice',item.Name..' ready!') p:SetAttribute('NoticeVersion',(p:GetAttribute('NoticeVersion') or 0)+1)
         refresh() return true
     end
-    remote.OnServerEvent:Connect(function(p,id)
-        if os.clock()-(cooldown[p] or 0)<.4 then return end cooldown[p]=os.clock()
-        local ok,why=X.Buy(p,id)
-        if not ok then p:SetAttribute('ResortNotice',({funds='Not enough tokens!',owned='Already owned!',active='This boost is already active!'})[why] or 'Claim your resort first!') p:SetAttribute('NoticeVersion',(p:GetAttribute('NoticeVersion') or 0)+1) end
-    end)
-    Players.PlayerRemoving:Connect(function(p) cooldown[p]=nil end)
     local cleaner,working=false,false
     task.spawn(function()
         while root.Parent do
@@ -140,10 +135,10 @@ function X.Start(S,root,refresh)
             local p=S.Owner
             if p then
                 local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid') if h then h.WalkSpeed=X.Boost(p,'Turbo') and 24 or 16 end
-                for _,room in rooms do room.Floor.CleanPrompt.HoldDuration=X.Boost(p,'Foam') and 1 or 3 end
+                for _,room in rooms do room.Floor.CleanPrompt.HoldDuration=X.Boost(p,'Foam') and 1 or Config.CleanSeconds end
                 if p:GetAttribute('OwnsCleaner') and not cleaner then
                     cleaner=Instance.new('Model') cleaner.Name='CleanerBot' cleaner.Parent=extras
-                    local body=part(cleaner,'Body',Vector3.new(2.6,1.2,2.6),CFrame.new(-10,6.4,-28),G.Colors.purple) body.Shape=Enum.PartType.Ball cleaner.PrimaryPart=body
+                    local body=part(cleaner,'Body',Vector3.new(2.6,1.2,2.6),CFrame.new(origin+Vector3.new(-10,6.4,-28)),G.Colors.purple) body.Shape=Enum.PartType.Ball cleaner.PrimaryPart=body
                     part(cleaner,'Face',Vector3.new(1.6,.5,.15),body.CFrame*CFrame.new(0,.3,-1.2),G.Colors.teal)
                     part(cleaner,'Brush',Vector3.new(3,.2,3),body.CFrame*CFrame.new(0,-.5,0),G.Colors.dark)
                 end
@@ -169,13 +164,13 @@ function X.Start(S,root,refresh)
                                 return S.Owner==owner and S.Generation==generation and bot.Parent~=nil
                             end
                             local start=bot:GetPivot().Position
-                            local north=destination.Z>50
-                            local lane=start.Z>50 and 62 or -10
-                            local route={Vector3.new(start.X,6.8,lane),Vector3.new(17,6.8,lane),Vector3.new(17,6.8,north and 62 or -10),Vector3.new(destination.X,6.8,north and 62 or -10),destination}
-                            for _,pos in route do if not move(pos) then working=false return end end
+                            local north=destination.Z-origin.Z>50
+                            local lane=start.Z-origin.Z>50 and 62 or -10
+                            local route={Vector3.new(start.X,6.8+origin.Y,lane+origin.Z),origin+Vector3.new(17,6.8,lane),origin+Vector3.new(17,6.8,north and 62 or -10),Vector3.new(destination.X,6.8+origin.Y,(north and 62 or -10)+origin.Z),destination}
+                            for _,pos in route do if not move(pos) then if S.Generation==generation then working=false end return end end
                             task.wait(6)
                             if S.Owner==owner and S.Generation==generation then finish(room,owner,false) end
-                            working=false
+                            if S.Generation==generation then working=false end
                         end)
                         break
                     end end
@@ -183,6 +178,10 @@ function X.Start(S,root,refresh)
             elseif cleaner then cleaner:Destroy() cleaner=nil end
         end
     end)
-    X.Reset=function() for _,room in rooms do dirty(room,false) end extras:ClearAllChildren() cleaner=nil working=false end
+    X.Reset=function()
+        for _,room in rooms do dirty(room,false) room:SetAttribute('NextPaymentAt',0) end
+        extras:ClearAllChildren() cleaner=nil working=false
+    end
+    return X
 end
 return X

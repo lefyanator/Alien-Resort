@@ -1,45 +1,51 @@
-# Alien Resort — shared project handoff
+# Shared handoff — Alien Resort 0.7.0
 
-Updated: 4 November 2026 (Australia/Brisbane).
+Updated 4 November 2026 (Australia/Brisbane). Repository: https://github.com/lefyanator/Alien-Resort
 
-## Imported baseline
+## Current milestone
 
-Repository: https://github.com/lefyanator/Alien-Resort
+The user's existing open Studio project was updated directly. The canonical place is `Alien Resort Tycoon.rbxl`; no separate multiplayer place is required. All 12 active source scripts are synchronized with the saved binary and the open Studio Edit scripts. The source/binary verification script and SHA-256 manifest make this reviewable.
 
-This milestone imports all 13 files from the user-supplied `Alien-Resort-Handoff (1).zip`, including the binary `Alien Resort Tycoon.rbxl`, nine editable Luau scripts, README, project bible, and sharing notes. Game files are preserved byte for byte. This is an upload milestone, not a completed bug-fix or gameplay audit milestone.
+Previous GitHub baseline: `ccdab7081812e6dc86e20fc276557ed768ac76dd`. The previous script folder and HUD remain in `ServerStorage/Before_Multiplayer_2026_11_04` inside the game file. The old scene, other code archives, and other exported root instances were preserved. The source ZIP did not contain a multiplayer implementation; `Orbit-Oasis-Multiplayer.zip` was unavailable. This milestone implements separate plots from the supplied source.
 
-The repository previously contained only a short README. The imported README replaces that placeholder. Original Git history remains intact.
+## Implemented
 
-## Actual game state
+- Four independently reserved plots, one per player. Separate owner, stages, guests, landing lock, cleaner, cosmetics, and income state. A fifth player waits and receives a vacancy when another leaves.
+- Server checks ownership, live character distance, prerequisites, affordability, loaded profile, and prompt hold timing. Shop and pet remotes route only to the caller's own claimed plot and are rate limited.
+- Pebble companion free; Jelly 120 / Slime 300 / Lava 700 tokens. Permanent ownership, one equipped follower, direct purchases, duplicate prevention, and species-specific guest payout bonuses. Newly owned species enter only that owner's guest rotation.
+- Existing construction, guest stays, cleaning, boosts, garden, terrace, robot avatar, and visual architecture retained. Client HUD selects only its assigned plot and includes a pet purchase/equip menu.
+- Profile normalization migrates existing tokens, stages, and amenities in `OrbitOasis_Progress_v1` and adds pet ownership/equipment without renaming player keys. Timed boosts remain session-only.
 
-The supplied source implements one shared resort per server, not separate multiplayer plots. It includes claiming, guest arrivals, income, staged construction, dirty rooms, cleaning, shop boosts, amenities, a robot avatar, and a Pebble alien collection entry. See README.md for source locations and controls.
+## Important fixes
 
-`Orbit-Oasis-Multiplayer.zip` was not supplied or found. Do not replace any newer multiplayer implementation with this baseline. Compare and merge it first when it becomes available, preserving independent ownership, guests, economy, cleaning, and progression for each plot.
+- Removed global mutable plot and Extras state; removed duplicate remote listeners per plot.
+- Applied profile values before marking the profile ready. Late loads after a player leaves release the loaded snapshot rather than saving blank attributes.
+- Save writes verify their own write identifier; malformed values and invalid equipped pets are normalized. NaN/infinity are rejected.
+- Plot release invalidates guest jobs before yielding to saves. Old guest jobs cannot dirty a new owner's room. Cleaner jobs and UFO landing locks cannot clear a new job's state after reset.
+- Failed guest jobs clean up their own models and retry only for the same owner/generation.
+- Fixed prompt event ordering: Roblox can send HoldEnded immediately before Triggered. Valid completed holds work while short, absent, and replayed holds are rejected.
 
-The supplied .rbxl is preserved as received. Its embedded scripts have not been verified against src/. An earlier inspection of the connected Studio showed older scripts and no ProgressStore module; that open Studio session was not modified. Do not assume the open Studio, binary place, and editable source are synchronized.
+## Validation completed
 
-## Two collaborators and their ChatGPTs
+- All 12 scripts compiled with Luau 0.745.
+- 53 isolated checks ran in the Roblox engine: all four plot origins/assignments, waiting/reuse, cross-owner rejection, stages/visual isolation, pet pricing/duplicates/equipment/rotation, legacy profile migration and invalid data, reset generation, and prompt event order/replay checks.
+- Live Studio play: four generated islands, HUD and Pets menu initialized, real keyboard claim succeeded, guest checked in and paid 10 tokens, unused plot had no guests, and a real client BuyPet remote bought/equipped Jelly with a 120-token debit (1000 → 880). Temporary test money was confined to the Studio session.
+- Scene exported through Roblox SerializationService; canonical place reassembled and round-tripped with Lune. All 12 active embedded script sources matched `src/`. Studio terrain cell count was zero; Lune warned about an unsupported empty Terrain metadata field while reading the old baseline.
+- Computer Use could not access Studio's save dialog. The matching local place was saved through native scene export plus local serialization; the Studio session was updated, but no Roblox cloud publication was performed.
 
-- Both collaborators use this repository as shared history and read this file plus PROJECT_BIBLE.md before editing.
-- Pull/read the latest branch before changes. Use separate feature branches and review overlapping work before merging. Do not overwrite another collaborator's newer files.
-- Coordinate who edits scripts and who edits the binary place. Binary .rbxl files cannot be merged like text; avoid simultaneous independent edits to the same place file.
-- Commit and push major milestones with descriptive messages; update this handoff with changed files, validation, known gaps, and the next task.
-- After source edits, sync the scripts to the Studio locations listed in README.md, save the place, and commit the corresponding binary when appropriate.
-- Each person uses their own GitHub and Roblox account. Repository access and Roblox Team Create access are separate. The second collaborator's username/access has not been verified. The owner manages GitHub access at https://github.com/lefyanator/Alien-Resort/settings/access and Roblox collaboration permissions in Studio/Creator Dashboard.
-- ChatGPTs share context through committed files; they do not automatically share chat history.
+## Still needs testing / remaining gaps
 
-## Open and test
+- Four actual simultaneous clients, fifth-client queue, leave/rejoin during guest stays and cleaning, and heavy remote-spam tests. Isolated fake-player checks do not prove real multiplayer replication or performance.
+- Published live DataStore acquisition, lease expiry, API outages, reconnects, and shutdown budgets. Existing cloud progress was not read or changed in Studio.
+- Phone/tablet layout, controller interaction, and low-end performance. Layout uses scrolling menus but full device QA remains pending.
+- Guests and cleaner use fixed tween routes, not dynamic obstacle avoidance. Alien species are procedural color/material/body-shape variants, not imported art or custom animations.
+- No shared lobby/visitor travel, trading, rebirth, randomized eggs, Robux products, or monetization. Four plots are generated; set the experience player limit to four for launch unless waiting players are desired.
 
-1. Download the repository ZIP from GitHub (Code → Download ZIP), extract it, and open `Alien Resort Tycoon.rbxl` in Roblox Studio.
-2. Before using the editable source as the baseline, copy all nine files to their matching Script/ModuleScript/LocalScript locations in README.md. Create ProgressStore as a ModuleScript if missing. Save a separate place copy first.
-3. Press Play. Claim the terminal, wait for a guest and token payout, buy all three construction stages for a building, clean a dirty room, and test permanent items and timed boosts. Check Output for errors.
-4. Stop and play again: this source deliberately resets progress in Studio. Cloud DataStore load/save must be tested separately in a published live test experience.
-5. Use Studio's local server/client testing with multiple players to verify that non-owners cannot build, buy, or clean the owner's resort, and that leaving releases the resort. Separate personal plots are not implemented in this supplied version.
+## Responsibilities for two collaborators and their ChatGPTs
 
-## Validation and remaining work
-
-- ZIP extracted and all 13 supplied files inventoried; binary and source uploaded without rewriting their contents.
-- GitHub upload must be verified against the resulting commit's file tree and Git blob hashes.
-- No Studio gameplay, four-player plot isolation, mobile layout, or live persistence tests were run for this import. The previous audit was stopped before any fixes were made.
-- Review profile load/readiness and leave-during-load handling, save lock lifecycle, prompt hold validation, guest-loop error recovery, UI on phones, and synchronization between source and place before treating the game as production ready.
-- Additional species, personal plots, Robux products, and deeper progression remain future work; do not describe them as shipped.
+1. Read this file, README, and the latest repository head before editing. Coordinate feature ownership and use separate branches for overlapping work.
+2. Use the same canonical game filename. Only one collaborator edits the binary place at a time, or coordinate in Team Create. Never overwrite the other person's newer place with a stale ZIP.
+3. Keep `src/` and Studio scripts identical, save/export the current place, run verification, regenerate the manifest, then commit major milestones with an updated handoff. No automatic background GitHub sync has been installed.
+4. `ResortService` handles player lifecycle/routing; `PlotService` owns one island; `ResortExtras.New` closes over one plot; `PetService` owns catalogue/purchases/companions; `ProgressStore` owns persistence; `Interaction` owns prompt validation; Geometry/Expansion build visuals; HUD/Theme display state.
+5. Never accept client prices, balances, plot owners, or pet ownership. Preserve server validation and per-plot coordinates in future changes.
+6. Each collaborator uses their own accounts. GitHub collaborator access and Roblox Team Create permission are separate; the second collaborator's account/access has not been verified. ChatGPTs share context through committed files, not automatic shared memory.

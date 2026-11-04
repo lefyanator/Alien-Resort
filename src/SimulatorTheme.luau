@@ -46,7 +46,7 @@ function T.Apply(gui,config)
     end
     gui.Roadmap.Milestone.TextColor3=black
     gui.Book.Species.TextColor3=black
-    local shop=gui.Shop shop.Position=UDim2.fromScale(.56,.45) shop.Size=UDim2.new(.76,0,.72,0)
+    local shop=gui.Shop shop.Position=UDim2.fromScale(.5,.48) shop.Size=UDim2.new(.92,0,.68,0)
     local items=shop.Items items.Position=UDim2.fromOffset(10,54) items.Size=UDim2.new(1,-20,1,-64) items.CanvasSize=UDim2.fromOffset(0,534)
     for i,item in config.Shop do
         local card=items[item.Id] local col=(i-1)%2 local row=math.floor((i-1)/2)
@@ -56,7 +56,7 @@ function T.Apply(gui,config)
         card.Buy.Position=UDim2.new(0,6,1,-30) card.Buy.Size=UDim2.new(1,-12,0,25) card.Buy.TextSize=12 card.Buy.TextColor3=black card.Buy.BackgroundColor3=Color3.fromRGB(255,231,64)
         local tile=Instance.new('Frame') tile.BackgroundTransparency=1 tile.Size=UDim2.fromOffset(76,70) tile.Position=UDim2.new(.5,-38,0,29) tile.ZIndex=12 tile.Parent=card icon(tile,item.Id)
     end
-    for i,spec in {{'ShopButton','SHOP','Turbo'},{'RoadmapButton','BUILD','House'},{'BookButton','ALIENS','Aliens'}} do
+    for i,spec in {{'ShopButton','SHOP','Turbo'},{'RoadmapButton','BUILD','House'},{'BookButton','PETS','Aliens'}} do
         local b=gui[spec[1]] b.AnchorPoint=Vector2.zero b.Position=UDim2.new(0,12,.26,(i-1)*82) b.Size=UDim2.fromOffset(64,70) b.BackgroundColor3=colors[i] b.TextTransparency=1
         local tile=Instance.new('Frame') tile.BackgroundTransparency=1 tile.Size=UDim2.new(1,0,1,-17) tile.ZIndex=b.ZIndex+1 tile.Parent=b icon(tile,spec[3])
         local label=Instance.new('TextLabel') label.Text=spec[2] label.Font=Enum.Font.FredokaOne label.TextSize=13 label.TextColor3=white label.TextStrokeColor3=black label.TextStrokeTransparency=0 label.BackgroundTransparency=1 label.Position=UDim2.new(0,0,1,-18) label.Size=UDim2.new(1,0,0,18) label.ZIndex=b.ZIndex+5 label.Parent=b

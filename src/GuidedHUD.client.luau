@@ -2,7 +2,13 @@ local Players=game:GetService("Players")
 local TweenService=game:GetService("TweenService")
 local RunService=game:GetService("RunService")
 local player=Players.LocalPlayer
-local world=workspace:WaitForChild("AlienResort")
+local waiting=Instance.new('ScreenGui') waiting.Name='ResortLoading' waiting.Parent=player:WaitForChild('PlayerGui')
+local status=Instance.new('TextLabel') status.Size=UDim2.new(.8,0,0,70) status.Position=UDim2.fromScale(.1,.4) status.Text='Loading your plot...' status.TextScaled=true status.Parent=waiting
+local function waitMessage() status.Text=player:GetAttribute('GuideTitle') or 'Loading your plot...' end
+local waitingConnection=player:GetAttributeChangedSignal('GuideTitle'):Connect(waitMessage)
+while not player:GetAttribute('PlotName') do player:GetAttributeChangedSignal('PlotName'):Wait() end
+local world=workspace:WaitForChild('ResortPlots'):WaitForChild(player:GetAttribute('PlotName'))
+waitingConnection:Disconnect() waiting:Destroy()
 world:WaitForChild("StarterRoom"):WaitForChild("Floor")
 world:WaitForChild("Upgrades"):WaitForChild("Room2"):WaitForChild("Floor")
 world.Upgrades:WaitForChild("Room3"):WaitForChild("Floor")
@@ -74,8 +80,8 @@ local function update()
     local part,object,caption=selectTarget(player:GetAttribute("GuideTarget") or "ClaimTerminal")
     marker.Enabled=part~=nil highlight.Enabled=object~=nil beam.Enabled=part~=nil
     marker.Adornee=part highlight.Adornee=object destination.Parent=part markerText.Text="▼\n"..(caption or "")
-    local found=player:GetAttribute("SpeciesDiscovered") book.Text=found and "ALIENS 1/1" or "ALIENS 0/1"
-    species.Text=found and "PEBBLE ALIEN • DISCOVERED\n\nLoves cosy pods and cosmic snacks. Each occupied room pays automatically.\n\nMore species are coming." or "FIRST CONTACT\n\nClaim your free resort and welcome a visitor to discover your first alien."
+    local found=player:GetAttribute("SpeciesDiscovered") book.Text="ALIEN PETS"
+    species.Text=found and "PEBBLE ALIEN • DISCOVERED\n\nYour starter guest is free. Buy more alien pets to unlock new visitors and earn extra tokens." or "FIRST CONTACT\n\nClaim your free resort and welcome a visitor to discover your first alien."
 end
 tokens.Changed:Connect(update)
 for _,key in {"GuideTitle","GuideDetail","GuideTarget","NextCost","OwnsResort","IncomePerTick","OccupiedRooms","SpeciesDiscovered"} do player:GetAttributeChangedSignal(key):Connect(update) end
@@ -166,7 +172,7 @@ for i,item in config.Shop do
     local name=text(card,"Name",item.Name,UDim2.fromOffset(10,4),UDim2.new(1,-20,0,24),18) name.ZIndex=12
     local desc=text(card,"Benefit",item.Description,UDim2.fromOffset(10,29),UDim2.new(1,-20,0,28),12) desc.ZIndex=12
     local buy=Instance.new("TextButton") buy.Name="Buy" buy.Position=UDim2.new(0,10,1,-32) buy.Size=UDim2.new(1,-20,0,27) buy.BackgroundColor3=teal buy.TextColor3=Color3.fromRGB(64,40,105) buy.Font=Enum.Font.FredokaOne buy.TextSize=14 buy.ZIndex=12 buy.Parent=card corner(buy)
-    buy.Activated:Connect(function() game.ReplicatedStorage.ResortShop:FireServer(item.Id) end)
+    buy.Activated:Connect(function() game.ReplicatedStorage.ResortShop:FireServer("Shop",item.Id) end)
     shopRows[item.Id]=buy
 end
 shopButton.Activated:Connect(function() shop.Visible=not shop.Visible roadmap.Visible=false panel.Visible=false guide.Visible=not shop.Visible end)
@@ -220,3 +226,39 @@ local saveStatus=text(gui,"SaveStatus","",UDim2.new(1,-250,1,-21),UDim2.fromOffs
 saveStatus.TextXAlignment=Enum.TextXAlignment.Right saveStatus.TextStrokeTransparency=.3
 local function saving() saveStatus.Text=player:GetAttribute("SaveStatus") or "Loading..." end
 player:GetAttributeChangedSignal("SaveStatus"):Connect(saving) saving()
+
+-- Token pet shop: ownership is permanent, equipment is one companion at a time.
+local pets=frame(gui,'Pets',UDim2.fromScale(.5,.48),UDim2.new(.92,0,.68,0)) pets.AnchorPoint=Vector2.new(.5,.5) pets.Visible=false pets.ZIndex=20
+local maxPets=Instance.new('UISizeConstraint') maxPets.MaxSize=Vector2.new(540,520) maxPets.Parent=pets
+local ph=text(pets,'Heading','ALIEN PETS',UDim2.fromOffset(14,10),UDim2.new(1,-60,0,30),21) ph.ZIndex=21
+local px=Instance.new('TextButton') px.Text='X' px.Size=UDim2.fromOffset(44,40) px.Position=UDim2.new(1,-48,0,5) px.ZIndex=22 px.Parent=pets
+local petList=Instance.new('ScrollingFrame') petList.BackgroundTransparency=1 petList.BorderSizePixel=0 petList.Position=UDim2.fromOffset(12,52) petList.Size=UDim2.new(1,-24,1,-64) petList.CanvasSize=UDim2.fromOffset(0,#config.PetSpecies*116) petList.ScrollBarThickness=5 petList.ZIndex=21 petList.Parent=pets
+local petButtons={}
+for i,spec in config.PetSpecies do
+    local card=frame(petList,spec.Id,UDim2.fromOffset(0,(i-1)*116),UDim2.new(1,-8,0,108)) card.ZIndex=21 card.BackgroundColor3=spec.Color
+    local n=text(card,'Name',spec.Name,UDim2.fromOffset(10,4),UDim2.new(1,-20,0,25),18,dark) n.ZIndex=22
+    local d=text(card,'Description',spec.Description,UDim2.fromOffset(10,30),UDim2.new(1,-20,0,32),12,dark) d.ZIndex=22
+    local buy=Instance.new('TextButton') buy.Position=UDim2.new(0,10,1,-38) buy.Size=UDim2.new(1,-20,0,32) buy.ZIndex=22 buy.Font=Enum.Font.FredokaOne buy.TextSize=14 buy.Parent=card corner(buy)
+    buy.Activated:Connect(function()
+        if not player:GetAttribute('OwnsResort') then notify('Claim your own plot first!') return end
+        local owned=spec.Id=='Pebble' or player:GetAttribute('Pet_'..spec.Id)
+        game.ReplicatedStorage.ResortShop:FireServer(owned and 'EquipPet' or 'BuyPet',spec.Id)
+    end)
+    petButtons[spec.Id]=buy
+end
+local function refreshPets()
+    local ownedCount=0
+    for _,spec in config.PetSpecies do
+        local owned=spec.Id=='Pebble' or player:GetAttribute('Pet_'..spec.Id)==true
+        if owned then ownedCount+=1 end
+        petButtons[spec.Id].Text=player:GetAttribute('EquippedPet')==spec.Id and 'EQUIPPED' or owned and 'EQUIP' or (spec.Price..' TOKENS - BUY')
+    end
+    ph.Text='ALIEN PETS  '..ownedCount..'/'..#config.PetSpecies
+end
+book.Activated:Connect(function() panel.Visible=false pets.Visible=not pets.Visible shop.Visible=false roadmap.Visible=false guide.Visible=not pets.Visible end)
+px.Activated:Connect(function() pets.Visible=false guide.Visible=true end)
+shopButton.Activated:Connect(function() pets.Visible=false end)
+roadmapButton.Activated:Connect(function() pets.Visible=false end)
+player:GetAttributeChangedSignal('EquippedPet'):Connect(refreshPets)
+for _,spec in config.PetSpecies do player:GetAttributeChangedSignal('Pet_'..spec.Id):Connect(refreshPets) end
+refreshPets()

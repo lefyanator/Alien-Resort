@@ -142,15 +142,9 @@ function G.Decorate(root)
     textOn(d,"ArrivalBoard",Vector3.new(-18,11,31),Vector3.new(12,5,.5),"SPACEPORT\nGUEST ARRIVALS",C.teal)
     root:SetAttribute("BuildVersion","0.2.0")
 end
-function G.Build()
-    if workspace:FindFirstChild("AlienResort") then
-        local existing=workspace.AlienResort
-        G.Decorate(existing)
-        require(script.Parent.Expansion).Build(existing,G)
-        for _,m in existing.Upgrades:GetChildren() do G.SetVisible(m,false) end
-        return existing
-    end
-    local root=folder(workspace,"AlienResort")
+function G.Build(parent,name,origin)
+    -- Construct each independent model at local zero, then translate once.
+    local root=folder(nil,name)
     root:SetAttribute("BuildVersion","0.1.0")
     local island=folder(root,"Island")
     cylinder(island,"UpperIsland",65,5,Vector3.new(0,2.5,0),C.purple)
@@ -210,6 +204,14 @@ function G.Build()
     G.Decorate(root)
     require(script.Parent.Expansion).Build(root,G)
     for _,m in upgrades:GetChildren() do G.SetVisible(m,false) end
+    local scenery=root:FindFirstChild("SpaceScenery")
+    if scenery then scenery:Destroy() end
+    for _,p in root:GetDescendants() do
+        if p:IsA("BasePart") then p.CFrame+=origin end
+    end
+    root:SetAttribute("Origin",origin)
+    root:SetAttribute("BuildVersion","0.7.0")
+    root.Parent=parent
     return root
 end
 return G

@@ -104,6 +104,6 @@ function Service.Start()
     task.spawn(function()
         while container.Parent do task.wait(.5) for _,plot in Service.Plots do Pets.Step(plot) end end
     end)
-    print('Alien Resort 0.10.1: Creator Store props, clear HUD and staged service prompts ready.')
+    print('Alien Resort 0.11.0: Cosmic stadium, tested round rules and safe profile retries ready.')
 end
 return Service

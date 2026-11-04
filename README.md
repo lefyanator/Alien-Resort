@@ -1,6 +1,6 @@
 # Alien Resort — Orbit & Oasis
 
-**Current version: 0.10.1. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
+**Current version: 0.11.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
 
 ## New: Cosmic Commons
 
@@ -53,3 +53,7 @@ Read POLISH_STATUS.md for the implemented visual, UI and gameplay changes and th
 ## 0.10.1 — declutter and free props
 
 Read DECLUTTER_STATUS.md for the stage-gated cafe, quieter world labels, Creator Store prop credits and compact icon HUD. art/WorldProps.rbxm is required for the curated props.
+
+## 0.11.0 — Cosmic overhaul milestone
+
+Read OVERHAUL_STATUS.md for implementation evidence and the outstanding acceptance gates from docs/OVERHAUL_BRIEF.md. The full overhaul remains in progress.

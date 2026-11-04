@@ -1,5 +1,5 @@
 {
-  "version": "0.10.1",
+  "version": "0.11.0",
   "updated": "2026-11-05",
   "canonicalPlace": "Alien Resort Tycoon.rbxl",
   "studioPlaceId": "134333458970364",
@@ -8,14 +8,14 @@
   "backgroundGithubSync": false,
   "files": {
     "Alien Resort Tycoon.rbxl": {
-      "bytes": 483235,
-      "sha256": "1e163fdb538081541ce2a75d185067c3c79391a046a92231026e6d8201b973a2",
-      "gitBlobSha": "ae04469b3d64ade8d07f132a308ffc94421024d9"
+      "bytes": 493803,
+      "sha256": "e766c2175e058cfe6d5647402242acbb2fbb685fc2a56df8070c859d5c143aee",
+      "gitBlobSha": "83f579ff9e7c5a51e3902d36ef49f6f9d87689e6"
     },
     "src/AdventureService.luau": {
-      "bytes": 28791,
-      "sha256": "ab38010d7ba0a29239d7e17ceb5b44823ce110767c3126904affa84f39dcc611",
-      "gitBlobSha": "213a0f8ebdba5e30d7d5c1996ee6f41a7842c306"
+      "bytes": 31502,
+      "sha256": "96a112175d76e56d955ba6753e890e5970d29114ec44c8015f2fe2e45984f26d",
+      "gitBlobSha": "7ef4e4a5d765db14b66bc14bf9f2cbe3a00a5d59"
     },
     "src/Bootstrap.server.luau": {
       "bytes": 840,
@@ -23,29 +23,29 @@
       "gitBlobSha": "e566775e19ca0d94e8d297c788ec7b83d7371755"
     },
     "src/CaptureRules.luau": {
-      "bytes": 585,
-      "sha256": "e6d3a4629429c2d8a02c12173225cd98219ffc9d9c270841905caef2a546e484",
-      "gitBlobSha": "4cdc9bfa669d2ddd1d7d5bd3244ca3856376ea28"
+      "bytes": 2737,
+      "sha256": "75cb694ecd529d8587ff81e80a227435d15874bbf85a4265f3000a95452decfa",
+      "gitBlobSha": "bb37da775b7b9d78d45d9ada4ed56124df44c981"
     },
     "src/Config.luau": {
       "bytes": 3485,
-      "sha256": "33924bb7c53543b56f05f4cac57e39d5ed3065221b57c42772e5a1e43e70a585",
-      "gitBlobSha": "9a1b65a3440d745430848b6f99eaf82bd1e67b91"
+      "sha256": "5e2660b63d6609006d70b11f9cbea0fe98d5a4389cf1197b96546adf2cb864e2",
+      "gitBlobSha": "ffc4dd24226f208ac7a0dc7ac1f40068ba11a123"
     },
     "src/Expansion.luau": {
-      "bytes": 9487,
-      "sha256": "7bb7dcf70785ba0037a88fd7f7f8e35c768dedb891aba84d476b0b0b95b60376",
-      "gitBlobSha": "50342aaa3b91f097573d2a467d1fd44ff8c36b88"
+      "bytes": 11164,
+      "sha256": "5c8ee62c193822e9a50c77d56aac8f8e9db6cc91bc73aec19b3f5d6109fa64bb",
+      "gitBlobSha": "80860f0e5fb84cddbc56594b8d70a8832286ec42"
     },
     "src/Geometry.luau": {
-      "bytes": 19867,
-      "sha256": "740b6316daaf6d10f1066336bddbb92e86d648709c1c022d3485d0a25ea36519",
-      "gitBlobSha": "6e7b03f9976215250c3ca292a01d77d119949d27"
+      "bytes": 19738,
+      "sha256": "1fdd4b2a0b38f3008d527233fbb8dee125a58b7719017440d33920faa26b1875",
+      "gitBlobSha": "ba731eefbfc7094acd44701e6c2549243b59228a"
     },
     "src/GuidedHUD.client.luau": {
-      "bytes": 33495,
-      "sha256": "416c55ac1b23f371e198e1f0314254f09b0a6679c230943e1935772b10b0d1cd",
-      "gitBlobSha": "486285c67f27a0fc66ca15c3f53225bdcc0eff0f"
+      "bytes": 47146,
+      "sha256": "a1df0a5b3d5ce82b323b8ad6c4c7e449d67f1c490d77284df6ff305b59b60e8e",
+      "gitBlobSha": "11cb7ff90fe286ffc1a56c0b03ea1685db155d83"
     },
     "src/Interaction.luau": {
       "bytes": 1521,
@@ -68,24 +68,24 @@
       "gitBlobSha": "33ca2afdd2fb0be2c208c1886dc3e2a05df2d214"
     },
     "src/ProgressStore.luau": {
-      "bytes": 5759,
-      "sha256": "9c02c2934c4bba39b2d01c5fb5a55023b0e97e5988aa50f9bfc8fe2d3bb002b0",
-      "gitBlobSha": "3d237f477533d391723a2a6cc009234dca165edb"
+      "bytes": 7297,
+      "sha256": "50b0fa90a8e38c0b312fb4d53750bfdca34b9c7711ede7bf1ffba3c5fc727c72",
+      "gitBlobSha": "1837c3037a318185836665b541f9ce5d4569d5e2"
     },
     "src/ResortExtras.luau": {
-      "bytes": 12451,
-      "sha256": "63167036765b3d5bc2f936143bbe0c988ad521b098f98e62a5ef3824c6a1455e",
-      "gitBlobSha": "60a54e557b1b856766d67336e1912419b3ed5a99"
+      "bytes": 12490,
+      "sha256": "3ecc91b0afaf7cefb2ba4f6c24c20c9177460778a9eec4c9dea2b90fa48f3ee0",
+      "gitBlobSha": "eaf178a7a47d8916b14b3493b7449f6206ee30ec"
     },
     "src/ResortService.luau": {
-      "bytes": 6626,
-      "sha256": "bf5ba83f430f44531543318bc87d5862a1e9459ef4531dd170b9782092808dd1",
-      "gitBlobSha": "fd8606a76c1388e855adabf3aa76336bc933cb41"
+      "bytes": 6628,
+      "sha256": "9d2efa7dac1f83930af6a76d8d830252a3264d5cd08e9b8362e7bf9ba9c1f0cd",
+      "gitBlobSha": "d8b05ef1a63d0c608fcc03b41cc569dbccbc05a4"
     },
     "src/SimulatorTheme.luau": {
-      "bytes": 4655,
-      "sha256": "726fb8f00e7a60849e81d99a21af6f014dcc76a86f7e3326fd96c4e8fb420051",
-      "gitBlobSha": "52e4477c07962136cbe81d89d76746724c1512ee"
+      "bytes": 5080,
+      "sha256": "178405fc7c9e8f418abcf01c8d88a47bd15b25366df15175904290030cf07c5a",
+      "gitBlobSha": "2b4404a484f1a1aebb4ded2f5d3633609a82c259"
     },
     "art/PetTemplates.rbxm": {
       "bytes": 13454,

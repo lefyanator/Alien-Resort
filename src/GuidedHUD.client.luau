@@ -15,6 +15,13 @@ local gui=Instance.new('ScreenGui') gui.Name='AlienResortHUD' gui.ResetOnSpawn=f
 local screen=Instance.new('Frame') screen.Name='SafeArea' screen.Size=UDim2.fromScale(1,1) screen.BackgroundTransparency=1 screen.Parent=gui
 local function place(o,x,y,w,h) o.Position=UDim2.fromOffset(x,y) o.Size=UDim2.fromOffset(w,h) return o end
 local function label(parent,name,value,size,color,x,y,w,h,z) return place(T.Text(parent,name,value,size,color,z),x,y,w,h) end
+local tooltip=T.Panel(screen,'Tooltip',C.Ink,100) tooltip.Visible=false tooltip.Size=UDim2.fromOffset(240,44) T.Stroke(tooltip,C.Lilac,1)
+local tooltipText=label(tooltip,'Text','',12,C.White,10,4,220,36,101)
+local function hint(button,text)
+    local function show() if Input.TouchEnabled and not Input.MouseEnabled then return end tooltipText.Text=text local pos=button.AbsolutePosition-screen.AbsolutePosition tooltip.Position=UDim2.fromOffset(math.clamp(pos.X+button.AbsoluteSize.X+10,8,math.max(8,screen.AbsoluteSize.X-248)),math.clamp(pos.Y,8,math.max(8,screen.AbsoluteSize.Y-52))) tooltip.Visible=true end
+    local function hide() tooltip.Visible=false end
+    button.MouseEnter:Connect(show) button.MouseLeave:Connect(hide) button.SelectionGained:Connect(show) button.SelectionLost:Connect(hide)
+end
 local wallet=place(T.Panel(screen,'Wallet',C.Ink,5),12,12,200,64)
 T.Round(wallet,30) T.Stroke(wallet,C.Gold,2)
 local walletScale=Instance.new('UIScale') walletScale.Parent=wallet
@@ -22,9 +29,10 @@ local coin=T.Coin(wallet,34,6) coin.Position=UDim2.fromOffset(12,10)
 label(wallet,'Brand','TOKENS',9,C.Gold,58,6,120,12,6)
 local tokenText=label(wallet,'Tokens','0',25,C.White,58,18,130,28,6) tokenText.Font=Enum.Font.FredokaOne
 local rate=label(wallet,'Income','Your island is getting ready',10,Color3.fromRGB(215,228,243),12,46,176,14,6)
-local fxButton=place(T.Button(screen,'Motion','FX ON',C.Cream,6),0,12,88,40)
-local motion=true
-fxButton.Activated:Connect(function() motion=not motion fxButton.Text=motion and 'FX ON' or 'FX QUIET' end)
+local fxButton=place(T.Button(screen,'Motion','SETTINGS',C.Cream,6),0,12,88,44)
+local motion,roomStatus,soundOn=true,true,true
+local settings,arena,arenaRefresh,settingsRefresh,resultSheet
+local playFeedback=function() end
 local guide=place(T.Panel(screen,'Guide',C.Ink,4),280,12,380,64) T.Round(guide,24) T.Stroke(guide,C.Gold,2) guide.BackgroundTransparency=.12
 local guideTitle=label(guide,'Title','Preparing your resort...',16,C.Gold,14,7,352,22) guideTitle.Font=Enum.Font.FredokaOne
 local guideDetail=label(guide,'Detail','A whole island. A tiny crew. Your next adventure.',12,C.White,14,30,352,28)
@@ -33,6 +41,7 @@ local progressFill=T.Panel(progress,'Fill',C.Teal,6) progressFill.Size=UDim2.fro
 local nav={}
 for i,spec in {{'Pets','PETS',C.Lilac},{'Build','BUILD',C.Teal},{'Shop','SHOP',C.Gold}} do
     local b=T.Button(screen,spec[1],spec[2],spec[3],6) T.NavIcon(b,spec[1]) nav[spec[1]]=b
+    hint(b,({Pets='Your companions • adopt, equip and evolve [P]',Build='Plan the next stage of your resort [B]',Shop='Helpers, decorations and timed boosts [M]'})[spec[1]])
 end
 local save=label(screen,'SaveStatus','',10,C.Muted,12,0,280,16,3)
 local toast=T.Panel(screen,'Notice',C.Ink,80) toast.AnchorPoint=Vector2.new(.5,0) toast.Visible=false
@@ -41,14 +50,15 @@ local toastVersion=0
 local function notify(message,errorStyle)
     toastVersion+=1 local id=toastVersion
     toastText.Text=message toast.BackgroundColor3=errorStyle and Color3.fromRGB(143,64,76) or C.Ink toast.Visible=true
+    if not errorStyle then playFeedback() end
     task.delay(3.5,function() if id==toastVersion and toast.Parent then toast.Visible=false end end)
 end
 local scrim=T.Button(screen,'Scrim','',C.Ink,20) scrim.Size=UDim2.fromScale(1,1) scrim.BackgroundTransparency=.35 scrim.Visible=false scrim.Selectable=false
-local modal=T.Panel(screen,'Collection',C.Cream,30) modal.AnchorPoint=Vector2.new(.5,.5) modal.Position=UDim2.fromScale(.5,.5) modal.Visible=false T.Stroke(modal,C.White,2)
+local modal=T.Panel(screen,'Collection',C.Cream,30) modal.AnchorPoint=Vector2.new(.5,.5) modal.Position=UDim2.fromScale(.5,.5) modal.Visible=false T.Window(modal,C.Lilac)
 local heading=label(modal,'Heading','MEET YOUR COSMIC CREW',23,C.Ink,20,16,700,30,31)
 heading.Font=Enum.Font.FredokaOne heading.TextColor3=C.White heading.TextStrokeColor3=C.Ink heading.TextStrokeTransparency=0
-local header=T.Panel(modal,'Header',C.Coral,30) header.Size=UDim2.new(1,0,0,54)
-local subtitle=label(modal,'Subtitle','Buy once. Keep forever. Explore together.',12,C.Muted,20,48,700,24,31)
+local header=modal.Accent
+local subtitle=label(modal,'Subtitle','Buy once. Keep forever. Explore together.',12,C.Muted,20,68,700,24,31)
 local close=place(T.Button(modal,'Close','X',C.White,35),0,14,44,44)
 local tabs={}
 for i,name in {'Pets','Build','Shop'} do tabs[name]=place(T.Button(modal,name..'Tab',string.upper(name),C.White,32),20+(i-1)*110,82,102,38) end
@@ -95,7 +105,9 @@ local function makePets()
         local card=cardBase(spec.Id,i) viewport(card,spec)
         local overline=label(card,'Species',string.upper(spec.Name)..' / '..spec.Role,9,C.Muted,12,122,160,24,33) overline.Size=UDim2.new(1,-24,0,24)
         local name=label(card,'Name',spec.CharacterName,22,C.Ink,12,148,160,28,33) name.Size=UDim2.new(1,-24,0,28)
-        local bio=label(card,'Personality',spec.Personality,11,C.Muted,12,178,160,32,33) bio.Size=UDim2.new(1,-24,0,32)
+        local bio=label(card,'Personality',spec.Personality,12,C.Muted,12,178,160,32,33) bio.Size=UDim2.new(1,-24,0,32)
+        local meter=T.Panel(card,'BondTrack',C.Soft,33) meter.Position=UDim2.new(0,12,0,236) meter.Size=UDim2.new(1,-24,0,4)
+        local fill=T.Panel(meter,'Fill',C.Lilac,34) fill.Size=UDim2.fromScale(0,1)
         local benefit=label(card,'Benefit',spec.Bonus>0 and ('+'..spec.Bonus..' per '..spec.Name..' guest payout') or 'Free starter companion',10,C.Ink,12,214,160,18,33) benefit.Size=UDim2.new(1,-24,0,24)
         local button=T.Button(card,'Action','',C.Gold,34) button.Position=UDim2.new(0,10,1,-54) button.Size=UDim2.new(1,-20,0,44)
         button.Activated:Connect(function()
@@ -104,7 +116,7 @@ local function makePets()
             if not owned and tokenValue<spec.Price then notify('Save '..T.Format(spec.Price-tokenValue)..' more tokens to meet '..spec.CharacterName..'.',true) return end
             send(owned and 'EquipPet' or 'BuyPet',spec.Id)
         end)
-        table.insert(cards,{Frame=card,Button=button,Spec=spec})
+        table.insert(cards,{Frame=card,Button=button,Spec=spec,Bio=bio,BondFill=fill})
     end
 end
 local function makeShop()
@@ -148,12 +160,12 @@ end
 layout=function()
     local w,h=screen.AbsoluteSize.X,screen.AbsoluteSize.Y if w<1 then return end
     local compact=w<920
-    place(wallet,12,12,math.min(200,w-104),64)
+    place(wallet,12,12,math.min(200,w-116),64)
     tokenText.Size=UDim2.new(1,-70,0,28) rate.Size=UDim2.new(1,-24,0,14)
-    place(fxButton,w-80,12,68,36) fxButton.TextSize=11
+    place(fxButton,w-100,12,88,44) fxButton.TextSize=11
     local names={'Pets','Build','Shop','Adventure'}
     if h<500 and w>=600 then
-        place(guide,224,12,w-320,64)
+        place(guide,224,12,w-336,64)
         for i,name in names do if nav[name] then place(nav[name],12+((i-1)%2)*76,94+math.floor((i-1)/2)*76,64,64) end end
     elseif compact then
         place(guide,12,88,w-24,64)
@@ -168,23 +180,23 @@ layout=function()
     place(boosts,12,h-68,math.min(320,w-24),44)
     local mw=math.min(900,w-24) local mh=math.min(590,h-24)
     modal.Size=UDim2.fromOffset(mw,mh) close.Position=UDim2.new(1,-60,0,14)
-    heading.Size=UDim2.new(1,-90,0,30) heading.TextSize=mw<500 and 18 or 23
+    heading.Size=UDim2.new(1,-90,0,30) heading.TextSize=mw<500 and 17 or 23
     subtitle.Size=UDim2.new(1,-40,0,24)
     local tabWidth=(mw-56)/3
-    for i,name in {'Pets','Build','Shop'} do place(tabs[name],20+(i-1)*(tabWidth+8),82,tabWidth,38) end
+    for i,name in {'Pets','Build','Shop'} do place(tabs[name],20+(i-1)*(tabWidth+8),100,tabWidth,44) end
     local short=h<500
     subtitle.Visible=not short
+    header.Size=UDim2.new(1,0,0,short and 50 or 60)
     heading.Position=UDim2.fromOffset(20,short and 10 or 16)
-    for i,name in {'Pets','Build','Shop'} do place(tabs[name],20+(i-1)*(tabWidth+8),short and 48 or 82,tabWidth,44) end
-    list.Position=UDim2.fromOffset(16,short and 104 or 136)
-    list.Size=UDim2.new(1,-32,1,short and -116 or -152)
+    for i,name in {'Pets','Build','Shop'} do place(tabs[name],20+(i-1)*(tabWidth+8),short and 58 or 100,tabWidth,44) end
+    list.Position=UDim2.fromOffset(16,short and 112 or 154)
+    list.Size=UDim2.new(1,-32,1,short and -124 or -170)
     local available=mw-42
     local columns=currentTab=='Build' and (mw>700 and 2 or 1) or math.max(1,math.min(currentTab=='Pets' and 4 or 3,math.floor((available+12)/190)))
-    if currentTab=='Pets' and available>=300 and columns==1 then columns=2 end
     local rowHeight=currentTab=='Pets' and (short and 184 or 298) or currentTab=='Build' and 180 or (short and 180 or 188)
     local count=currentTab=='Pets' and #config.PetSpecies or currentTab=='Build' and #config.Upgrades or #config.Shop
     local rows=math.ceil(count/columns)
-    mh=math.min(mh,(short and 116 or 152)+rows*(rowHeight+12)-12)
+    mh=math.min(mh,(short and 124 or 170)+rows*(rowHeight+12)-12)
     modal.Size=UDim2.fromOffset(mw,mh)
     grid.CellSize=UDim2.fromOffset(math.floor((available-(columns-1)*12)/columns),rowHeight)
     if currentTab=='Pets' then
@@ -195,20 +207,32 @@ layout=function()
             local overline=f:FindFirstChild('Species') overline.Position=UDim2.fromOffset(12,short and 72 or 122) overline.Size=UDim2.new(1,-24,0,short and 12 or 24)
             local name=f:FindFirstChild('Name') name.Position=UDim2.fromOffset(12,short and 86 or 148) name.TextSize=short and 18 or 22 name.Size=UDim2.new(1,-24,0,short and 22 or 28)
             f.Personality.Visible=not short
+            f.BondTrack.Visible=not short
             f.Benefit.Position=UDim2.fromOffset(12,short and 110 or 214) f.Benefit.Size=UDim2.new(1,-24,0,short and 16 or 24)
         end
     end
-    toast.Size=UDim2.fromOffset(math.min(440,w-24),54) toast.Position=UDim2.new(.5,0,0,compact and math.min(252,h-72) or 118) toastText.Size=UDim2.new(1,-28,1,-14)
+    toast.Size=UDim2.fromOffset(math.min(440,w-24),54) toast.Position=UDim2.new(.5,0,1,-(h<500 and 72 or 92)) toastText.Size=UDim2.new(1,-28,1,-14)
+    if arena then
+        arena.Position=UDim2.new(.5,0,0,compact and 88 or 12)
+        arena.Size=UDim2.fromOffset(math.min(420,w-24),compact and 70 or 96)
+        arena.Hint.Position=UDim2.fromOffset(14,compact and 48 or 57) arena.Hint.Size=UDim2.new(1,-28,0,compact and 18 or 32) arena.Hint.TextSize=compact and 10 or 12
+        arena.Score.Position=UDim2.fromOffset(14,24) arena.Score.TextSize=compact and 18 or 21
+    end
 end
 open=function(name)
+    tooltip.Visible=false
     if drawer then drawer.Visible=false end
-    if not name then modal.Visible=false scrim.Visible=false return end
+    if settings then settings.Visible=false end
+    if resultSheet then resultSheet.Visible=false end
+    if not name then modal.Visible=false scrim.Visible=false GuiService.SelectedObject=nil return end
     currentTab=name clearCards()
     if name=='Pets' then makePets() elseif name=='Shop' then makeShop() else makeBuild() end
     heading.Text=name=='Pets' and 'MEET YOUR COSMIC CREW' or name=='Shop' and 'RESORT SUPPLY STATION' or 'BUILD YOUR LITTLE UNIVERSE'
-    subtitle.Text=name=='Pets' and 'One companion equipped. Every friendship stays yours.' or name=='Shop' and 'Useful upgrades. Clear prices. All bought with tokens.' or 'Three stages per building. Use your island build pads.'
+    subtitle.Text=name=='Pets' and 'ADOPT • BOND • EVOLVE' or name=='Shop' and 'Permanent helpers and timed boosts. Tokens only.' or 'Foundation → structure → furnish. Build on your island.'
+    header.BackgroundColor3=name=='Pets' and C.Lilac or name=='Shop' and C.Coral or C.Teal
     for tab,button in tabs do button.BackgroundColor3=tab==name and C.Ink or C.White button.TextColor3=tab==name and C.White or C.Ink end
     list.CanvasPosition=Vector2.zero modal.Visible=true scrim.Visible=true layout() refresh()
+    if motion then modal.Position=UDim2.new(.5,0,.5,10) Tween:Create(modal,TweenInfo.new(.16,Enum.EasingStyle.Quad),{Position=UDim2.fromScale(.5,.5)}):Play() end
     if Input:GetLastInputType()==Enum.UserInputType.Gamepad1 then GuiService.SelectedObject=close end
 end
 for name,button in nav do button.Activated:Connect(function() open(name) end) end
@@ -222,15 +246,16 @@ Input.InputBegan:Connect(function(input,processed)
     elseif input.KeyCode==Enum.KeyCode.M then open('Shop') end
 end)
 local function guideTarget(id)
-    if not world then return end
+    if not world or not world.Parent then return end
+    local upgrades,pads=world:FindFirstChild('Upgrades'),world:FindFirstChild('BuildPads')
     if id and id:sub(1,6)=='Clean_' then
-        local name=id:sub(7) local room=name=='StarterRoom' and world.StarterRoom or world.Upgrades:FindFirstChild(name)
-        if room then return room.Floor,room,'CLEAN ROOM' end
+        local name=id:sub(7) local room=name=='StarterRoom' and world:FindFirstChild('StarterRoom') or upgrades and upgrades:FindFirstChild(name)
+        if room then return room:FindFirstChild('Floor'),room,'CLEAN ROOM' end
     elseif id=='CommonsShuttle' and world:FindFirstChild('CommonsShuttle') then return world.CommonsShuttle,world.CommonsShuttle,'ADVENTURE SHUTTLE'
-    elseif id=='ClaimTerminal' then return world.ClaimTerminal,world.ClaimTerminal,'CLAIM YOUR ISLAND'
-    elseif id=='LandingPad' then return world.LandingPad.LandingSurface,world.LandingPad,'GUEST ARRIVING'
-    elseif id=='StarterRoom' then return world.StarterRoom.Floor,world.StarterRoom,'GUEST INCOME'
-    elseif id and world.BuildPads:FindFirstChild(id) then return world.BuildPads[id],world.BuildPads[id],'BUILD NEXT STAGE' end
+    elseif id=='ClaimTerminal' then local part=world:FindFirstChild('ClaimTerminal') return part,part,'CLAIM YOUR ISLAND'
+    elseif id=='LandingPad' then local pad=world:FindFirstChild('LandingPad') return pad and pad:FindFirstChild('LandingSurface'),pad,'GUEST ARRIVING'
+    elseif id=='StarterRoom' then local room=world:FindFirstChild('StarterRoom') return room and room:FindFirstChild('Floor'),room,'GUEST INCOME'
+    elseif id and pads and pads:FindFirstChild(id) then return pads[id],pads[id],'BUILD NEXT STAGE' end
 end
 updateWayfinder=function()
     if not world or not marker then return end
@@ -241,7 +266,7 @@ updateWayfinder=function()
     highlight.Enabled=object~=nil highlight.Adornee=object
     destination.Parent=part beam.Enabled=part~=nil
     if preview then preview:Destroy() preview=nil end
-    local building=id and world.Upgrades:FindFirstChild(id)
+    local upgrades=world:FindFirstChild('Upgrades') local building=id and upgrades and upgrades:FindFirstChild(id)
     if not building or not p:GetAttribute('OwnsResort') then return end
     local stage=(p:GetAttribute('Stage_'..id) or 0)+1
     if stage>3 then return end
@@ -265,6 +290,9 @@ refresh=function()
         local spec=entry.Spec local button=entry.Button local text,color
         if currentTab=='Pets' then
             local owned=spec.Id=='Pebble' or p:GetAttribute('Pet_'..spec.Id)==true
+            local bond=p:GetAttribute('Bond_'..spec.Id) or 0
+            entry.BondFill.Size=UDim2.fromScale(math.clamp(bond/config.Adventure.EvolutionBond,0,1),1)
+            entry.Bio.Text=owned and ('BOND '..bond..' / '..config.Adventure.EvolutionBond..'\n'..(p:GetAttribute('Evolved_'..spec.Id) and 'EVOLVED COMPANION' or 'Explore together to evolve')) or spec.Personality
             if p:GetAttribute('EquippedPet')==spec.Id then text='EQUIPPED  ✓' color=C.Teal
             elseif owned then text='EQUIP '..string.upper(spec.CharacterName) color=C.Soft
             else text=T.Format(spec.Price)..' TOKENS / ADOPT' color=tokenValue>=spec.Price and C.Gold or C.Soft end
@@ -284,9 +312,11 @@ refresh=function()
         end
         if pending and pending.Id==spec.Id then text='ONE MOMENT...' color=C.Soft end
         button.Text=not owner and 'CLAIM YOUR ISLAND FIRST' or text button.BackgroundColor3=color or C.Soft
+        button.Interactable=pending==nil
     end
 end
 local function earnings(amount)
+    playFeedback()
     local pop=T.Panel(screen,'Gain',C.Gold,92) pop.Size=UDim2.fromOffset(290,34) pop.AnchorPoint=Vector2.new(.5,0)
     local text=label(pop,'Text','CHA-CHING!  +'..T.Format(amount),17,C.Ink,0,0,290,34,93) text.TextXAlignment=Enum.TextXAlignment.Center
     local w=screen.AbsoluteSize.X local popupWidth=math.min(290,w-24) pop.Size=UDim2.fromOffset(popupWidth,34) text.Size=UDim2.fromScale(1,1)
@@ -319,33 +349,48 @@ end)
 p.AttributeChanged:Connect(function(key)
     if key=='GuideTarget' or key:sub(1,6)=='Stage_' then updateWayfinder() end
     if key=='NoticeVersion' then pending=nil notify(p:GetAttribute('ResortNotice') or '') end
-    refresh()
+    if key:sub(1,5)~='Arena' and key~='ActivityProgress' and key~='ProtectedUntil' then refresh() end
 end)
 local function alienAdded(model) if model:IsA('Model') then activeAliens[model]={Last=model:GetPivot().Position,Follow=model:GetPivot()} end end
 for _,model in Tags:GetTagged('ResortAlien') do alienAdded(model) end
 Tags:GetInstanceAddedSignal('ResortAlien'):Connect(alienAdded)
 Tags:GetInstanceRemovedSignal('ResortAlien'):Connect(function(model) activeAliens[model]=nil end)
-task.spawn(function()
-    while not p:GetAttribute('PlotName') do p:GetAttributeChangedSignal('PlotName'):Wait() end
-    world=workspace:WaitForChild('ResortPlots'):WaitForChild(p:GetAttribute('PlotName'))
-    world:WaitForChild('StarterRoom'):WaitForChild('Floor') world:WaitForChild('Upgrades'):WaitForChild('Room3'):WaitForChild('Floor')
+local function attachBeam(character)
+    local hrp=character:WaitForChild('HumanoidRootPart',10)
+    if hrp and beam and beam.Parent then
+        local a=hrp:FindFirstChild('ResortWayfinder') or Instance.new('Attachment') a.Name='ResortWayfinder' a.Position=Vector3.new(0,-2,0) a.Parent=hrp beam.Attachment0=a
+    end
+end
+p.CharacterAdded:Connect(attachBeam)
+local function bindWorld(newWorld)
+    if marker then marker:Destroy() end if highlight then highlight:Destroy() end if destination then destination:Destroy() end if beam then beam:Destroy() end if preview then preview:Destroy() preview=nil end
+    for _,entry in roomLabels do entry.Gui:Destroy() end roomLabels={}
+    world=newWorld marker=nil highlight=nil destination=nil beam=nil
+    if not world then return end
     marker=Instance.new('BillboardGui') marker.Name='NextStepMarker' marker.Size=UDim2.fromOffset(120,48) marker.StudsOffsetWorldSpace=Vector3.new(0,7,0) marker.AlwaysOnTop=true marker.MaxDistance=100 marker.Parent=gui
     local caption=label(marker,'Caption','',13,C.Gold,0,0,120,48,5) caption.TextXAlignment=Enum.TextXAlignment.Center caption.TextStrokeTransparency=.35
     highlight=Instance.new('Highlight') highlight.FillColor=C.Teal highlight.FillTransparency=.82 highlight.OutlineColor=C.Cream highlight.Parent=world
     destination=Instance.new('Attachment') destination.Position=Vector3.new(0,1.5,0)
     beam=Instance.new('Beam') beam.Color=ColorSequence.new(C.Teal) beam.Width0=.14 beam.Width1=.14 beam.FaceCamera=true beam.Attachment1=destination beam.Parent=world
-    local function character(c)
-        local hrp=c:WaitForChild('HumanoidRootPart',10)
-        if hrp then local a=Instance.new('Attachment') a.Position=Vector3.new(0,-2,0) a.Parent=hrp beam.Attachment0=a end
-    end
-    p.CharacterAdded:Connect(character) if p.Character then task.spawn(character,p.Character) end
-    for _,room in {world.StarterRoom,world.Upgrades.Room2,world.Upgrades.Room3} do
-        local bb=Instance.new('BillboardGui') bb.Size=UDim2.fromOffset(150,40) bb.Adornee=room.Floor bb.StudsOffsetWorldSpace=Vector3.new(0,14,0) bb.MaxDistance=22 bb.Parent=gui
+    if p.Character then task.spawn(attachBeam,p.Character) end
+    local upgrades=world:FindFirstChild('Upgrades')
+    for _,room in {world:FindFirstChild('StarterRoom'),upgrades and upgrades:FindFirstChild('Room2'),upgrades and upgrades:FindFirstChild('Room3')} do
+        local floor=room and room:FindFirstChild('Floor')
+        if not floor then continue end
+        local bb=Instance.new('BillboardGui') bb.Size=UDim2.fromOffset(150,40) bb.Adornee=floor bb.StudsOffsetWorldSpace=Vector3.new(0,14,0) bb.MaxDistance=22 bb.Parent=gui
         local panel=T.Panel(bb,'Room',C.Ink,2) panel.Size=UDim2.fromScale(1,1)
-        local text=label(panel,'Status','',12,C.White,8,4,164,38,3) text.TextXAlignment=Enum.TextXAlignment.Center
+        local text=label(panel,'Status','',12,C.White,8,4,134,32,3) text.TextXAlignment=Enum.TextXAlignment.Center
         table.insert(roomLabels,{Room=room,Gui=bb,Text=text})
     end
     updateWayfinder()
+end
+task.spawn(function()
+    while gui.Parent do
+        local plots=workspace:FindFirstChild('ResortPlots') local name=p:GetAttribute('PlotName')
+        local candidate=plots and name and plots:FindFirstChild(name)
+        if candidate~=world then bindWorld(candidate) elseif world and not target then updateWayfinder() end
+        task.wait(1)
+    end
 end)
 local quarter=0 local sceneClock=0
 Run.RenderStepped:Connect(function(dt)
@@ -384,6 +429,23 @@ Run.RenderStepped:Connect(function(dt)
         end
     end
     quarter+=dt if quarter<.25 then return end quarter=0
+    -- A runner must never see its own/teammate tag prompt: OneGlobally would hide cores.
+    local team=p:GetAttribute('ArenaTeam')
+    for _,other in Players:GetPlayers() do
+        local h=other.Character and other.Character:FindFirstChild('HumanoidRootPart')
+        local tag=h and h:FindFirstChild('TagRunner')
+        if tag then tag.Enabled=other~=p and team~=nil and other:GetAttribute('ArenaTeam')~=nil and other:GetAttribute('ArenaTeam')~=team end
+    end
+    local commons=workspace:FindFirstChild('CosmicCommons')
+    if commons then
+        for i,names in {{'Blue Starcore','BLUE HOME'},{'Coral Starcore','CORAL HOME'}} do
+            local flag=commons:FindFirstChild(names[1]) local base=commons:FindFirstChild(names[2])
+            local take=flag and flag:FindFirstChildOfClass('ProximityPrompt') local score=base and base:FindFirstChildOfClass('ProximityPrompt')
+            if take then take.Enabled=team~=nil and (team==i and flag:GetAttribute('Dropped')==true or team~=i and not flag:GetAttribute('CarrierUserId') and not p:GetAttribute('CarryingStarcore')) end
+            if score then score.Enabled=team==i and p:GetAttribute('CarryingStarcore')==true end
+        end
+    end
+    if arenaRefresh then arenaRefresh() end
     if drawer and drawer.Visible and activityStatus then activityStatus() end
     local active={}
     for _,id in {'Turbo','Foam','Beacon'} do local left=math.ceil((p:GetAttribute(id..'Until') or 0)-workspace:GetServerTimeNow()) if left>0 then table.insert(active,string.upper(id)..' '..left..'s') end end
@@ -392,7 +454,8 @@ Run.RenderStepped:Connect(function(dt)
     if modal.Visible and currentTab=='Shop' then refresh() end
     for _,entry in roomLabels do
         local room=entry.Room
-        entry.Gui.Enabled=room.Floor.Transparency<1 and room:GetAttribute('Occupied')==true and (room:GetAttribute('Stage')==nil or room:GetAttribute('Stage')==3)
+        local floor=room:FindFirstChild('Floor')
+        entry.Gui.Enabled=roomStatus and floor~=nil and floor.Transparency<1 and room:GetAttribute('Occupied')==true and (room:GetAttribute('Stage')==nil or room:GetAttribute('Stage')==3)
         local status=room:GetAttribute('GuestStatus') or 'Ready for guests'
         if status=='Occupied' then
             local seconds=math.max(0,math.ceil((room:GetAttribute('NextPaymentAt') or 0)-workspace:GetServerTimeNow()))
@@ -415,26 +478,36 @@ end)
 local adventureRemote=Replicated:WaitForChild('ResortAdventure')
 local play=T.Button(screen,'Adventure','ADVENTURE',C.Teal,8)
 T.NavIcon(play,'Adventure') nav.Adventure=play
-drawer=T.Panel(screen,'AdventureDrawer',C.Cream,45) drawer.AnchorPoint=Vector2.new(.5,.5) drawer.Position=UDim2.fromScale(.5,.5) drawer.Visible=false T.Stroke(drawer)
-local title=label(drawer,'Title','BUILD. BOND. ADVENTURE.',17,C.Ink,14,12,400,25,46)
-local summary=label(drawer,'Progress','',13,C.Ink,14,44,400,112,46)
+hint(play,'Your passport • travel, pet powers and Starcore Capture') hint(fxButton,'Sound, animation and room-label settings')
+drawer=T.Panel(screen,'AdventureDrawer',C.Cream,45) drawer.AnchorPoint=Vector2.new(.5,.5) drawer.Position=UDim2.fromScale(.5,.5) drawer.Visible=false T.Window(drawer,C.Lilac)
+local title=label(drawer,'Title','YOUR COSMIC PASSPORT',19,C.White,14,12,400,32,46) title.Font=Enum.Font.FredokaOne title.TextStrokeColor3=C.Ink title.TextStrokeTransparency=.1
+local summary=label(drawer,'Progress','',13,C.Ink,14,72,400,132,46)
 local exit=T.Button(drawer,'Close','X',C.White,48) exit.Position=UDim2.new(1,-52,0,8) exit.Size=UDim2.fromOffset(44,44)
-local actions=Instance.new('ScrollingFrame') actions.Position=UDim2.fromOffset(12,164) actions.Size=UDim2.new(1,-24,1,-176) actions.AutomaticCanvasSize=Enum.AutomaticSize.Y actions.CanvasSize=UDim2.new() actions.BackgroundTransparency=1 actions.BorderSizePixel=0 actions.ScrollBarThickness=5 actions.ZIndex=46 actions.Parent=drawer
+local actions=Instance.new('ScrollingFrame') actions.Name='Actions' actions.Position=UDim2.fromOffset(12,210) actions.Size=UDim2.new(1,-24,1,-222) actions.AutomaticCanvasSize=Enum.AutomaticSize.Y actions.CanvasSize=UDim2.new() actions.BackgroundTransparency=1 actions.BorderSizePixel=0 actions.ScrollBarThickness=5 actions.ZIndex=46 actions.Parent=drawer
 local actionGrid=Instance.new('UIGridLayout') actionGrid.CellPadding=UDim2.fromOffset(8,8) actionGrid.Parent=actions
-local definitions={{'Commons','TO THE COMMONS'},{'Home','RETURN HOME'},{'Ability','USE PET ABILITY'},{'Evolve','EVOLVE AT LAB'},{'Request','ACCEPT GUEST REQUEST'},{'Deliver','DELIVER REQUEST'},{'Job','PIP: WORK / REST','Pebble'},{'Job','JUNO: WORK / REST','Jelly'},{'Job','SPROUT: WORK / REST','Slime'},{'Job','EMBER: WORK / REST','Lava'}}
+local definitions={{'Commons','TO THE COMMONS'},{'Home','RETURN HOME'},{'Ability','USE PET ABILITY'},{'Evolve','EVOLVE AT LAB'},{'Request','ACCEPT GUEST REQUEST'},{'Deliver','DELIVER REQUEST'},{'Job','PIP: WORK / REST','Pebble'},{'Job','JUNO: WORK / REST','Jelly'},{'Job','SPROUT: WORK / REST','Slime'},{'Job','EMBER: WORK / REST','Lava'},{'Queue','JOIN STARCORE CAPTURE'}}
 local actionButtons={} local lastAction=0
 for i,entry in definitions do
     local button=T.Button(actions,'Action'..i,entry[2],i%2==0 and C.Soft or C.Teal,47) button.LayoutOrder=i button.TextSize=11 actionButtons[i]=button
     button.Activated:Connect(function()
         if not p:GetAttribute('OwnsResort') then notify('Claim your island first.',true) return end
         if os.clock()-lastAction<.4 then return end lastAction=os.clock()
-        adventureRemote:FireServer(entry[1],entry[3]) if entry[1]=='Home' or entry[1]=='Commons' then open(nil) end
+        local action=entry[1]
+        if action=='Queue' then
+            if p:GetAttribute('ArenaTeam') or p:GetAttribute('ArenaQueued') then action='Leave'
+            else
+                local root=workspace:FindFirstChild('CosmicCommons') local pad=root and root:FindFirstChild('STARCORE CAPTURE / QUEUE')
+                local h=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
+                if not h or not pad or (h.Position-pad.Position).Magnitude>14 then action='Commons' notify('Visit the Starcore gate to join the queue.') end
+            end
+        end
+        adventureRemote:FireServer(action,entry[3]) if action=='Home' or action=='Commons' then open(nil) end
     end)
 end
 local function activityLayout()
     local w,h=screen.AbsoluteSize.X,screen.AbsoluteSize.Y
     layout()
-    drawer.Size=UDim2.fromOffset(math.min(520,w-24),math.min(490,h-24)) title.Size=UDim2.new(1,-78,0,25) summary.Size=UDim2.new(1,-28,0,112)
+    drawer.Size=UDim2.fromOffset(math.min(560,w-24),math.min(540,h-24)) title.Size=UDim2.new(1,-78,0,32) summary.Size=UDim2.new(1,-28,0,132)
     actionGrid.CellSize=UDim2.new(.5,-8,0,44)
 end
 activityStatus=function()
@@ -442,14 +515,87 @@ activityStatus=function()
     for i=7,10 do
         local entry=definitions[i] local pet=entry[3]
         local owned=pet=='Pebble' or p:GetAttribute('Pet_'..pet)
-        actionButtons[i].Text=not owned and ('ADOPT '..string.upper(pet)..' FIRST') or p:GetAttribute('PetJob')==pet and (string.upper(pet)..': REST') or entry[2]
-        actionButtons[i].Interactable=owned==true actionButtons[i].BackgroundColor3=owned and C.Teal or C.Soft
+        local facility=({Pebble='Reception',Jelly='Lounge',Slime='Garden',Lava='Kiosk'})[pet]
+        local unlocked=facility=='Garden' and p:GetAttribute('OwnsGarden') or (p:GetAttribute('Stage_'..facility) or 0)==3
+        local usable=owned and (unlocked or p:GetAttribute('PetJob')==pet)
+        actionButtons[i].Text=not owned and ('ADOPT '..string.upper(pet)..' FIRST') or not usable and ('BUILD '..string.upper(facility)..' FIRST') or p:GetAttribute('PetJob')==pet and (string.upper(pet)..': REST') or entry[2]
+        actionButtons[i].Interactable=usable==true actionButtons[i].BackgroundColor3=usable and C.Teal or C.Soft
     end
     local cooldown=math.max(0,math.ceil((p:GetAttribute('AbilityUntil') or 0)-workspace:GetServerTimeNow()))
-    summary.Text='SHARDS '..(p:GetAttribute('StarShards') or 0)..'/'..config.Adventure.EvolutionShards..'    BOND '..(p:GetAttribute('Bond_'..id) or 0)..'/'..config.Adventure.EvolutionBond..'\nJob: '..(p:GetAttribute('PetJob') or 'none')..' / Power: '..(cooldown>0 and (cooldown..'s') or 'READY')..'\n'..(p:GetAttribute('ActivityProgress') or 'Build your resort, then explore the Commons.')..(p:GetAttribute('ArenaTeam') and ('\nTEAM '..p:GetAttribute('ArenaTeam')..' / '..(p:GetAttribute('ArenaSeconds') or 0)..'s') or '')
+    local stages=0 local nextBuild=nil
+    for _,u in config.Upgrades do local stage=p:GetAttribute('Stage_'..u.Id) or 0 stages+=stage if stage<3 and not nextBuild then nextBuild=u.Name..' • '..config.StageNames[stage+1] end end
+    local stars=math.min(5,math.floor(stages/18*5))
+    summary.Text='RESORT RATING '..stars..'/5  •  '..stages..'/18 BUILD STAGES\nNext: '..(nextBuild or 'Evolve your crew and master Starcore Capture')..'\nSHARDS '..(p:GetAttribute('StarShards') or 0)..'/'..config.Adventure.EvolutionShards..'    BOND '..(p:GetAttribute('Bond_'..id) or 0)..'/'..config.Adventure.EvolutionBond..'\nJob: '..(p:GetAttribute('PetJob') or 'none')..' / Power: '..(cooldown>0 and (cooldown..'s') or 'READY')..'\n'..(p:GetAttribute('ActivityProgress') or 'Build your resort, then explore the Commons.')
+    actionButtons[11].Text=p:GetAttribute('ArenaTeam') and 'LEAVE MATCH' or p:GetAttribute('ArenaQueued') and 'LEAVE QUEUE' or 'JOIN STARCORE CAPTURE'
 end
 play.Activated:Connect(function() local was=drawer.Visible open(nil) drawer.Visible=not was scrim.Visible=not was activityStatus() if not was then GuiService.SelectedObject=exit end end)
 exit.Activated:Connect(function() open(nil) end)
 for name,button in nav do if name~='Adventure' then button.Activated:Connect(function() drawer.Visible=false end) end end
-p.AttributeChanged:Connect(activityStatus) screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(activityLayout)
+p.AttributeChanged:Connect(function() if drawer.Visible then activityStatus() end end) screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(activityLayout)
 activityLayout() activityStatus()
+
+-- One modal policy also covers accessibility controls; these affect only this client.
+local SoundService=game:GetService('SoundService')
+local feedback=SoundService:FindFirstChild('UIFeedback') or Instance.new('SoundGroup') feedback.Name='UIFeedback' feedback.Parent=SoundService
+local chime=Instance.new('Sound') chime.Name='CosmicFeedback' chime.SoundId='rbxassetid://1293433423' chime.SoundGroup=feedback chime.Volume=.12 chime.PlaybackSpeed=1.4 chime.Parent=SoundService
+local lastSound=-math.huge
+playFeedback=function() if soundOn and os.clock()-lastSound>.8 then lastSound=os.clock() chime:Play() end end
+gui.Destroying:Connect(function() chime:Destroy() end)
+settings=T.Panel(screen,'Settings',C.Cream,50) settings.AnchorPoint=Vector2.new(.5,.5) settings.Position=UDim2.fromScale(.5,.5) settings.Visible=false T.Window(settings,C.Lilac)
+local settingsTitle=label(settings,'Title','MAKE IT YOURS',22,C.White,18,14,250,32,51) settingsTitle.Font=Enum.Font.FredokaOne
+local settingsClose=place(T.Button(settings,'Close','X',C.White,53),0,12,44,44)
+local settingsBody=Instance.new('ScrollingFrame') settingsBody.Name='Options' settingsBody.BackgroundTransparency=1 settingsBody.BorderSizePixel=0 settingsBody.AutomaticCanvasSize=Enum.AutomaticSize.Y settingsBody.CanvasSize=UDim2.new() settingsBody.ScrollBarThickness=4 settingsBody.Position=UDim2.fromOffset(16,78) settingsBody.Size=UDim2.new(1,-32,1,-94) settingsBody.ZIndex=51 settingsBody.Parent=settings
+local settingButtons={}
+for i,spec in {{'Motion','Animation','Reduced mode stops bobbing, coin trails and button scaling.'},{'Audio','Sound effects','Controls Alien Resort feedback audio; voice chat is unaffected.'},{'Labels','Room status labels','Hide room payout labels. Tutorial markers and prompts stay visible.'}} do
+    local row=T.Panel(settingsBody,spec[1],C.White,51) row.Position=UDim2.fromOffset(0,(i-1)*96) row.Size=UDim2.new(1,-4,0,88) T.Stroke(row,C.Soft,1)
+    label(row,'Name',spec[2],15,C.Ink,12,8,180,24,52)
+    local detail=label(row,'Description',spec[3],12,C.Muted,12,36,250,42,52) detail.Size=UDim2.new(1,-24,0,42)
+    local button=T.Button(row,'Toggle','',C.Teal,53) button.Position=UDim2.new(1,-94,0,4) button.Size=UDim2.fromOffset(82,44) button.TextSize=12 settingButtons[spec[1]]=button
+end
+settingsRefresh=function()
+    settingButtons.Motion.Text=motion and 'FULL' or 'REDUCED' settingButtons.Motion.BackgroundColor3=motion and C.Teal or C.Soft
+    settingButtons.Audio.Text=soundOn and 'ON' or 'MUTED' settingButtons.Audio.BackgroundColor3=soundOn and C.Teal or C.Soft
+    settingButtons.Labels.Text=roomStatus and 'ON' or 'HIDDEN' settingButtons.Labels.BackgroundColor3=roomStatus and C.Teal or C.Soft
+    T.Motion=motion feedback.Volume=soundOn and 1 or 0
+end
+settingButtons.Motion.Activated:Connect(function() motion=not motion settingsRefresh() end)
+settingButtons.Audio.Activated:Connect(function() soundOn=not soundOn settingsRefresh() end)
+settingButtons.Labels.Activated:Connect(function() roomStatus=not roomStatus settingsRefresh() end)
+settingsClose.Activated:Connect(function() open(nil) end)
+fxButton.Activated:Connect(function() local visible=settings.Visible open(nil) settings.Visible=not visible scrim.Visible=not visible settingsRefresh() if not visible then GuiService.SelectedObject=settingsClose end end)
+local function settingsLayout() local w,h=screen.AbsoluteSize.X,screen.AbsoluteSize.Y settings.Size=UDim2.fromOffset(math.min(460,w-24),math.min(400,h-24)) settingsClose.Position=UDim2.new(1,-58,0,10) end
+screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(settingsLayout) settingsLayout() settingsRefresh()
+
+-- Compact match HUD uses server-owned attributes. No client rewards or scoring.
+arena=T.Panel(screen,'ArenaHUD',C.Ink,12) arena.AnchorPoint=Vector2.new(.5,0) arena.Visible=false T.Round(arena,22) T.Stroke(arena,C.Lilac,2)
+local arenaMode=label(arena,'Mode','STARCORE CAPTURE',12,C.Gold,14,7,300,18,13)
+local arenaScore=label(arena,'Score','',21,C.White,14,27,300,27,13) arenaScore.Font=Enum.Font.FredokaOne
+local arenaHint=label(arena,'Hint','',12,C.White,14,57,360,28,13) arenaHint.Size=UDim2.new(1,-28,0,32)
+local arenaLeave=place(T.Button(arena,'Leave','LEAVE',C.Coral,14),0,9,70,44) arenaLeave.AnchorPoint=Vector2.new(1,0) arenaLeave.Position=UDim2.new(1,-10,0,8) arenaLeave.TextSize=12
+arenaLeave.Activated:Connect(function() adventureRemote:FireServer('Leave') end)
+arenaRefresh=function()
+    local team=p:GetAttribute('ArenaTeam') local queued=p:GetAttribute('ArenaQueued')
+    arena.Visible=team~=nil or queued==true guide.Visible=not arena.Visible
+    if not arena.Visible then return end
+    local root=workspace:FindFirstChild('CosmicCommons')
+    local blue=p:GetAttribute('ArenaBlueScore') or (root and root:GetAttribute('BlueScore')) or 0
+    local coral=p:GetAttribute('ArenaCoralScore') or (root and root:GetAttribute('CoralScore')) or 0
+    local countdown=p:GetAttribute('ArenaCountdown') or 0
+    arenaMode.Text=team and ((team==1 and 'BLUE TEAM' or 'CORAL TEAM')..' • '..(p:GetAttribute('ArenaSeconds') or 0)..'s') or 'STARCORE • IN QUEUE'
+    arenaScore.Text=queued and ((root and root:GetAttribute('QueueCount') or 1)..' QUEUED • '..(root and root:GetAttribute('QueueSeconds') or 0)..'s') or (blue..' BLUE  :  '..coral..' CORAL')
+    arenaHint.Text=queued and 'Up to 2v2. Explore while waiting.' or p:GetAttribute('ArenaPhase')=='Countdown' and ('GET READY • '..countdown) or p:GetAttribute('CarryingStarcore') and 'CORE SECURED! Bring it to your home base.' or 'Steal their core. Return home. Tag nearby enemies.'
+    arenaScore.Size=UDim2.new(1,-104,0,27) arenaMode.Size=UDim2.new(1,-100,0,18)
+end
+resultSheet=T.Panel(screen,'RoundResult',C.Cream,55) resultSheet.AnchorPoint=Vector2.new(.5,.5) resultSheet.Position=UDim2.fromScale(.5,.5) resultSheet.Visible=false T.Window(resultSheet,C.Lilac)
+local resultTitle=label(resultSheet,'Title','ROUND RESULTS',22,C.White,18,14,270,32,56) resultTitle.Font=Enum.Font.FredokaOne
+local resultText=label(resultSheet,'Rewards','',15,C.Ink,18,74,360,82,56) resultText.Size=UDim2.new(1,-36,0,82) resultText.TextXAlignment=Enum.TextXAlignment.Center
+local resultClose=T.Button(resultSheet,'Continue','CONTINUE EXPLORING',C.Teal,57) resultClose.Position=UDim2.new(0,16,1,-58) resultClose.Size=UDim2.new(1,-32,0,44)
+resultClose.Activated:Connect(function() open(nil) end)
+local function resultLayout() resultSheet.Size=UDim2.fromOffset(math.min(420,screen.AbsoluteSize.X-24),224) resultTitle.Size=UDim2.new(1,-36,0,32) end
+screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(resultLayout) resultLayout()
+p:GetAttributeChangedSignal('ArenaResultVersion'):Connect(function()
+    local message=p:GetAttribute('ArenaResult')
+    if message and message~='' then open(nil) resultText.Text=message resultSheet.Visible=true scrim.Visible=true playFeedback() GuiService.SelectedObject=resultClose end
+end)
+screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(function() layout() arenaRefresh() end)
+layout() arenaRefresh()

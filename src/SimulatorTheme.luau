@@ -1,5 +1,5 @@
 local Tween=game:GetService('TweenService')
-local T={Colors={Ink=Color3.fromRGB(28,35,68),Muted=Color3.fromRGB(77,89,117),Cream=Color3.fromRGB(239,249,255),White=Color3.fromRGB(255,255,255),Teal=Color3.fromRGB(42,225,174),Lilac=Color3.fromRGB(182,117,255),Gold=Color3.fromRGB(255,215,48),Coral=Color3.fromRGB(255,101,119),Line=Color3.fromRGB(47,58,100),Soft=Color3.fromRGB(218,231,248)}}
+local T={Motion=true,Colors={Ink=Color3.fromRGB(23,27,61),Muted=Color3.fromRGB(82,89,117),Cream=Color3.fromRGB(245,244,255),White=Color3.fromRGB(255,255,255),Teal=Color3.fromRGB(69,230,193),Lilac=Color3.fromRGB(139,92,246),Gold=Color3.fromRGB(255,209,102),Coral=Color3.fromRGB(255,111,174),Line=Color3.fromRGB(55,49,96),Soft=Color3.fromRGB(229,225,245)}}
 function T.Round(o,r) local c=o:FindFirstChildOfClass('UICorner') or Instance.new('UICorner') c.CornerRadius=UDim.new(0,r or 14) c.Parent=o end
 function T.Stroke(o,color,width)
     local s=Instance.new('UIStroke') s.ApplyStrokeMode=Enum.ApplyStrokeMode.Border s.Color=color or T.Colors.Line s.Thickness=width or 3 s.Parent=o return s
@@ -14,15 +14,22 @@ function T.Button(parent,name,value,color,z)
     local b=Instance.new('TextButton') b.Name=name b.Text=value b.Font=Enum.Font.FredokaOne b.TextSize=15 b.TextColor3=T.Colors.Ink b.BackgroundColor3=color or T.Colors.Gold b.BorderSizePixel=0 b.AutoButtonColor=false b.Selectable=true b.ZIndex=z or parent.ZIndex+1 b.Parent=parent T.Round(b,15)
     local minimum=Instance.new('UISizeConstraint') minimum.MinSize=Vector2.new(44,44) minimum.Parent=b
     local scale=Instance.new('UIScale') scale.Parent=b
-    local function hover() Tween:Create(scale,TweenInfo.new(.12),{Scale=1.025}):Play() end
-    local function leave() Tween:Create(scale,TweenInfo.new(.12),{Scale=1}):Play() end
+    local function animate(value,duration) if T.Motion then Tween:Create(scale,TweenInfo.new(duration),{Scale=value}):Play() else scale.Scale=1 end end
+    local function hover() animate(1.025,.12) end
+    local function leave() animate(1,.12) end
     if name=='Scrim' then return b end
     T.Stroke(b,T.Colors.Ink,3)
-    local gradient=Instance.new('UIGradient') gradient.Color=ColorSequence.new(Color3.new(1,1,1),Color3.fromRGB(190,205,230)) gradient.Rotation=90 gradient.Parent=b
+    local gradient=Instance.new('UIGradient') gradient.Color=ColorSequence.new(Color3.new(1,1,1),Color3.fromRGB(204,210,239)) gradient.Rotation=90 gradient.Parent=b
     b.MouseEnter:Connect(hover) b.MouseLeave:Connect(leave) b.SelectionGained:Connect(hover) b.SelectionLost:Connect(leave)
-    b.MouseButton1Down:Connect(function() Tween:Create(scale,TweenInfo.new(.07),{Scale=.97}):Play() end)
+    b.MouseButton1Down:Connect(function() animate(.97,.07) end)
     b.MouseButton1Up:Connect(leave)
     return b
+end
+function T.Window(panel,accent)
+    T.Round(panel,22) T.Stroke(panel,T.Colors.Ink,3)
+    local band=T.Panel(panel,'Accent',accent or T.Colors.Lilac,panel.ZIndex)
+    band.Size=UDim2.new(1,0,0,64) T.Round(band,22)
+    local gradient=Instance.new('UIGradient') gradient.Color=ColorSequence.new(Color3.new(1,1,1),Color3.fromRGB(173,162,240)) gradient.Rotation=15 gradient.Parent=band
 end
 function T.NavIcon(b,kind)
     b.Text=kind=='Adventure' and 'TRAVEL' or string.upper(kind) b.TextColor3=T.Colors.White b.TextStrokeColor3=T.Colors.Ink b.TextStrokeTransparency=0 b.TextYAlignment=Enum.TextYAlignment.Bottom b.TextSize=12

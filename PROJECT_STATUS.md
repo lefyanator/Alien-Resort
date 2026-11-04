@@ -1,4 +1,8 @@
-# Latest: 0.10.1 — declutter and Creator Store props
+# Latest: 0.11.0 — Cosmic overhaul milestone
+
+Read OVERHAUL_STATUS.md for the full-scope acceptance tracker, real two-client capture/reward evidence, 183+31+37 checks, revised map/UI and remaining work. Full brief: docs/OVERHAUL_BRIEF.md. This is an ongoing overhaul, not a release-ready claim.
+
+# Previous: 0.10.1 — declutter and Creator Store props
 
 Read DECLUTTER_STATUS.md for the screenshot-driven fixes, free asset credits, construction-gated cafe interaction and 183 engine checks. Previous results below are historical.
 

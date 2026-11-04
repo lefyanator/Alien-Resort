@@ -1,5 +1,5 @@
 local G = {}
-local C = {cream=Color3.fromRGB(245,237,216), teal=Color3.fromRGB(56,214,193), dark=Color3.fromRGB(25,42,66), purple=Color3.fromRGB(157,137,226), coral=Color3.fromRGB(255,151,124), rock=Color3.fromRGB(65,66,99)}
+local C = {cream=Color3.fromRGB(237,230,213), teal=Color3.fromRGB(69,230,193), dark=Color3.fromRGB(23,27,61), purple=Color3.fromRGB(139,92,246), coral=Color3.fromRGB(255,111,174), rock=Color3.fromRGB(67,62,93)}
 G.Colors = C
 local function part(parent,name,size,pos,color,material,shape)
     local templates=shape==Enum.PartType.Ball and game.ReplicatedStorage:FindFirstChild('PetTemplates')
@@ -9,6 +9,12 @@ local function part(parent,name,size,pos,color,material,shape)
     if shape and p:IsA('Part') then p.Shape=shape end p.Parent=parent return p
 end
 G.Part=part
+local function keepBelow(p,ceiling)
+    local cf,size=p.CFrame,p.Size
+    local halfHeight=(math.abs(cf.RightVector.Y)*size.X+math.abs(cf.UpVector.Y)*size.Y+math.abs(cf.LookVector.Y)*size.Z)/2
+    p.CFrame-=Vector3.new(0,math.max(0,p.Position.Y+halfHeight-ceiling),0)
+end
+G.KeepBelow=keepBelow
 -- Small reusable silhouettes; decorative parts never block players or raycasts.
 function G.Prop(parent,kind,pos,accent)
     local library=game.ServerStorage:FindFirstChild('WorldProps')
@@ -75,9 +81,6 @@ end
 local function folder(parent,name)
     local f=Instance.new("Model") f.Name=name f.Parent=parent return f
 end
-local function plant(parent,x,z)
-    G.Prop(parent,'Palm',Vector3.new(x,5.7,z))
-end
 function G.DressCommons(root,origin)
     local art=folder(root,'CommonsArt')
     local function p(name,size,pos,color,shape)
@@ -86,7 +89,44 @@ function G.DressCommons(root,origin)
     local function disc(name,r,h,pos,color)
         local v=p(name,Vector3.new(h,r*2,r*2),pos,color,Enum.PartType.Cylinder) v.Orientation=Vector3.new(0,0,90) return v
     end
-    root.CommonsDeck.Color=Color3.fromRGB(84,112,136)
+    -- Chamfered terraces replace the oversized slab without changing interaction locations.
+    root.CommonsDeck:Destroy() root.CommonsIsland:Destroy()
+    for _,v in root:GetChildren() do if v.Name=='EdgeRail' or v.Name=='NebulaPlanter' or v.Name=='NebulaCrystal' then v:Destroy() end end
+    local function floor(name,size,pos,color)
+        local v=p(name,size,pos,color) v.CanCollide=true v.CanQuery=true return v
+    end
+    local function terrace(name,width,depth,y,z,color)
+        local cut=12
+        floor(name,Vector3.new(width-cut*2,1,depth),Vector3.new(0,y,z),color)
+        floor(name..'Wings',Vector3.new(width,1,depth-cut*2),Vector3.new(0,y,z),color)
+        for _,sx in {-1,1} do for _,sz in {-1,1} do
+            local corner=Instance.new('CornerWedgePart') corner.Name=name..'Bevel' corner.Size=Vector3.new(cut,1,cut)
+            corner.CFrame=CFrame.new(origin+Vector3.new(sx*(width-cut)/2,y,z+sz*(depth-cut)/2))*CFrame.Angles(0,math.rad(sx==1 and (sz==1 and 0 or 90) or (sz==1 and 270 or 180)),0)
+            corner.Color=color corner.Material=Enum.Material.SmoothPlastic corner.Anchored=true corner.CanTouch=false corner.Parent=art
+        end end
+    end
+    terrace('LowerBelt',232,184,1.8,0,C.rock)
+    terrace('DeckRim',228,180,4.1,0,C.dark)
+    terrace('CommonsDeck',222,174,5.4,0,Color3.fromRGB(190,185,171))
+    -- The underside reads as buoyant asteroid clusters rather than stacked cylinders.
+    for _,rock in {{-68,-10,-28,83,34,74},{54,-14,-18,105,43,88},{-34,-22,48,88,51,72},{56,-13,62,64,34,57}} do
+        local v=p('AsteroidRoot',Vector3.new(rock[4],rock[5],rock[6]),Vector3.new(rock[1],rock[2],rock[3]),C.rock,Enum.PartType.Ball)
+        v.Orientation=Vector3.new(8,rock[1]*3,14)
+        keepBelow(v,origin.Y+.8)
+    end
+    for _,side in {-1,1} do
+        p('ArenaSideBelt',Vector3.new(4,8,83),Vector3.new(side*96,3,-43),C.purple)
+        p('ArenaRail',Vector3.new(1,2,76),Vector3.new(side*91,8,-43),C.dark)
+        local pyl=p('StadiumPylon',Vector3.new(7,22,7),Vector3.new(side*95,15,-80),C.dark)
+        pyl.Orientation=Vector3.new(0,0,side*8)
+        p('PylonBadge',Vector3.new(4,7,1),Vector3.new(side*95,18,-84),side<0 and C.teal or C.coral)
+    end
+    -- Public seating is outside the match boundary; both end routes remain open.
+    for _,x in {-48,48} do
+        for row=1,2 do floor('SpectatorTier',Vector3.new(30,1+row*1.3,5),Vector3.new(x,6+row*.65,-81-row*3),C.dark) end
+    end
+    for _,z in {-88,87} do p('TerraceRail',Vector3.new(192,1.5,.7),Vector3.new(0,7,z),C.dark) end
+    for _,x in {-109,109} do p('PromenadeRail',Vector3.new(.7,1.5,161),Vector3.new(x,7,0),C.dark) end
     p('CentralPromenade',Vector3.new(10,.12,162),Vector3.new(0,6,0),C.cream)
     p('ActivityWalk',Vector3.new(205,.12,7),Vector3.new(0,6,33),C.cream)
     for _,spec in {{-75,C.coral},{-25,C.purple},{25,C.teal},{75,C.coral}} do
@@ -122,7 +162,17 @@ function G.DressCommons(root,origin)
     end
     for _,z in {-78,-8} do p('ArenaBoundary',Vector3.new(178,.2,.5),Vector3.new(0,6.5,z),C.teal) end
     for _,x in {-77,77} do disc('GoalCrest',8,.15,Vector3.new(x,7.6,-43),x<0 and C.teal or C.coral) end
+    -- Team goals use different colour and a ring silhouette visible across the field.
+    for _,x in {-77,77} do
+        local color=x<0 and C.teal or C.coral
+        for _,z in {-49,-37} do p('GoalFin',Vector3.new(1,10,2),Vector3.new(x,12,z),color) end
+        p('GoalCrown',Vector3.new(2,1,14),Vector3.new(x,17,-43),color)
+    end
     p('HalfwayLine',Vector3.new(.5,.2,72),Vector3.new(0,6.5,-43),C.cream)
+    for _,x in {-14,14} do p('StadiumEntrance',Vector3.new(2,18,3),Vector3.new(x,15,1),C.dark) end
+    local scoreboard=textOn(art,'ArenaScoreboard',origin+Vector3.new(0,24,1),Vector3.new(32,7,1),'STARCORE CAPTURE\nTAKE • RETURN • SCORE',C.cream)
+    scoreboard.SurfaceGui.Face=Enum.NormalId.Back scoreboard.SurfaceGui.TextLabel.Name='Text'
+    scoreboard.CanQuery=false
     for _,x in {49,81} do p('RepairBayPost',Vector3.new(1,14,1),Vector3.new(x,12,66),C.coral) end
     p('RepairBayArch',Vector3.new(34,1,3),Vector3.new(65,19,66),C.coral)
     p('RepairBayRoof',Vector3.new(36,3,26),Vector3.new(65,20,55),C.coral,Enum.PartType.Ball)
@@ -132,27 +182,10 @@ function G.DressCommons(root,origin)
     p('EvolutionCore',Vector3.new(2.5,3.5,2.5),Vector3.new(24,10,81),C.coral,Enum.PartType.Ball)
     for _,pos in {Vector3.new(21,6,20),Vector3.new(29,6,20)} do G.Prop(art,'Flowers',origin+pos,C.coral) end
     for _,pos in {Vector3.new(-100,6,73),Vector3.new(100,6,73)} do G.Prop(art,'Palm',origin+pos) end
+    for _,pos in {Vector3.new(-107,5.9,42),Vector3.new(102,5.9,42),Vector3.new(-42,5.9,86),Vector3.new(48,5.9,87)} do G.Prop(art,'Bush',origin+pos) end
     local beacon=root:FindFirstChild('Ancient Beacon')
     if beacon then beacon.Shape=Enum.PartType.Cylinder beacon.Size=Vector3.new(8,3,3) beacon.Orientation=Vector3.new(0,0,90) end
     p('BeaconLens',Vector3.new(5,4,5),Vector3.new(75,15,20),C.coral,Enum.PartType.Ball)
-end
-function G.Room(parent,name,x,z,accent)
-    local m=folder(parent,name)
-    part(m,"Deck",Vector3.new(21,1,18),Vector3.new(x,5.5,z),C.dark)
-    part(m,"Floor",Vector3.new(18,0.6,15),Vector3.new(x,6.3,z),C.cream)
-    part(m,"Back",Vector3.new(18,9,0.7),Vector3.new(x,10.5,z+7.5),C.cream)
-    part(m,"SideL",Vector3.new(0.7,9,15),Vector3.new(x-9,10.5,z),C.cream)
-    part(m,"SideR",Vector3.new(0.7,9,15),Vector3.new(x+9,10.5,z),C.cream)
-    part(m,"Roof",Vector3.new(21,1.2,18),Vector3.new(x,15.6,z),accent)
-    part(m,"RoofInset",Vector3.new(17,0.6,14),Vector3.new(x,16.4,z),C.cream)
-    for _,offset in {-6,6} do part(m,"FrontPanel",Vector3.new(6,9,0.7),Vector3.new(x+offset,10.5,z-7.5),C.cream) end
-    part(m,"DoorGlow",Vector3.new(6,0.3,0.4),Vector3.new(x,14.7,z-7.9),accent,Enum.Material.Neon)
-    local window=part(m,"Window",Vector3.new(5,3.5,0.2),Vector3.new(x-5.5,11,z-7.95),C.teal,Enum.Material.Glass) window.Transparency=.25
-    part(m,"BedBase",Vector3.new(6,1.2,8),Vector3.new(x+4,7.2,z+2),C.dark)
-    part(m,"Duvet",Vector3.new(6.2,0.7,6),Vector3.new(x+4,8.1,z+1),accent)
-    part(m,"Pillow",Vector3.new(4.5,0.6,1.8),Vector3.new(x+4,8.2,z+4),C.cream)
-    textOn(m,"RoomSign",Vector3.new(x,17.7,z-7.5),Vector3.new(13,2,0.4),name=="StarterRoom" and "01 / ORBIT POD" or "02 / MOON POD",C.cream)
-    return m
 end
 function G.UFO(parent,pos)
     local m=folder(parent,"GuestShuttle")
@@ -178,27 +211,6 @@ function G.UFO(parent,pos)
     for _,v in m:GetDescendants() do if v:IsA("BasePart") then v.CanCollide=false end end
     m:PivotTo(CFrame.new(pos))
     m:SetAttribute("AssetVersion","upright-0.2")
-    return m
-end
-function G.Guest(parent,pos)
-    local m=folder(parent,"PebbleGuest")
-    local body=part(m,"Body",Vector3.new(2.8,3.6,2.4),pos,C.teal,nil,Enum.PartType.Ball)
-    part(m,"Belly",Vector3.new(1.8,2,.4),pos+Vector3.new(0,-.3,-1.05),C.cream,nil,Enum.PartType.Ball)
-    for _,x in {-.65,.65} do
-        part(m,"Eye",Vector3.new(.43,.6,.25),pos+Vector3.new(x,.65,-1.13),C.dark,nil,Enum.PartType.Ball)
-        part(m,"Foot",Vector3.new(.85,.6,1.25),pos+Vector3.new(x,-1.8,0),C.purple,nil,Enum.PartType.Ball)
-        part(m,"Antenna",Vector3.new(.15,1.3,.15),pos+Vector3.new(x,2,0),C.dark)
-        part(m,"AntennaTip",Vector3.new(.5,.5,.5),pos+Vector3.new(x,2.7,0),C.coral,Enum.Material.Neon,Enum.PartType.Ball)
-    end
-    part(m,"Suitcase",Vector3.new(.8,1.2,1.1),pos+Vector3.new(1.7,-1,0),C.coral)
-    for _,x in {-1.4,1.4} do
-        part(m,"Arm",Vector3.new(.7,1.7,.8),pos+Vector3.new(x,-.5,0),C.teal,nil,Enum.PartType.Ball)
-    end
-    part(m,"Backpack",Vector3.new(1.8,2,.7),pos+Vector3.new(0,-.2,1.1),C.purple,nil,Enum.PartType.Ball)
-    part(m,"Buckle",Vector3.new(.7,.4,.2),pos+Vector3.new(0,-.5,-1.3),C.coral)
-    part(m,"Smile",Vector3.new(.5,.12,.15),pos+Vector3.new(0,.1,-1.3),C.dark)
-    m.PrimaryPart=body
-    for _,v in m:GetChildren() do if v:IsA("BasePart") then v.CanCollide=false v.CanTouch=false end end
     return m
 end
 function G.SetVisible(model,visible)
@@ -227,31 +239,24 @@ function G.Build(parent,name,origin)
     cylinder(island,"UpperIsland",65,5,Vector3.new(0,2.5,0),C.purple)
     cylinder(island,"CreamRim",65.8,.7,Vector3.new(0,4,0),C.cream)
     cylinder(island,"Ground",63,.7,Vector3.new(0,5,0),Color3.fromRGB(199,191,168))
-    for i=1,3 do cylinder(island,"FloatingRock",58-i*10,6,Vector3.new(0,-i*5,0),C.rock) end
+    for _,r in {{-20,-7,-7,78,30,77},{21,-9,10,75,32,68},{-5,-20,9,55,33,57}} do
+        local rock=part(island,'AsteroidRoot',Vector3.new(r[4],r[5],r[6]),Vector3.new(r[1],r[2],r[3]),C.rock,Enum.Material.Slate,Enum.PartType.Ball)
+        rock.Orientation=Vector3.new(12,r[1]*4,15) rock.CanCollide=false rock.CanQuery=false
+        keepBelow(rock,.8)
+    end
+    for _,s in {-1,1} do
+        local crystal=part(island,'LiftCrystal',Vector3.new(5,15,5),Vector3.new(s*40,-9,3),s<0 and C.teal or C.purple,Enum.Material.Glass)
+        crystal.Orientation=Vector3.new(0,0,s*18) crystal.CanCollide=false crystal.CanQuery=false
+    end
     part(island,"MainWalk",Vector3.new(12,.3,105),Vector3.new(0,5.5,0),C.cream)
     for _,z in {-10,20} do part(island,"CrossWalk",Vector3.new(90,.3,8),Vector3.new(0,5.5,z),C.cream) end
-    for _,x in {-7,7} do part(island,"PathLight",Vector3.new(.3,.15,100),Vector3.new(x,5.7,0),C.teal,Enum.Material.Neon) end
+    for _,x in {-7,7} do part(island,"PathInlay",Vector3.new(.3,.15,100),Vector3.new(x,5.7,0),C.dark) end
     local pad=folder(root,"LandingPad")
     cylinder(pad,"Ring",14,.5,Vector3.new(0,5.9,36),C.teal,Enum.Material.Neon)
     cylinder(pad,"LandingSurface",12.8,.5,Vector3.new(0,6.2,36),C.dark)
     textOn(pad,"ArrivalSign",Vector3.new(0,7.5,50),Vector3.new(18,2,.3),"ARRIVALS / 01",C.teal)
-    G.Room(root,"StarterRoom",-29,7,C.teal)
     local upgrades=folder(root,"Upgrades")
-    G.Room(upgrades,"Room2",29,7,C.purple)
-    local reception=folder(upgrades,"Reception")
-    part(reception,"Counter",Vector3.new(15,4,5),Vector3.new(-28,7.5,-28),C.cream)
-    part(reception,"CounterTop",Vector3.new(16,.5,6),Vector3.new(-28,9.8,-28),C.teal)
-    part(reception,"Terminal",Vector3.new(4,2.4,.5),Vector3.new(-28,11,-28),C.dark)
-    for _,x in {-35,-21} do part(reception,"CanopyPost",Vector3.new(.5,10,.5),Vector3.new(x,10.5,-26),C.dark) end
-    part(reception,"Canopy",Vector3.new(18,1,9),Vector3.new(-28,15.5,-28),C.coral)
-    textOn(reception,"Sign",Vector3.new(-28,16.8,-32),Vector3.new(18,2,.3),"STAR RECEPTION",C.cream)
-    local kiosk=folder(upgrades,"Kiosk")
-    part(kiosk,"Counter",Vector3.new(14,4,7),Vector3.new(29,7.5,-27),C.cream)
-    part(kiosk,"CounterTop",Vector3.new(15,.6,8),Vector3.new(29,10,-27),C.coral)
-    for _,x in {23,35} do part(kiosk,"Post",Vector3.new(.5,8,.5),Vector3.new(x,10,-27),C.dark) end
-    part(kiosk,"Canopy",Vector3.new(17,1,10),Vector3.new(29,14.5,-27),C.purple)
-    textOn(kiosk,"Sign",Vector3.new(29,16,-32),Vector3.new(17,2,.3),"COSMIC SNACKS",C.cream)
-    for i=1,4 do cylinder(kiosk,"Drink",.6,1.5,Vector3.new(24+i*2,11,-28),i%2==0 and C.teal or C.purple) end
+    folder(upgrades,"Reception") folder(upgrades,"Kiosk")
     local buttons=folder(root,"BuildPads")
     for i,entry in {{"Room2",Vector3.new(24,6,-10)},{"Reception",Vector3.new(-24,6,-39)},{"Kiosk",Vector3.new(24,6,-39)}} do
         local b=cylinder(buttons,entry[1],3.3,.5,entry[2],C.teal,Enum.Material.Neon)
@@ -270,18 +275,12 @@ function G.Build(parent,name,origin)
         part(root,"BeaconPost",Vector3.new(.5,3,.5),Vector3.new(x,7,z),C.dark)
         part(root,"Beacon",Vector3.new(1.1,.4,1.1),Vector3.new(x,8.7,z),C.teal,Enum.Material.Neon)
     end
-    local backdrop=folder(root,"SpaceScenery")
-    for _,spec in {{Vector3.new(-190,85,170),60,C.purple},{Vector3.new(220,120,230),90,C.teal},{Vector3.new(-100,130,320),35,C.coral}} do
-        local p=part(backdrop,"DistantMoon",Vector3.new(spec[2],spec[2],spec[2]),spec[1],spec[3],nil,Enum.PartType.Ball) p.CanCollide=false
-    end
     folder(root,"Guests")
     for _,m in upgrades:GetChildren() do G.SetVisible(m,false) end
     local spawn=Instance.new("SpawnLocation") spawn.Name="ResortSpawn" spawn.Size=Vector3.new(6,.3,6) spawn.Position=Vector3.new(0,5.8,-56) spawn.Transparency=1 spawn.Anchored=true spawn.Neutral=true spawn.Duration=0 spawn.Parent=root
     G.Decorate(root)
     require(script.Parent.Expansion).Build(root,G)
     for _,m in upgrades:GetChildren() do G.SetVisible(m,false) end
-    local scenery=root:FindFirstChild("SpaceScenery")
-    if scenery then scenery:Destroy() end
     for _,p in root:GetDescendants() do
         if p:IsA("BasePart") then p.CFrame+=origin end
     end

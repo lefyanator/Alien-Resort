@@ -1,4 +1,4 @@
--- Original architecture, assembled from anchored parts. No external assets.
+-- Shared staged architecture with curated prop templates and authored service silhouettes.
 local E={}
 function E.Build(root,G)
     if root:GetAttribute("BuildVersion")=="0.3.0" then return end
@@ -81,12 +81,25 @@ function E.Build(root,G)
     block(reception,"WelcomeTower",{3,14,3},{-37,21,-22},C.teal)
     sign(reception,"TowerSign",-37,26,-23.7,5,5,"i",C.cream)
     local district=model(root,"NorthPromenade")
-    block(district,"ExtensionLand",{112,5,47},{0,2.5,76},C.rock)
-    block(district,"PromenadeDeck",{112,.7,47},{0,5,76},C.cream)
+    block(district,"ExtensionLand",{74,4,44},{0,2.5,76},C.rock)
+    block(district,"PromenadeDeck",{74,.7,44},{0,5,76},C.cream)
+    for _,x in {-37,37} do
+        local endcap=G.Part(district,'PromenadeEndcap',Vector3.new(.7,44,44),Vector3.new(x,5,76),C.cream,nil,Enum.PartType.Cylinder)
+        endcap.Orientation=Vector3.new(0,0,90)
+        local rock=G.Part(district,'PromenadeAsteroid',Vector3.new(43,23,43),Vector3.new(x,-7,76),C.rock,Enum.Material.Slate,Enum.PartType.Ball)
+        rock.CanCollide=false rock.CanQuery=false rock.Orientation=Vector3.new(12,x*2,10)
+        G.KeepBelow(rock,.8)
+    end
     block(district,"Bridge",{12,1,18},{0,4.9,55},C.cream)
     block(district,"Walkway",{105,.2,8},{0,5.5,62},C.dark)
-    for _,x in {-55,55} do block(district,"GuardRail",{.7,2,46},{x,6.5,76},C.teal) end
-    block(district,"BackRail",{110,2,.7},{0,6.5,99},C.teal)
+    for _,side in {-1,1} do
+        for i=0,5 do
+            local a=math.rad(-75+i*30) local x=side*(37+math.cos(a)*21) local z=76+math.sin(a)*21
+            local rail=block(district,'CurvedGuardRail',{.6,1.5,10.7},{x,6.3,z},C.dark)
+            rail.Orientation=Vector3.new(0,-side*math.deg(a),0)
+        end
+    end
+    block(district,"BackRail",{74,1.5,.6},{0,6.3,97},C.dark)
     sign(district,"DistrictSign",0,10,58,18,3,"NORTH PROMENADE",C.teal)
     room("Room3",-35,80,C.coral,"03  AURORA SUITE")
     local lounge=model(root.Upgrades,"Lounge") shell(lounge,0,80,24,20,C.purple,"STARGAZER LOUNGE")
@@ -115,6 +128,19 @@ function E.Build(root,G)
     roof(root.Upgrades.Room3,-35,80,{24,6,22},C.coral)
     roof(lounge,0,80,{28,13,24},C.purple)
     roof(observatory,35,80,{25,14,24},C.dark)
+    -- Aurora is an A-frame cabin, while the lounge is an open observatory pavilion.
+    local aurora=root.Upgrades.Room3 aurora.CurvedRoof:Destroy()
+    for _,side in {-1,1} do
+        local wing=Instance.new('WedgePart') wing.Name='AuroraRoof' wing.Size=Vector3.new(22,7,12)
+        wing.CFrame=CFrame.new(-35+side*6,19,80)*CFrame.Angles(0,math.rad(side*90),0)
+        wing.Anchored=true wing.CanTouch=false wing.Color=C.coral wing.Material=Enum.Material.SmoothPlastic wing:SetAttribute('BuildStage',2) wing.Parent=aurora
+    end
+    aurora.BuildingName.Position+=Vector3.new(0,4,0)
+    for _,v in lounge:GetChildren() do
+        if v.Name=='FrontWall' or v.Name=='WindowSill' or v.Name=='Glass' or v.Name=='Skylight' then v:Destroy() end
+    end
+    local rim=G.Part(observatory,'ObservatoryRing',Vector3.new(.6,25,23),Vector3.new(35,17,80),C.teal,nil,Enum.PartType.Cylinder)
+    rim.Orientation=Vector3.new(0,0,90) rim:SetAttribute('BuildStage',2)
     observatory.Dome:Destroy()
     local barrel=block(observatory,'SkyTelescope',{2.8,2.8,12},{35,23,79},C.teal) barrel.Shape=Enum.PartType.Cylinder barrel.Size=Vector3.new(12,3,3) barrel.Orientation=Vector3.new(0,0,35) barrel:SetAttribute('BuildStage',3)
     for _,v in snack:GetChildren() do if v.Name=='FrontWall' or v.Name=='RoofCap' then v:Destroy() end end

@@ -1,4 +1,7 @@
-local theme=script.Parent.SimulatorTheme:Clone() theme.Parent=game.ReplicatedStorage
+for _,name in {'SimulatorTheme','PetVisuals'} do
+    local old=game.ReplicatedStorage:FindFirstChild(name) if old then old:Destroy() end
+    local clone=script.Parent[name]:Clone() clone.Parent=game.ReplicatedStorage
+end
 local display=game:GetService("ReplicatedStorage"):FindFirstChild("ResortDisplayConfig")
 if not display then
     display=script.Parent.Config:Clone()

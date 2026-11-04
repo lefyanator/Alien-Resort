@@ -1,10 +1,21 @@
-# Shared handoff — Alien Resort 0.7.0
+# Shared handoff — Alien Resort 0.8.0
 
 Updated 4 November 2026 (Australia/Brisbane). Repository: https://github.com/lefyanator/Alien-Resort
 
+## Visual milestone 0.8
+
+Multiplayer/pet milestone preserved in GitHub commit `413e8d8bfb46bd2387a9d7f463abdd839fe63fa9`. This pass replaces the HUD and theme and adds shared PetVisuals. A `Before_Visual_0_8` script backup remains inside ServerStorage.
+
+- Clear token wallet with comma formatting, animated totals, CHA-CHING gain banner, flying coin arcs, wallet pulse, and FX Quiet.
+- A single modal with Pets/Build/Shop tabs, loading/pending/owned/equipped/affordability states, real 3D portraits, 44-pixel minimum touch targets, keyboard shortcuts, and core/device safe insets.
+- Pip, Juno, Sprout, and Ember have distinct procedural silhouettes, faces, accessories, biographies, equipment greetings, name labels, and idle/blink/gait animations. Jelly floats; Slime bounces. Visuals are shared by menu portraits, pets, and guests.
+- UI screenshots reviewed on desktop and iPhone 17 Pro landscape and portrait. Compact landscape cards were corrected so the first row's purchase buttons fit. Studio returned to default viewport. No runtime errors in final console output.
+- In live Studio, P/B/M opened the matching menu and a token gain produced the CHA-CHING effect. The final engine suite passed 69 checks, including per-character appearance features, part-count budget, and scaled-animation pivot stability.
+- See UI_UX_SPEC.md for concrete design instructions. Tablet, hardware touch/controller behavior, and extended accessibility QA still need testing.
+
 ## Current milestone
 
-The user's existing open Studio project was updated directly. The canonical place is `Alien Resort Tycoon.rbxl`; no separate multiplayer place is required. All 12 active source scripts are synchronized with the saved binary and the open Studio Edit scripts. The source/binary verification script and SHA-256 manifest make this reviewable.
+The user's existing open Studio project was updated directly. The canonical place is `Alien Resort Tycoon.rbxl`; no separate multiplayer place is required. All 13 active source scripts are synchronized with the saved binary and the open Studio Edit scripts. The source/binary verification script and SHA-256 manifest make this reviewable.
 
 Previous GitHub baseline: `ccdab7081812e6dc86e20fc276557ed768ac76dd`. The previous script folder and HUD remain in `ServerStorage/Before_Multiplayer_2026_11_04` inside the game file. The old scene, other code archives, and other exported root instances were preserved. The source ZIP did not contain a multiplayer implementation; `Orbit-Oasis-Multiplayer.zip` was unavailable. This milestone implements separate plots from the supplied source.
 
@@ -27,18 +38,18 @@ Previous GitHub baseline: `ccdab7081812e6dc86e20fc276557ed768ac76dd`. The previo
 
 ## Validation completed
 
-- All 12 scripts compiled with Luau 0.745.
-- 53 isolated checks ran in the Roblox engine: all four plot origins/assignments, waiting/reuse, cross-owner rejection, stages/visual isolation, pet pricing/duplicates/equipment/rotation, legacy profile migration and invalid data, reset generation, and prompt event order/replay checks.
+- All 13 scripts compiled with Luau 0.745.
+- 69 isolated checks ran in the Roblox engine: all four plot origins/assignments, waiting/reuse, cross-owner rejection, stages/visual isolation, pet pricing/duplicates/equipment/rotation, legacy profile migration and invalid data, reset generation, and prompt event order/replay checks.
 - Live Studio play: four generated islands, HUD and Pets menu initialized, real keyboard claim succeeded, guest checked in and paid 10 tokens, unused plot had no guests, and a real client BuyPet remote bought/equipped Jelly with a 120-token debit (1000 → 880). Temporary test money was confined to the Studio session.
-- Scene exported through Roblox SerializationService; canonical place reassembled and round-tripped with Lune. All 12 active embedded script sources matched `src/`. Studio terrain cell count was zero; Lune warned about an unsupported empty Terrain metadata field while reading the old baseline.
+- Scene exported through Roblox SerializationService; canonical place reassembled and round-tripped with Lune. All 13 active embedded script sources matched `src/`. Studio terrain cell count was zero; Lune warned about an unsupported empty Terrain metadata field while reading the old baseline.
 - Computer Use could not access Studio's save dialog. The matching local place was saved through native scene export plus local serialization; the Studio session was updated, but no Roblox cloud publication was performed.
 
 ## Still needs testing / remaining gaps
 
 - Four actual simultaneous clients, fifth-client queue, leave/rejoin during guest stays and cleaning, and heavy remote-spam tests. Isolated fake-player checks do not prove real multiplayer replication or performance.
 - Published live DataStore acquisition, lease expiry, API outages, reconnects, and shutdown budgets. Existing cloud progress was not read or changed in Studio.
-- Phone/tablet layout, controller interaction, and low-end performance. Layout uses scrolling menus but full device QA remains pending.
-- Guests and cleaner use fixed tween routes, not dynamic obstacle avoidance. Alien species are procedural color/material/body-shape variants, not imported art or custom animations.
+- Tablet, hardware touch/controller behavior, and low-end performance. Phone portrait/landscape were checked in Studio simulation, not on physical hardware.
+- Guests and cleaner use fixed tween routes, not dynamic obstacle avoidance. Alien species now have distinct procedural character models and part-based idle animations; there are no imported mesh assets or skeletal animation clips.
 - No shared lobby/visitor travel, trading, rebirth, randomized eggs, Robux products, or monetization. Four plots are generated; set the experience player limit to four for launch unless waiting players are desired.
 
 ## Responsibilities for two collaborators and their ChatGPTs

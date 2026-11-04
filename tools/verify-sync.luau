@@ -14,5 +14,5 @@ for _,name in fs.readDir('src') do
         count+=1
     end
 end
-assert(count==12,'Expected all 12 active scripts')
+assert(count==13,'Expected all 13 active scripts')
 print('PASS: all '..count..' active place scripts match src/.')

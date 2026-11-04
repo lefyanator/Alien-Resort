@@ -1,15 +1,15 @@
 -- Prototype defaults. Unpublished places work without network configuration.
 return {
-    Version = "0.7.0",
+    Version = "0.8.0",
     PlotCount = 4,
     PlotSpacing = 220,
     CleanReward = 3,
     CleanSeconds = 3,
     PetSpecies = {
-        {Id="Pebble",Name="Pebble",Price=0,Bonus=0,Color=Color3.fromRGB(56,214,193),Description="Your free starter companion"},
-        {Id="Jelly",Name="Jelly",Price=120,Bonus=2,Color=Color3.fromRGB(190,130,255),Description="Unlock Jelly guests; +2 tokens per Jelly payout"},
-        {Id="Slime",Name="Slime",Price=300,Bonus=5,Color=Color3.fromRGB(150,230,85),Description="Unlock Slime guests; +5 tokens per Slime payout"},
-        {Id="Lava",Name="Lava",Price=700,Bonus=10,Color=Color3.fromRGB(255,135,65),Description="Unlock Lava guests; +10 tokens per Lava payout"},
+        {Id="Pebble",Name="Pebble",CharacterName="Pip",Greeting="Adventure? I packed extra snacks!",Role="THE TINY EXPLORER",Personality="Curious, loyal, always packing snacks.",Price=0,Bonus=0,Color=Color3.fromRGB(56,214,193),Description="Your free starter companion"},
+        {Id="Jelly",Name="Jelly",CharacterName="Juno",Greeting="Every star has a wish. What is yours?",Role="THE MOON DREAMER",Personality="A gentle floater who collects wishes.",Price=120,Bonus=2,Color=Color3.fromRGB(190,130,255),Description="Unlock Jelly guests; +2 tokens per Jelly payout"},
+        {Id="Slime",Name="Slime",CharacterName="Sprout",Greeting="I found a puddle. Best day ever!",Role="THE GARDEN GREMLIN",Personality="Bouncy, cheeky, and proudly muddy.",Price=300,Bonus=5,Color=Color3.fromRGB(150,230,85),Description="Unlock Slime guests; +5 tokens per Slime payout"},
+        {Id="Lava",Name="Lava",CharacterName="Ember",Greeting="Small paws. Big courage. Let us go!",Role="THE BRAVE LITTLE SPARK",Personality="A warm-hearted cub with a fiery tail.",Price=700,Bonus=10,Color=Color3.fromRGB(255,135,65),Description="Unlock Lava guests; +10 tokens per Lava payout"},
     },
     IncomeInterval = 10,
     BasePayout = 10,

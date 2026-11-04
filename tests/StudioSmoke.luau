@@ -7,6 +7,7 @@ return function(requireModule)
     local Progress=requireModule('ProgressStore')
     local Config=requireModule('Config')
     local Interaction=requireModule('Interaction')
+    local Visuals=requireModule('PetVisuals')
     local scratch=Instance.new('Folder')
     local characters={}
     local plots={}
@@ -46,6 +47,16 @@ return function(requireModule)
             check(plots[i].Claim(players[i])==true,'owner can claim')
         end
         local a,b=players[1],players[2]
+        for _,spec in Config.PetSpecies do
+            local character=Visuals.Create(scratch,Vector3.zero,spec.Id)
+            check(character.PrimaryPart~=nil and character:GetAttribute('SpeciesId')==spec.Id,'character identity')
+            local feature=({Pebble='ExplorerPack',Jelly='Ribbon',Slime='SproutStem',Lava='TailFlame'})[spec.Id]
+            check(character:FindFirstChild(feature)~=nil,'species has unique silhouette/accessory')
+            check(#character:GetChildren()<=36,'character instance budget')
+            character:ScaleTo(.6) Visuals.Animate(character,4.5,true)
+            check(character.PrimaryPart.Position.Magnitude<.01,'animation preserves gameplay pivot')
+            character:Destroy()
+        end
         local function signal()
             local s={Listeners={}}
             function s:Connect(fn) table.insert(self.Listeners,fn) end

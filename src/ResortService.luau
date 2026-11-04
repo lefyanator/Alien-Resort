@@ -61,7 +61,10 @@ function Service.Start()
         elseif action=='BuyPet' then ok,why=Pets.Buy(plot,p,id)
         elseif action=='EquipPet' then ok,why=Pets.Equip(plot,p,id)
         else return end
-        if ok then plot.Refresh() notice(p,action=='Shop' and 'Supplies ready!' or 'Pet ready!')
+        if ok then
+            plot.Refresh()
+            local spec=Pets.Find(id)
+            notice(p,action=='Shop' and 'Supplies ready!' or (spec.CharacterName..': '..spec.Greeting))
         else notice(p,({funds='Not enough tokens!',owned='Already owned. Equip it from Pets.',active='This boost is still active!',locked='Buy this pet before equipping it.'})[why] or 'Unable to buy this item.') end
     end)
     Progress.Start()
@@ -98,6 +101,6 @@ function Service.Start()
     task.spawn(function()
         while container.Parent do task.wait(.1) for _,plot in Service.Plots do Pets.Step(plot) end end
     end)
-    print('Alien Resort 0.7: four isolated plots and purchasable alien pets ready.')
+    print('Alien Resort 0.8: personal plots, cosmic characters, and responsive HUD ready.')
 end
 return Service

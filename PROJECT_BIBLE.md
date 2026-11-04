@@ -1,6 +1,6 @@
 # Alien Resort project bible
 
-Cute space resort tycoon, branded **Orbit & Oasis**. Four personal floating islands, token income from alien guests, staged construction, cleaning, amenities, and permanent alien pets.
+Cute space resort tycoon, branded **Orbit & Oasis**. Four personal floating islands, token income from alien guests, staged construction, cleaning, amenities, and permanent alien pets. The current visual pass is 0.8.0; follow UI_UX_SPEC.md for presentation and character rules.
 
 Read `PROJECT_STATUS.md` for the current implementation, verification, and remaining work. `README.md` explains how to play and test. The old single-resort handoff is superseded.
 

@@ -1,5 +1,5 @@
 local Config=require(script.Parent.Config)
-local Geometry=require(script.Parent.Geometry)
+local Visuals=require(script.Parent.PetVisuals)
 local Pets={}
 function Pets.Find(id)
     for _,entry in Config.PetSpecies do if entry.Id==id then return entry end end
@@ -9,19 +9,8 @@ function Pets.Owned(player,id)
 end
 function Pets.Create(parent,position,id)
     local spec=Pets.Find(id) or Config.PetSpecies[1]
-    local model=Geometry.Guest(parent,position)
-    model.Name=spec.Id..'Guest' model:SetAttribute('SpeciesId',spec.Id)
-    for _,p in model:GetDescendants() do
-        if p:IsA('BasePart') then
-            p.CanCollide=false p.CanTouch=false p.CanQuery=false
-            if p.Name=='Body' or p.Name=='Arm' then
-                p.Color=spec.Color
-                if spec.Id=='Jelly' then p.Material=Enum.Material.Glass p.Transparency=.25
-                elseif spec.Id=='Lava' then p.Material=Enum.Material.Neon end
-            end
-            if spec.Id=='Slime' and p.Name=='Body' then p.Size=Vector3.new(3.7,2.7,3.2) end
-        end
-    end
+    local model=Visuals.Create(parent,position,spec.Id)
+    game:GetService("CollectionService"):AddTag(model,"ResortAlien")
     return model
 end
 function Pets.Refresh(plot)
@@ -31,6 +20,10 @@ function Pets.Refresh(plot)
     if not Pets.Find(id) or not Pets.Owned(p,id) then id='Pebble' p:SetAttribute('EquippedPet',id) end
     local model=Pets.Create(plot.Root.Guests,plot.Origin+Vector3.new(4,8,-42),id)
     model.Name='PetCompanion' model:SetAttribute('OwnerUserId',p.UserId) model:ScaleTo(.6)
+    local spec=Pets.Find(id)
+    model:SetAttribute('CharacterName',spec.CharacterName)
+    local tag=Instance.new('BillboardGui') tag.Name='CharacterName' tag.Adornee=model.PrimaryPart tag.Size=UDim2.fromOffset(130,24) tag.StudsOffsetWorldSpace=Vector3.new(0,2.4,0) tag.MaxDistance=35 tag.Parent=model
+    local text=Instance.new('TextLabel') text.BackgroundTransparency=1 text.Size=UDim2.fromScale(1,1) text.Text=spec.CharacterName..' / '..spec.Name text.Font=Enum.Font.GothamBold text.TextSize=11 text.TextColor3=Color3.new(1,1,1) text.TextStrokeTransparency=.35 text.Parent=tag
     plot.Companion=model
 end
 function Pets.Buy(plot,p,id)
@@ -59,7 +52,9 @@ function Pets.Step(plot)
     local hrp=p and p.Character and p.Character:FindFirstChild('HumanoidRootPart')
     if model and model.Parent and hrp then
         -- Server follows owner; companions never collide or grant arbitrary rewards.
-        local target=hrp.CFrame*CFrame.new(3,-1.5,3)
+        local id=model:GetAttribute('SpeciesId') local now=os.clock()
+        local bob=id=='Jelly' and (.4+math.sin(now*2)*.3) or id=='Slime' and math.abs(math.sin(now*3))*.18 or 0
+        local target=hrp.CFrame*CFrame.new(3,-1.5+bob,3)
         model:PivotTo(model:GetPivot():Lerp(target,.28))
     end
 end

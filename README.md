@@ -1,6 +1,6 @@
 # Alien Resort — Orbit & Oasis
 
-**Current version: 0.7.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
+**Current version: 0.8.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
 
 ## Play
 
@@ -30,4 +30,10 @@ Do not use the earlier `Alien Resort Multiplayer.rbxlx` preview. Keep one curren
 
 Run `lune run tools/verify-sync.luau` from the repository root to compare every embedded active script to `src/`. Lune is only a development tool; the Roblox game does not depend on it. `tests/StudioSmoke.luau` runs isolated engine checks with a supplied module loader and test players; it is not a replacement for actual multi-client testing.
 
-Read `PROJECT_STATUS.md` before changing shared code.
+## Presentation and controls
+
+The token wallet counts smoothly and celebrates earnings with a gold CHA-CHING banner, flying tokens, and a brief wallet pulse. FX Quiet reduces motion. Pet cards use actual animated 3D portraits of Pip, Juno, Sprout, and Ember; the same models appear in the world. Each has a personality, greeting, and different shape/accessories. Menus reflow for desktop, phone portrait, and short landscape screens.
+
+Keyboard: **P** Pets, **B** Build, **M** Shop; **E** operates world prompts. Controller Y opens Pets and B closes menus. Visible buttons support touch and pointer input. Pet and shop purchases remain server validated.
+
+Read `UI_UX_SPEC.md` for the art direction, color tokens, animation timings, and implementation rules. Read `PROJECT_STATUS.md` before changing shared code.

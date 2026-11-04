@@ -1,0 +1,19 @@
+Send your friend this folder's zip plus nothing else unless they need history.
+
+Inside Alien-Resort-Handoff.zip:
+  PROJECT_BIBLE.md     — paste this into their ChatGPT first
+  README.md            — how to Play in Studio
+  Alien Resort Tycoon.rbxl
+  src/                 — all current Luau
+
+Do not send:
+  backups/             — old places
+  archive/             — spent Python patchers and old HUD
+  Obsidian zip attachments unless they want the design history
+  Roblox passwords, cookies, or Studio login
+
+How they work with you:
+  1. You add them as a Team Create collaborator on the experience you own.
+  2. They open the place in Roblox Studio (their own account).
+  3. Their ChatGPT reads PROJECT_BIBLE.md and src/.
+  Two ChatGPT apps cannot talk to each other directly.

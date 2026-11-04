@@ -1,3 +1,7 @@
+# Blender art first pass — 4 November 2026
+
+The art/ folder contains an editable Blender scene, four static pet FBX exports and a reproducible build script. These are original concept meshes for Pip, Juno, Sprout and Ember. They are NOT imported into Roblox yet and have no rigs or animation clips. See art/README.md for the integration contract and remaining work. The canonical playable game is still the verified 0.9.0 milestone below; no game scripts or gameplay were changed by this art pass.
+
 # Adventure milestone 0.9.0 — 4 November 2026
 
 The same open Studio project now includes Cosmic Commons, shuttles, a solo/cooperative activity loop, pet abilities/jobs, bonding, evolution, and a Starcore Capture prototype. Read GAMEPLAY_STATUS.md for exact controls, rewards, limitations and validation. Previous visual milestone: e39ce19dff4e5f1a24aeeca0e108a56f3101e0fd. Before_Adventure_0_9 preserves previous scripts in ServerStorage.

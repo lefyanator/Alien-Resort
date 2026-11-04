@@ -14,7 +14,7 @@ function X.SetStage(model,stage)
     for _,p in model:GetDescendants() do
         if p:IsA('BasePart') then
             if p:GetAttribute('OriginalTransparency')==nil then p:SetAttribute('OriginalTransparency',p.Transparency) p:SetAttribute('OriginalCollision',p.CanCollide) end
-            local level=foundation[p.Name] and 1 or structure[p.Name] and 2 or 3
+            local level=p:GetAttribute('BuildStage') or (foundation[p.Name] and 1 or structure[p.Name] and 2 or 3)
             p:SetAttribute('BuildStage',level)
             local visible=stage>=level
             p.Transparency=visible and p:GetAttribute('OriginalTransparency') or 1
@@ -43,6 +43,7 @@ function X.Robot(character)
             if limb~=head then
                 local color=string.find(limb.Name,'Torso') and G.Colors.teal or G.Colors.cream
                 local shell=part(suit,'Robot'..limb.Name,limb.Size*1.03,limb.CFrame,color)
+                shell.Shape=Enum.PartType.Ball
                 shell.Anchored=false shell.Massless=true
                 local joint=Instance.new('WeldConstraint') joint.Part0=limb joint.Part1=shell joint.Parent=shell
             end
@@ -52,8 +53,8 @@ function X.Robot(character)
         local p=part(suit,name,size,head.CFrame*offset,color) p.Anchored=false p.Massless=true
         local w=Instance.new('WeldConstraint') w.Part0=head w.Part1=p w.Parent=p return p
     end
-    weld('Helmet',Vector3.new(2.15,1.55,1.55),CFrame.new(),G.Colors.cream)
-    weld('FaceScreen',Vector3.new(1.8,1,.12),CFrame.new(0,0,-.83),G.Colors.dark)
+    weld('Helmet',Vector3.new(2.15,1.85,1.8),CFrame.new(),G.Colors.cream).Shape=Enum.PartType.Ball
+    weld('FaceScreen',Vector3.new(1.85,1.15,.35),CFrame.new(0,0,-.77),G.Colors.dark).Shape=Enum.PartType.Ball
     for _,x in {-.45,.45} do local e=weld('Eye',Vector3.new(.3,.32,.1),CFrame.new(x,.12,-.92),G.Colors.teal) e.Material=Enum.Material.Neon end
     weld('Smile',Vector3.new(.6,.1,.1),CFrame.new(0,-.23,-.92),G.Colors.teal)
     weld('Antenna',Vector3.new(.15,.65,.15),CFrame.new(0,1.05,0),G.Colors.dark)
@@ -84,7 +85,7 @@ function X.New(S,root,refresh)
         dirty(room,false)
         local sparkle=Instance.new('Sparkles') sparkle.SparkleColor=G.Colors.teal sparkle.Parent=room.Floor
         game:GetService('Debris'):AddItem(sparkle,2)
-        if manual then p.leaderstats.Tokens.Value+=Config.CleanReward end
+        if manual then p.leaderstats.Tokens.Value+=Config.CleanReward p:SetAttribute('RoomsCleaned',(p:GetAttribute('RoomsCleaned') or 0)+1) end
         refresh() return true
     end
     for _,room in rooms do
@@ -107,20 +108,12 @@ function X.New(S,root,refresh)
         else
             p:SetAttribute('Owns'..id,true)
             if id=='Garden' then
-                for _,x in {-43,43} do
-                    localPart(extras,'FlowerBox',Vector3.new(8,1.2,3),CFrame.new(x,6,-17),G.Colors.cream)
-                    for i=1,5 do
-                        local pos=Vector3.new(x-4+i*1.3,8,-17)
-                        localPart(extras,'FlowerStem',Vector3.new(.15,2,.15),CFrame.new(pos-Vector3.new(0,1,0)),Color3.fromRGB(59,143,83))
-                        for j=1,5 do local a=j*math.pi*2/5 local petal=localPart(extras,'Petal',Vector3.new(.9,.9,.3),CFrame.new(pos+Vector3.new(math.cos(a)*.45,math.sin(a)*.45,0)),G.Colors.coral) petal.Shape=Enum.PartType.Ball end
-                        local centre=localPart(extras,'FlowerCentre',Vector3.new(.5,.5,.4),CFrame.new(pos-Vector3.new(0,0,.15)),Color3.fromRGB(255,220,70)) centre.Shape=Enum.PartType.Ball
-                    end
-                end
+                for _,x in {-43,43} do G.Prop(extras,'Flowers',origin+Vector3.new(x,5.7,-17),G.Colors.coral) end
             elseif id=='Tables' then
                 for _,x in {37,45} do
                     localPart(extras,'TableStem',Vector3.new(.5,3,.5),CFrame.new(x,7,-39),G.Colors.dark)
                     local top=localPart(extras,'TableTop',Vector3.new(.5,5,5),CFrame.new(x,8.5,-39)*CFrame.Angles(0,0,math.pi/2),G.Colors.cream) top.Shape=Enum.PartType.Cylinder
-                    for _,dz in {-3.5,3.5} do localPart(extras,'Seat',Vector3.new(2,1,2),CFrame.new(x,7,-39+dz),G.Colors.coral) localPart(extras,'SeatBack',Vector3.new(2,2,.4),CFrame.new(x,8,-39+dz+(dz>0 and 1 or -1)),G.Colors.coral) end
+                    for _,dz in {-3.5,3.5} do local pos=origin+Vector3.new(x,5.7,-39+dz) local chair=G.Prop(extras,'Chair',pos,G.Colors.coral) chair:PivotTo(CFrame.new(pos)*CFrame.Angles(0,dz>0 and 0 or math.pi,0)) end
                 end
             end
         end

@@ -10,7 +10,8 @@ if not display then
 end
 local lighting=game:GetService("Lighting")
 lighting.ClockTime=14
-lighting.Brightness=3
+lighting.Brightness=2
+for _,effect in lighting:GetChildren() do if effect:IsA('BloomEffect') then effect.Intensity=.15 effect.Size=16 effect.Threshold=1.2 end end
 lighting.Ambient=Color3.fromRGB(165,170,200)
 lighting.OutdoorAmbient=Color3.fromRGB(170,175,210)
 require(script.Parent.ResortService).Start()

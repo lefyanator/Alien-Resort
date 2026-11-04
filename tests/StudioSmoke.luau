@@ -14,6 +14,14 @@ return function(requireModule)
     local plots={}
     local assertions=0
     local function check(value,message) assertions+=1 assert(value,message) end
+    check(not Rules.CompletedRequest(10,'Jelly',11,'Pebble'),'wrong completed pet cannot fulfill request')
+    check(not Rules.CompletedRequest(10,'Jelly',9,'Jelly'),'old course cannot fulfill new request')
+    check(Rules.CompletedRequest(10,'Jelly',11,'Jelly'),'matching completed course fulfills request')
+    local goal=CFrame.new(8,0,0) local slow=CFrame.identity local fast=CFrame.identity
+    for _=1,10 do slow=Visuals.Follow(slow,goal,.1) end
+    for _=1,60 do fast=Visuals.Follow(fast,goal,1/60) end
+    check((slow.Position-fast.Position).Magnitude<.001,'follow smoothing independent of frame rate')
+    check(Visuals.Follow(CFrame.identity,CFrame.new(100,0,0),1/60).Position.X==100,'follow snaps across teleports')
     local function player(id)
         local p={UserId=id,DisplayName='Test'..id,Parent=game:GetService('Players'),Attributes={ProfileReady=true,EquippedPet='Pebble'}}
         local stats={Tokens={Value=10000}}

@@ -90,6 +90,10 @@ function V.Create(parent,position,id)
     model:SetAttribute('SpeciesId',id) model.Parent=parent
     return model
 end
+function V.Follow(current,target,dt)
+    if (current.Position-target.Position).Magnitude>60 then return target end
+    return current:Lerp(target,1-math.exp(-12*dt))
+end
 function V.Animate(model,t,moving)
     if not model.Parent or not model.PrimaryPart then return end
     local pivot=model:GetPivot() local scale=model:GetScale()

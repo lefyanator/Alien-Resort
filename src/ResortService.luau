@@ -80,7 +80,7 @@ function Service.Start()
         tokens.Changed:Connect(function() local plot=Service.Assignments[p] if plot and plot.Owner==p then plot.Refresh() end end)
         local function spawn(character)
             local hrp=character:WaitForChild('HumanoidRootPart',10) local plot=Service.Assignments[p]
-            if hrp and p.Character==character and plot then character:PivotTo(CFrame.new(plot.Origin+Vector3.new(0,10,-44))) end
+            if hrp and p.Character==character and plot and not p:GetAttribute('ArenaTeam') then character:PivotTo(CFrame.new(plot.Origin+Vector3.new(0,10,-44))) end
         end
         p.CharacterAdded:Connect(spawn) p.CharacterAppearanceLoaded:Connect(Extras.Robot)
         if p.Character then task.spawn(spawn,p.Character) task.spawn(Extras.Robot,p.Character) end
@@ -102,8 +102,8 @@ function Service.Start()
     end)
     for _,p in Players:GetPlayers() do task.spawn(setup,p) end
     task.spawn(function()
-        while container.Parent do task.wait(.1) for _,plot in Service.Plots do Pets.Step(plot) end end
+        while container.Parent do task.wait(.5) for _,plot in Service.Plots do Pets.Step(plot) end end
     end)
-    print('Alien Resort 0.9.1: Cosmic Commons, pet abilities, training, rescue and Starcore Capture ready.')
+    print('Alien Resort 0.10.0: smooth companions, themed buildings and guided progression ready.')
 end
 return Service

@@ -46,13 +46,15 @@ end
 local scrim=T.Button(screen,'Scrim','',C.Ink,20) scrim.Size=UDim2.fromScale(1,1) scrim.BackgroundTransparency=.35 scrim.Visible=false scrim.Selectable=false
 local modal=T.Panel(screen,'Collection',C.Cream,30) modal.AnchorPoint=Vector2.new(.5,.5) modal.Position=UDim2.fromScale(.5,.5) modal.Visible=false T.Stroke(modal,C.White,2)
 local heading=label(modal,'Heading','MEET YOUR COSMIC CREW',23,C.Ink,20,16,700,30,31)
+heading.Font=Enum.Font.FredokaOne heading.TextColor3=C.White heading.TextStrokeColor3=C.Ink heading.TextStrokeTransparency=0
+local header=T.Panel(modal,'Header',C.Coral,30) header.Size=UDim2.new(1,0,0,54)
 local subtitle=label(modal,'Subtitle','Buy once. Keep forever. Explore together.',12,C.Muted,20,48,700,24,31)
 local close=place(T.Button(modal,'Close','X',C.White,35),0,14,44,44)
 local tabs={}
 for i,name in {'Pets','Build','Shop'} do tabs[name]=place(T.Button(modal,name..'Tab',string.upper(name),C.White,32),20+(i-1)*110,82,102,38) end
 local list=Instance.new('ScrollingFrame') list.Name='Cards' list.Position=UDim2.fromOffset(16,136) list.Size=UDim2.new(1,-32,1,-152) list.BackgroundTransparency=1 list.BorderSizePixel=0 list.ScrollBarThickness=5 list.ScrollBarImageColor3=C.Muted list.AutomaticCanvasSize=Enum.AutomaticSize.Y list.CanvasSize=UDim2.new() list.ZIndex=31 list.Parent=modal
 local grid=Instance.new('UIGridLayout') grid.CellPadding=UDim2.fromOffset(12,12) grid.SortOrder=Enum.SortOrder.LayoutOrder grid.Parent=list
-local bottomPadding=Instance.new('UIPadding') bottomPadding.PaddingBottom=UDim.new(0,8) bottomPadding.Parent=list
+local bottomPadding=Instance.new('UIPadding') bottomPadding.PaddingBottom=UDim.new(0,8) bottomPadding.PaddingTop=UDim.new(0,4) bottomPadding.PaddingLeft=UDim.new(0,4) bottomPadding.Parent=list
 local currentTab='Pets'
 local cards={} local portraits={} local pending=nil
 local world=nil local target=nil local highlight=nil local destination=nil local beam=nil local marker=nil
@@ -61,7 +63,10 @@ display.Changed:Connect(function(value) tokenText.Text=T.Format(value) end)
 local numberTween=nil
 local coins={} local activeAliens={} local roomLabels={}
 local preview=nil
-local refresh,layout,open
+local refresh,layout,open,updateWayfinder
+local drawer,selectedBuild,selectedAt,activityStatus
+local boosts=label(screen,'ActiveBoosts','',12,C.White,12,0,280,40,6)
+boosts.TextStrokeColor3=C.Ink boosts.TextStrokeTransparency=.1
 local function clearCards()
     for _,card in cards do card.Frame:Destroy() end
     cards={} portraits={}
@@ -105,7 +110,7 @@ end
 local function makeShop()
     for i,item in config.Shop do
         local card=cardBase(item.Id,i)
-        local badge=T.Coin(card,30,33) badge.Position=UDim2.fromOffset(12,12)
+        local badge=label(card,'Icon',({Cleaner='⚙',Turbo='ϟ',Foam='✦',Beacon='◉',Garden='❀',Tables='☕'})[item.Id],28,C.Teal,12,8,34,36,33) badge.TextXAlignment=Enum.TextXAlignment.Center
         local name=label(card,'Name',item.Name,16,C.Ink,52,10,180,34,33) name.Size=UDim2.new(1,-64,0,34)
         local detail=label(card,'Description',item.Description,12,C.Muted,12,52,220,48,33) detail.Size=UDim2.new(1,-24,0,48)
         local typeText=item.Duration and ('BOOST / '..item.Duration..' SECONDS') or 'PERMANENT UPGRADE'
@@ -130,7 +135,13 @@ local function makeBuild()
         local segments={}
         for j=1,3 do local segment=T.Panel(card,'Stage'..j,C.Soft,33) segment.Position=UDim2.new((j-1)/3,12-(j-1)*8,0,104) segment.Size=UDim2.new(1/3,-16,0,5) segments[j]=segment end
         local button=T.Button(card,'Action','',C.Teal,34) button.Position=UDim2.new(0,10,1,-54) button.Size=UDim2.new(1,-20,0,44)
-        button.Activated:Connect(function() open(nil) notify('Use the glowing build pad on your own island.') end)
+        button.Activated:Connect(function()
+            local stage=p:GetAttribute('Stage_'..u.Id) or 0
+            if not p:GetAttribute('OwnsResort') then notify('Claim your island first.',true) return end
+            if stage==3 then notify('This building is complete.') return end
+            if i>1 and (p:GetAttribute('Stage_'..config.Upgrades[i-1].Id) or 0)<3 then notify('Finish '..config.Upgrades[i-1].Name..' first.',true) return end
+            selectedBuild=u.Id selectedAt=os.clock() open(nil) updateWayfinder() notify('Follow the marker to '..u.Name..'.')
+        end)
         table.insert(cards,{Frame=card,Button=button,Spec=u,Status=status,Segments=segments,Index=i})
     end
 end
@@ -153,6 +164,7 @@ layout=function()
     end
     guideTitle.Size=UDim2.new(1,-28,0,25) guideDetail.Size=UDim2.new(1,-28,0,32)
     place(save,12,h-20,w-24,16)
+    place(boosts,12,h-68,math.min(320,w-24),44)
     local mw=math.min(900,w-24) local mh=math.min(590,h-24)
     modal.Size=UDim2.fromOffset(mw,mh) close.Position=UDim2.new(1,-60,0,14)
     heading.Size=UDim2.new(1,-90,0,30) heading.TextSize=mw<500 and 18 or 23
@@ -188,6 +200,7 @@ layout=function()
     toast.Size=UDim2.fromOffset(math.min(440,w-24),54) toast.Position=UDim2.new(.5,0,0,compact and math.min(252,h-72) or 118) toastText.Size=UDim2.new(1,-28,1,-14)
 end
 open=function(name)
+    if drawer then drawer.Visible=false end
     if not name then modal.Visible=false scrim.Visible=false return end
     currentTab=name clearCards()
     if name=='Pets' then makePets() elseif name=='Shop' then makeShop() else makeBuild() end
@@ -218,21 +231,23 @@ local function guideTarget(id)
     elseif id=='StarterRoom' then return world.StarterRoom.Floor,world.StarterRoom,'GUEST INCOME'
     elseif id and world.BuildPads:FindFirstChild(id) then return world.BuildPads[id],world.BuildPads[id],'BUILD NEXT STAGE' end
 end
-local function updateWayfinder()
+updateWayfinder=function()
     if not world or not marker then return end
-    local part,object,caption=guideTarget(p:GetAttribute('GuideTarget')) target=part
+    if selectedBuild and ((p:GetAttribute('Stage_'..selectedBuild) or 0)==3 or os.clock()-selectedAt>30) then selectedBuild=nil end
+    local id=selectedBuild or p:GetAttribute('GuideTarget')
+    local part,object,caption=guideTarget(id) target=part
     marker.Enabled=part~=nil marker.Adornee=part marker.Caption.Text='▼\n'..(caption or '')
     highlight.Enabled=object~=nil highlight.Adornee=object
     destination.Parent=part beam.Enabled=part~=nil
     if preview then preview:Destroy() preview=nil end
-    local id=p:GetAttribute('GuideTarget') local building=id and world.Upgrades:FindFirstChild(id)
+    local building=id and world.Upgrades:FindFirstChild(id)
     if not building or not p:GetAttribute('OwnsResort') then return end
     local stage=(p:GetAttribute('Stage_'..id) or 0)+1
     if stage>3 then return end
     preview=Instance.new('Model') preview.Name='LocalConstructionPreview' preview.Parent=workspace
     for _,part in building:GetDescendants() do
         if part:IsA('BasePart') and part:GetAttribute('BuildStage')==stage then
-            local ghost=Instance.new('Part') ghost.Size=part.Size ghost.CFrame=part.CFrame ghost.Anchored=true ghost.CanCollide=false ghost.CanTouch=false ghost.CanQuery=false ghost.Transparency=.86 ghost.Color=C.Teal ghost.Material=Enum.Material.ForceField ghost.Parent=preview
+            local ghost=part:Clone() ghost:ClearAllChildren() ghost.Anchored=true ghost.CanCollide=false ghost.CanTouch=false ghost.CanQuery=false ghost.CastShadow=false ghost.Transparency=.86 ghost.Color=C.Teal ghost.Material=Enum.Material.ForceField ghost.Parent=preview
         end
     end
 end
@@ -305,7 +320,7 @@ p.AttributeChanged:Connect(function(key)
     if key=='NoticeVersion' then pending=nil notify(p:GetAttribute('ResortNotice') or '') end
     refresh()
 end)
-local function alienAdded(model) if model:IsA('Model') then activeAliens[model]={Last=model:GetPivot().Position} end end
+local function alienAdded(model) if model:IsA('Model') then activeAliens[model]={Last=model:GetPivot().Position,Follow=model:GetPivot()} end end
 for _,model in Tags:GetTagged('ResortAlien') do alienAdded(model) end
 Tags:GetInstanceAddedSignal('ResortAlien'):Connect(alienAdded)
 Tags:GetInstanceRemovedSignal('ResortAlien'):Connect(function(model) activeAliens[model]=nil end)
@@ -334,6 +349,16 @@ end)
 local quarter=0 local sceneClock=0
 Run.RenderStepped:Connect(function(dt)
     local now=os.clock()
+    for model,state in activeAliens do
+        local owner=model:GetAttribute('OwnerUserId')
+        local player=owner and Players:GetPlayerByUserId(owner)
+        local hrp=player and player.Character and player.Character:FindFirstChild('HumanoidRootPart')
+        if hrp and model.Parent then
+            local goal=hrp.CFrame*CFrame.new(3,-1.5,3)
+            state.Follow=Visuals.Follow(state.Follow,goal,dt)
+            model:PivotTo(state.Follow)
+        end
+    end
     for i=#coins,1,-1 do
         local entry=coins[i] local t=math.clamp((now-entry.At)/.7,0,1)
         local point=(1-t)^2*entry.Start+2*(1-t)*t*entry.Control+t*t*entry.Finish
@@ -358,6 +383,11 @@ Run.RenderStepped:Connect(function(dt)
         end
     end
     quarter+=dt if quarter<.25 then return end quarter=0
+    if drawer and drawer.Visible and activityStatus then activityStatus() end
+    local active={}
+    for _,id in {'Turbo','Foam','Beacon'} do local left=math.ceil((p:GetAttribute(id..'Until') or 0)-workspace:GetServerTimeNow()) if left>0 then table.insert(active,string.upper(id)..' '..left..'s') end end
+    boosts.Text=table.concat(active,'  /  ')
+    if selectedBuild and os.clock()-selectedAt>30 then selectedBuild=nil updateWayfinder() end
     if modal.Visible and currentTab=='Shop' then refresh() end
     for _,entry in roomLabels do
         local room=entry.Room
@@ -383,26 +413,41 @@ end)
 -- Adventure drawer: travel, useful pet actions, jobs, and progression.
 local adventureRemote=Replicated:WaitForChild('ResortAdventure')
 local play=T.Button(screen,'Adventure','ADVENTURE',C.Teal,8)
-local drawer=T.Panel(screen,'AdventureDrawer',C.Cream,45) drawer.AnchorPoint=Vector2.new(.5,.5) drawer.Position=UDim2.fromScale(.5,.5) drawer.Visible=false T.Stroke(drawer)
+drawer=T.Panel(screen,'AdventureDrawer',C.Cream,45) drawer.AnchorPoint=Vector2.new(.5,.5) drawer.Position=UDim2.fromScale(.5,.5) drawer.Visible=false T.Stroke(drawer)
 local title=label(drawer,'Title','BUILD. BOND. ADVENTURE.',17,C.Ink,14,12,400,25,46)
-local summary=label(drawer,'Progress','',12,C.Ink,14,44,400,55,46)
+local summary=label(drawer,'Progress','',13,C.Ink,14,44,400,112,46)
 local exit=T.Button(drawer,'Close','X',C.White,48) exit.Position=UDim2.new(1,-52,0,8) exit.Size=UDim2.fromOffset(44,44)
-local actions=Instance.new('ScrollingFrame') actions.Position=UDim2.fromOffset(12,108) actions.Size=UDim2.new(1,-24,1,-120) actions.AutomaticCanvasSize=Enum.AutomaticSize.Y actions.CanvasSize=UDim2.new() actions.BackgroundTransparency=1 actions.BorderSizePixel=0 actions.ScrollBarThickness=5 actions.ZIndex=46 actions.Parent=drawer
+local actions=Instance.new('ScrollingFrame') actions.Position=UDim2.fromOffset(12,164) actions.Size=UDim2.new(1,-24,1,-176) actions.AutomaticCanvasSize=Enum.AutomaticSize.Y actions.CanvasSize=UDim2.new() actions.BackgroundTransparency=1 actions.BorderSizePixel=0 actions.ScrollBarThickness=5 actions.ZIndex=46 actions.Parent=drawer
 local actionGrid=Instance.new('UIGridLayout') actionGrid.CellPadding=UDim2.fromOffset(8,8) actionGrid.Parent=actions
 local definitions={{'Commons','TO THE COMMONS'},{'Home','RETURN HOME'},{'Ability','USE PET ABILITY'},{'Evolve','EVOLVE AT LAB'},{'Request','ACCEPT GUEST REQUEST'},{'Deliver','DELIVER REQUEST'},{'Job','PIP: WORK / REST','Pebble'},{'Job','JUNO: WORK / REST','Jelly'},{'Job','SPROUT: WORK / REST','Slime'},{'Job','EMBER: WORK / REST','Lava'}}
-for i,entry in definitions do local button=T.Button(actions,'Action'..i,entry[2],i%2==0 and C.Soft or C.Teal,47) button.LayoutOrder=i button.TextSize=11 button.Activated:Connect(function() adventureRemote:FireServer(entry[1],entry[3]) if entry[1]=='Home' or entry[1]=='Commons' then drawer.Visible=false end end) end
+local actionButtons={} local lastAction=0
+for i,entry in definitions do
+    local button=T.Button(actions,'Action'..i,entry[2],i%2==0 and C.Soft or C.Teal,47) button.LayoutOrder=i button.TextSize=11 actionButtons[i]=button
+    button.Activated:Connect(function()
+        if not p:GetAttribute('OwnsResort') then notify('Claim your island first.',true) return end
+        if os.clock()-lastAction<.4 then return end lastAction=os.clock()
+        adventureRemote:FireServer(entry[1],entry[3]) if entry[1]=='Home' or entry[1]=='Commons' then open(nil) end
+    end)
+end
 local function activityLayout()
     local w,h=screen.AbsoluteSize.X,screen.AbsoluteSize.Y
-    play.Position=UDim2.fromOffset(w-112,64) play.Size=UDim2.fromOffset(100,44)
-    drawer.Size=UDim2.fromOffset(math.min(520,w-24),math.min(440,h-24)) title.Size=UDim2.new(1,-78,0,25) summary.Size=UDim2.new(1,-28,0,55)
+    play.Position=UDim2.fromOffset(w-100,64) play.Size=UDim2.fromOffset(88,44) play.TextSize=12
+    drawer.Size=UDim2.fromOffset(math.min(520,w-24),math.min(490,h-24)) title.Size=UDim2.new(1,-78,0,25) summary.Size=UDim2.new(1,-28,0,112)
     actionGrid.CellSize=UDim2.new(.5,-8,0,44)
 end
-local function activityStatus()
+activityStatus=function()
     local id=p:GetAttribute('EquippedPet') or 'Pebble'
-    summary.Text='Star Shards: '..(p:GetAttribute('StarShards') or 0)..' / '..config.Adventure.EvolutionShards..'   Bond: '..(p:GetAttribute('Bond_'..id) or 0)..' / '..config.Adventure.EvolutionBond..'\nJob: '..(p:GetAttribute('PetJob') or 'none')..(p:GetAttribute('ArenaTeam') and (' / Team '..p:GetAttribute('ArenaTeam')..' / '..(p:GetAttribute('ArenaSeconds') or 0)..'s') or '\nTraining, rescue and treasure all help you evolve.')
+    for i=7,10 do
+        local entry=definitions[i] local pet=entry[3]
+        local owned=pet=='Pebble' or p:GetAttribute('Pet_'..pet)
+        actionButtons[i].Text=not owned and ('ADOPT '..string.upper(pet)..' FIRST') or p:GetAttribute('PetJob')==pet and (string.upper(pet)..': REST') or entry[2]
+        actionButtons[i].Interactable=owned==true actionButtons[i].BackgroundColor3=owned and C.Teal or C.Soft
+    end
+    local cooldown=math.max(0,math.ceil((p:GetAttribute('AbilityUntil') or 0)-workspace:GetServerTimeNow()))
+    summary.Text='SHARDS '..(p:GetAttribute('StarShards') or 0)..'/'..config.Adventure.EvolutionShards..'    BOND '..(p:GetAttribute('Bond_'..id) or 0)..'/'..config.Adventure.EvolutionBond..'\nJob: '..(p:GetAttribute('PetJob') or 'none')..' / Power: '..(cooldown>0 and (cooldown..'s') or 'READY')..'\n'..(p:GetAttribute('ActivityProgress') or 'Build your resort, then explore the Commons.')..(p:GetAttribute('ArenaTeam') and ('\nTEAM '..p:GetAttribute('ArenaTeam')..' / '..(p:GetAttribute('ArenaSeconds') or 0)..'s') or '')
 end
-play.Activated:Connect(function() open(nil) drawer.Visible=not drawer.Visible activityStatus() end)
-exit.Activated:Connect(function() drawer.Visible=false end)
+play.Activated:Connect(function() local was=drawer.Visible open(nil) drawer.Visible=not was scrim.Visible=not was activityStatus() if not was then GuiService.SelectedObject=exit end end)
+exit.Activated:Connect(function() open(nil) end)
 for _,button in nav do button.Activated:Connect(function() drawer.Visible=false end) end
 p.AttributeChanged:Connect(activityStatus) screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(activityLayout)
 activityLayout() activityStatus()

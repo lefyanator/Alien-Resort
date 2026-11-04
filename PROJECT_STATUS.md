@@ -1,4 +1,8 @@
-# Latest: 0.9.1 — Blender integration and code review
+# Latest: 0.10.0 — smooth companions and polish
+
+Read POLISH_STATUS.md for implemented art/GUI/gameplay changes, 179 engine checks, desktop and layout evidence, and remaining release gates. Previous milestones below are historical.
+
+# Previous: 0.9.1 — Blender integration and code review
 
 Read CODE_REVIEW.md for current results and remaining work. The four templates are integrated and verified; the first-pass art notes below are historical.
 

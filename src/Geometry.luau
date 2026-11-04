@@ -2,11 +2,57 @@ local G = {}
 local C = {cream=Color3.fromRGB(245,237,216), teal=Color3.fromRGB(56,214,193), dark=Color3.fromRGB(25,42,66), purple=Color3.fromRGB(157,137,226), coral=Color3.fromRGB(255,151,124), rock=Color3.fromRGB(65,66,99)}
 G.Colors = C
 local function part(parent,name,size,pos,color,material,shape)
-    local p=Instance.new("Part") p.Name=name p.Size=size p.Position=pos p.Color=color
-    p.Material=material or Enum.Material.SmoothPlastic p.Anchored=true p.TopSurface=Enum.SurfaceType.Smooth p.BottomSurface=Enum.SurfaceType.Smooth
-    if shape then p.Shape=shape end p.Parent=parent return p
+    local templates=shape==Enum.PartType.Ball and game.ReplicatedStorage:FindFirstChild('PetTemplates')
+    local surface=templates and templates:FindFirstChild('Pebble') and templates.Pebble:FindFirstChild('Body')
+    local p=surface and surface:Clone() or Instance.new("Part") p:ClearAllChildren() p.Name=name p.Size=size p.CFrame=CFrame.new(pos) p.Color=color p.CastShadow=true
+    p.Material=material or Enum.Material.SmoothPlastic p.Anchored=true p.CanTouch=false p.TopSurface=Enum.SurfaceType.Smooth p.BottomSurface=Enum.SurfaceType.Smooth
+    if shape and p:IsA('Part') then p.Shape=shape end p.Parent=parent return p
 end
 G.Part=part
+-- Small reusable silhouettes; decorative parts never block players or raycasts.
+function G.Prop(parent,kind,pos,accent)
+    local m=Instance.new('Model') m.Name=kind m.Parent=parent accent=accent or C.teal
+    local function p(name,size,offset,color,shape)
+        local v=part(m,name,size,pos+offset,color,nil,shape) v.CanCollide=false v.CanQuery=false v:SetAttribute('BuildStage',3) return v
+    end
+    local function ball(name,size,offset,color) return p(name,size,offset,color,Enum.PartType.Ball) end
+    local function disc(name,r,h,offset,color)
+        local v=p(name,Vector3.new(h,r*2,r*2),offset,color,Enum.PartType.Cylinder) v.Orientation=Vector3.new(0,0,90) return v
+    end
+    if kind=='Palm' or kind=='Flowers' then
+        disc('Planter',2.1,1,Vector3.new(0,.5,0),C.cream) disc('Soil',1.8,.1,Vector3.new(0,1.05,0),C.dark)
+        if kind=='Palm' then
+            disc('Trunk',.35,5,Vector3.new(0,3.5,0),C.coral)
+            for i=1,5 do local a=i*math.pi*2/5 local leaf=ball('Leaf',Vector3.new(1.8,.65,5),Vector3.new(math.sin(a)*1.8,6,math.cos(a)*1.8),C.teal) leaf.Orientation=Vector3.new(12,i*72,0) end
+        else
+            for i=1,3 do
+                local x=(i-2)*1.1 p('Stem',Vector3.new(.15,2,.15),Vector3.new(x,2,0),C.teal)
+                for j=1,5 do local a=j*math.pi*2/5 ball('Petal',Vector3.new(.8,.8,.35),Vector3.new(x+math.cos(a)*.48,3+math.sin(a)*.48,0),accent) end
+                ball('Pollen',Vector3.new(.55,.55,.45),Vector3.new(x,3,-.15),C.cream)
+            end
+        end
+    elseif kind=='Luggage' then
+        ball('Case',Vector3.new(1.6,2.2,1),Vector3.new(0,1.3,0),accent)
+        for _,x in {-.55,.55} do ball('Wheel',Vector3.new(.4,.4,.4),Vector3.new(x,.25,0),C.dark) end
+        p('Handle',Vector3.new(.7,.2,.2),Vector3.new(0,2.6,0),C.dark)
+        p('Belt',Vector3.new(.18,1.9,1.03),Vector3.new(0,1.3,0),C.cream)
+    elseif kind=='Lamp' then
+        disc('Base',.85,.3,Vector3.new(0,.15,0),C.dark) disc('Stem',.15,3,Vector3.new(0,1.7,0),C.dark)
+        ball('Shade',Vector3.new(2,1.4,2),Vector3.new(0,3.4,0),accent)
+        ball('Bulb',Vector3.new(.8,.6,.8),Vector3.new(0,3,0),C.cream)
+    elseif kind=='Console' then
+        disc('Pedestal',1.4,1,Vector3.new(0,.5,0),C.dark)
+        local screen=p('Screen',Vector3.new(3,2,.35),Vector3.new(0,2,0),accent) screen.Orientation=Vector3.new(-15,0,0)
+        for i=1,3 do ball('Button',Vector3.new(.3,.3,.2),Vector3.new((i-2)*.7,1.4,-.35),C.cream) end
+    elseif kind=='Chair' then
+        disc('Base',.9,.2,Vector3.new(0,.1,0),C.dark)
+        disc('Leg',.18,1.8,Vector3.new(0,1,0),C.dark)
+        disc('Seat',1.3,.45,Vector3.new(0,2,0),accent)
+        p('Backrest',Vector3.new(2.5,2,.4),Vector3.new(0,3,1),accent)
+    end
+    m.WorldPivot=CFrame.new(pos)
+    return m
+end
 local function cylinder(parent,name,radius,height,pos,color,material)
     local p=part(parent,name,Vector3.new(height,radius*2,radius*2),pos,color,material,Enum.PartType.Cylinder)
     p.Orientation=Vector3.new(0,0,90) return p
@@ -22,11 +68,63 @@ local function folder(parent,name)
     local f=Instance.new("Model") f.Name=name f.Parent=parent return f
 end
 local function plant(parent,x,z)
-    cylinder(parent,"Planter",2,2,Vector3.new(x,6,z),C.cream)
-    for i=1,3 do
-        local p=part(parent,"AlienLeaf",Vector3.new(1.5,5+i,1.4),Vector3.new(x+(i-2)*1.1,9,z),i==2 and C.teal or C.purple,nil,Enum.PartType.Ball)
-        p.Orientation=Vector3.new(0,0,(i-2)*25) p.CanCollide=false
+    G.Prop(parent,'Palm',Vector3.new(x,5.7,z))
+end
+function G.DressCommons(root,origin)
+    local art=folder(root,'CommonsArt')
+    local function p(name,size,pos,color,shape)
+        local v=part(art,name,size,origin+pos,color,nil,shape) v.CanCollide=false v.CanQuery=false return v
     end
+    local function disc(name,r,h,pos,color)
+        local v=p(name,Vector3.new(h,r*2,r*2),pos,color,Enum.PartType.Cylinder) v.Orientation=Vector3.new(0,0,90) return v
+    end
+    root.CommonsDeck.Color=Color3.fromRGB(84,112,136)
+    p('CentralPromenade',Vector3.new(10,.12,162),Vector3.new(0,6,0),C.cream)
+    p('ActivityWalk',Vector3.new(205,.12,7),Vector3.new(0,6,33),C.cream)
+    for _,spec in {{-75,C.coral},{-25,C.purple},{25,C.teal},{75,C.coral}} do
+        disc('ActivityGarden',13,.18,Vector3.new(spec[1],5.95,20),C.dark)
+        local canopy=p('ActivityCanopy',Vector3.new(25,4,23),Vector3.new(spec[1],17,21),spec[2],Enum.PartType.Ball)
+        for _,dx in {-10,10} do p('CanopyPillar',Vector3.new(.8,10,.8),Vector3.new(spec[1]+dx,11,28),C.cream) end
+        G.Prop(art,'Palm',origin+Vector3.new(spec[1]+10,6,27),spec[2])
+    end
+    for i=1,3 do disc('BounceCoil',3+i*.5,.35,Vector3.new(-25,7+i*.65,20),C.purple) end
+    p('ScannerDish',Vector3.new(6,2,6),Vector3.new(-75,11,24),C.coral,Enum.PartType.Ball)
+    p('ScannerMast',Vector3.new(.6,4,.6),Vector3.new(-75,9,24),C.cream)
+    for i=1,5 do
+        local cp=root:FindFirstChild('Training '..i)
+        if cp then
+            local localPos=cp.Position-origin
+            for _,dx in {-4.5,4.5} do p('TrainingArch',Vector3.new(.7,6,.7),localPos+Vector3.new(dx,3,0),C.coral) end
+            p('ArchTop',Vector3.new(10,.7,.7),localPos+Vector3.new(0,6,0),C.teal)
+            p('CourseStripe',Vector3.new(8,.15,2),localPos+Vector3.new(0,.6,0),C.cream)
+        end
+    end
+    for _,v in root:GetChildren() do
+        if v.Name=='ArenaCover' then
+            v.Shape=Enum.PartType.Cylinder v.Size=Vector3.new(6,8,8) v.Orientation=Vector3.new(0,0,90) v.Color=C.purple
+            disc('CoverCap',4.2,.3,v.Position-origin+Vector3.new(0,3,0),C.teal)
+        elseif v.Name:find('Rescue system',1,true) then
+            G.Prop(art,'Console',v.Position+Vector3.new(0,1,0),C.coral)
+        elseif v.Name:find('Buried stardust',1,true) then
+            v.Transparency=0 v.Shape=Enum.PartType.Ball v.Color=C.purple
+            p('TreasureGem',Vector3.new(1.5,2.8,1.5),v.Position-origin+Vector3.new(0,1.5,0),C.teal,Enum.PartType.Ball)
+        end
+    end
+    for _,z in {-78,-8} do p('ArenaBoundary',Vector3.new(178,.2,.5),Vector3.new(0,6.5,z),C.teal) end
+    for _,x in {-77,77} do disc('GoalCrest',8,.15,Vector3.new(x,7.6,-43),x<0 and C.teal or C.coral) end
+    p('HalfwayLine',Vector3.new(.5,.2,72),Vector3.new(0,6.5,-43),C.cream)
+    for _,x in {49,81} do p('RepairBayPost',Vector3.new(1,14,1),Vector3.new(x,12,66),C.coral) end
+    p('RepairBayArch',Vector3.new(34,1,3),Vector3.new(65,19,66),C.coral)
+    p('RepairBayRoof',Vector3.new(36,3,26),Vector3.new(65,20,55),C.coral,Enum.PartType.Ball)
+    for _,x in {18,30} do p('LabPylon',Vector3.new(1,10,1),Vector3.new(x,11,82),C.purple) end
+    local lab=p('LabDome',Vector3.new(22,7,18),Vector3.new(24,16,81),C.purple,Enum.PartType.Ball)
+    disc('EvolutionRing',5,.4,Vector3.new(24,7,78),C.teal)
+    p('EvolutionCore',Vector3.new(2.5,3.5,2.5),Vector3.new(24,10,81),C.coral,Enum.PartType.Ball)
+    for _,pos in {Vector3.new(21,6,20),Vector3.new(29,6,20)} do G.Prop(art,'Flowers',origin+pos,C.coral) end
+    for _,pos in {Vector3.new(-100,6,73),Vector3.new(100,6,73)} do G.Prop(art,'Palm',origin+pos) end
+    local beacon=root:FindFirstChild('Ancient Beacon')
+    if beacon then beacon.Shape=Enum.PartType.Cylinder beacon.Size=Vector3.new(8,3,3) beacon.Orientation=Vector3.new(0,0,90) end
+    p('BeaconLens',Vector3.new(5,4,5),Vector3.new(75,15,20),C.coral,Enum.PartType.Ball)
 end
 function G.Room(parent,name,x,z,accent)
     local m=folder(parent,name)
@@ -118,8 +216,7 @@ function G.Decorate(root)
     end
     for i=1,4 do
         local x=-15-i*2
-        local p=part(d,"Luggage",Vector3.new(1.3,1.8,1),Vector3.new(x,6.6,30),i%2==0 and C.coral or C.purple)
-        part(d,"LuggageHandle",Vector3.new(.65,.3,.2),p.Position+Vector3.new(0,1,0),C.dark)
+        G.Prop(d,'Luggage',Vector3.new(x,5.6,30),i%2==0 and C.coral or C.purple)
     end
     for _,room in {root.StarterRoom,root.Upgrades.Room2} do
         local x=room.Floor.Position.X
@@ -136,7 +233,7 @@ function G.Decorate(root)
         plant(d,p[1],p[2])
         for i=1,4 do
             local a=i*math.pi/2
-            part(d,"Crystal",Vector3.new(1,2+i*.3,1),Vector3.new(p[1]+math.cos(a)*3,7,p[2]+math.sin(a)*3),i%2==0 and C.teal or C.purple,Enum.Material.Glass)
+            local crystal=part(d,"Crystal",Vector3.new(1,2+i*.3,1),Vector3.new(p[1]+math.cos(a)*3,7,p[2]+math.sin(a)*3),i%2==0 and C.teal or C.purple,Enum.Material.Glass) crystal.Shape=Enum.PartType.Ball crystal.Orientation=Vector3.new(15,0,25) crystal.CanCollide=false
         end
     end
     textOn(d,"ArrivalBoard",Vector3.new(-18,11,31),Vector3.new(12,5,.5),"SPACEPORT\nGUEST ARRIVALS",C.teal)

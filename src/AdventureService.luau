@@ -8,7 +8,7 @@ local Rules=require(script.Parent.CaptureRules)
 local A={}
 local C=Config.Adventure
 function A.Start(resorts)
-    local state={} local queue={} local match=nil local serial=0
+    local state={} local queue={} local match=nil local serial=0 local queueAt=nil
     local root=Instance.new('Model') root.Name='CosmicCommons' root.Parent=workspace
     local origin=Vector3.new(180,0,190)
     local colors={Lilac=Color3.fromRGB(177,147,239),Teal=Color3.fromRGB(59,208,181),Gold=Color3.fromRGB(255,210,94),Ink=Color3.fromRGB(31,40,65),Cream=Color3.fromRGB(252,247,235),Blue=Color3.fromRGB(90,163,249),Red=Color3.fromRGB(248,143,125)}
@@ -16,7 +16,7 @@ function A.Start(resorts)
         local p=Instance.new('Part') p.Name=name p.Anchored=true p.Size=size p.Position=origin+pos p.Color=color p.Material=Enum.Material.SmoothPlastic p.Parent=root return p
     end
     local function sign(p,text)
-        local bb=Instance.new('BillboardGui') bb.Size=UDim2.fromOffset(240,65) bb.StudsOffsetWorldSpace=Vector3.new(0,5,0) bb.MaxDistance=95 bb.Parent=p
+        local bb=Instance.new('BillboardGui') bb.Size=UDim2.fromOffset(190,60) bb.StudsOffsetWorldSpace=Vector3.new(0,5,0) bb.MaxDistance=45 bb.Parent=p
         local t=Instance.new('TextLabel') t.Size=UDim2.fromScale(1,1) t.BackgroundColor3=colors.Ink t.BackgroundTransparency=.1 t.TextColor3=colors.Cream t.TextWrapped=true t.Font=Enum.Font.GothamBold t.TextSize=14 t.Text=text t.Parent=bb
         return t
     end
@@ -37,7 +37,8 @@ function A.Start(resorts)
         say(p,'+'..tokens..' tokens / +'..shards..' Star Shards! Train, explore, then evolve your pet.')
     end
     local function ready(p,key,seconds)
-        local d=data(p) if os.clock()<(d.Cooldown[key] or 0) then return false end d.Cooldown[key]=os.clock()+seconds return true
+        local d=data(p) if os.clock()<(d.Cooldown[key] or 0) then return false end d.Cooldown[key]=os.clock()+seconds
+        p:SetAttribute(key..'Until',workspace:GetServerTimeNow()+seconds) return true
     end
     local function prompt(p,text,fn)
         local q=Instance.new('ProximityPrompt') q.ActionText=text q.ObjectText=p.Name q.HoldDuration=.5 q.MaxActivationDistance=12 q.RequiresLineOfSight=false q.Parent=p
@@ -71,7 +72,7 @@ function A.Start(resorts)
     local checkpoints={}
     for i=1,5 do
         local cp=part('Training '..i,Vector3.new(-93+(i-1)*12,6+(i%2)*2,48),Vector3.new(8,1,8),i==5 and colors.Gold or colors.Teal)
-        checkpoints[i]=cp sign(cp,i==1 and 'PET TRAINING\nStart here; follow checkpoints 1 → 5' or ('CHECKPOINT '..i))
+        checkpoints[i]=cp local caption=sign(cp,i==1 and 'TRAIN / START' or ('CHECKPOINT '..i)) caption.Parent.Size=UDim2.fromOffset(100,36) caption.Parent.MaxDistance=24
         prompt(cp,i==1 and 'Start training' or 'Complete checkpoint',function(p)
             if match and match.Team[p] then return end
             local d=data(p)
@@ -80,7 +81,7 @@ function A.Start(resorts)
                 d.Training=i
                 if i==5 then
                     d.Training=0
-                    if os.clock()-d.TrainingAt>=C.TrainingMinimum then d.CompletedTrainingAt=os.clock() end
+                    if os.clock()-d.TrainingAt>=C.TrainingMinimum then d.CompletedTrainingAt=os.clock() d.CompletedTrainingPet=d.TrainingPet end
                     if os.clock()-d.TrainingAt>=C.TrainingMinimum and ready(p,'TrainingReward',C.ActivityCooldown) then reward(p,C.TrainingTokens,C.TrainingShards,d.TrainingPet)
                     else say(p,'Course complete! Rewards recharge; explore another activity.') end
                 else say(p,'Checkpoint '..i..'! Next: '..(i+1)) end
@@ -208,6 +209,7 @@ function A.Start(resorts)
     end)
     local function setupCharacter(p,char)
         local h=char:WaitForChild('HumanoidRootPart',10) if not h then return end
+        if match and match.Team[p] then drop(p) data(p).ProtectedUntil=os.clock()+C.RespawnProtection teleport(p,bases[match.Team[p]].Position+Vector3.new(0,4,0)) end
         local q=Instance.new('ProximityPrompt') q.Name='TagRunner' q.Enabled=p:GetAttribute('ArenaTeam')~=nil q.ActionText='Tag enemy runner' q.HoldDuration=0 q.MaxActivationDistance=7 q.RequiresLineOfSight=true q.Parent=h
         I.Bind(q,function(attacker)
             if not (match and match.Team[p] and match.Team[attacker] and match.Team[p]~=match.Team[attacker] and I.Near(attacker,h,8)) then return false end
@@ -263,9 +265,18 @@ function A.Start(resorts)
                 end)
                 local h=hrp(p) if h then h.AssemblyLinearVelocity=Vector3.new(0,evolved and 65 or 55,0) end
                 say(p,'Juno launches you upward!')
-            elseif pet=='Slime' then garden.Color=colors.Teal say(p,'Sprout restored the garden!')
-            else beacon.Color=colors.Gold beacon.Material=Enum.Material.Neon say(p,'Ember activated the beacon!') end
-            bond(p,pet,C.BondReward)
+            elseif pet=='Slime' then
+                garden.Color=colors.Teal
+                for _,room in {s.Root.StarterRoom,s.Root.Upgrades.Room2,s.Root.Upgrades.Room3} do
+                    if room:GetAttribute('Dirty') then room:SetAttribute('Dirty',false) room:SetAttribute('GuestStatus','Ready for guests') room.Floor.CleanPrompt.Enabled=false local mess=room:FindFirstChild('GuestMess') if mess then mess:Destroy() end if not evolved then break end end
+                end
+                s.Refresh() say(p,evolved and 'Sprout restored the garden and cleaned every dirty room!' or 'Sprout restored the garden and cleaned one dirty room!')
+            else
+                beacon.Color=colors.Gold beacon.Material=Enum.Material.Neon
+                p:SetAttribute('BeaconUntil',math.max(p:GetAttribute('BeaconUntil') or 0,workspace:GetServerTimeNow()+(evolved and 40 or 20)))
+                say(p,'Ember lit a guest beacon: faster resort arrivals!')
+            end
+            if pet=='Pebble' then bond(p,pet,C.BondReward) end
             if pet~='Pebble' and ready(p,'AbilityReward',C.ActivityCooldown) then reward(p,evolved and C.AbilityTokens*2 or C.AbilityTokens,1,pet) end
         elseif action=='Request' then
             if inMatch or not I.Near(p,s.Root.ClaimTerminal) then return end
@@ -278,6 +289,7 @@ function A.Start(resorts)
             d.RequestAt=nil d.RequestDone=nil reward(p,C.RequestTokens,1,d.RequestPet)
         end
     end)
+    require(script.Parent.Geometry).DressCommons(root,origin)
     -- Expose no reward or capture remote: interaction state remains server-owned.
     task.spawn(function()
         while root.Parent do
@@ -285,7 +297,10 @@ function A.Start(resorts)
             if not match then
                 local waiting={} for p,inQueue in queue do if inQueue and plot(p) then table.insert(waiting,p) end end
                 table.sort(waiting,function(a,b) return a.UserId<b.UserId end)
-                if #waiting>=2 then
+                if #waiting>=2 then queueAt=queueAt or os.clock() else queueAt=nil end
+                arenaLabel.Text='STARCORE CAPTURE / '..#waiting..' queued\n'..(queueAt and ('Starting in '..math.max(0,math.ceil(8-(os.clock()-queueAt)))..'s / up to 2v2') or 'Need 2 players / train while waiting')
+                if #waiting>=4 or (queueAt and os.clock()-queueAt>=8) then
+                    queueAt=nil
                     serial+=1 match={Id=serial,Started=os.clock(),Team={},Score={0,0},Flags={{},{}},Contribution={},LastCapture=0}
                     local count=#waiting>=4 and 4 or 2
                     for i=1,count do local p=waiting[i] local team=(i-1)%2+1 match.Team[p]=team queue[p]=nil p:SetAttribute('ArenaTeam',team) local h=hrp(p) if h and h:FindFirstChild('TagRunner') then h.TagRunner.Enabled=true end data(p).ProtectedUntil=os.clock()+C.RespawnProtection teleport(p,bases[team].Position+Vector3.new(0,4,0)) end
@@ -316,8 +331,13 @@ function A.Start(resorts)
                             d.Worker=Pets.Create(s.Root.SessionExtras,s.Origin+offset,assigned) d.Worker:ScaleTo(.55)
                         end
                     end
-                    p:SetAttribute('JobGuestBonus',assigned=='Jelly' and 2 or assigned=='Lava' and 3 or 0)
-                    if d.RequestAt and d.CompletedTrainingAt and d.CompletedTrainingAt>=d.RequestAt and d.TrainingPet==d.RequestPet then d.RequestDone=true end
+                    local bonus=assigned=='Jelly' and 2 or assigned=='Lava' and 3 or 0
+                    if p:GetAttribute('JobGuestBonus')~=bonus then p:SetAttribute('JobGuestBonus',bonus) s.Refresh() end
+                    if Rules.CompletedRequest(d.RequestAt,d.RequestPet,d.CompletedTrainingAt,d.CompletedTrainingPet) then d.RequestDone=true end
+                    local training=d.Training>0 and ('Training '..d.Training..'/5 / next '..(d.Training+1)) or 'Training: start at checkpoint 1'
+                    local request=d.RequestAt and (d.RequestDone and 'Request ready: return to reception terminal' or ('Request: finish training with '..Pets.Find(d.RequestPet).CharacterName)) or 'Requests: accept at your reception terminal'
+                    local status=training..'\n'..request
+                    if p:GetAttribute('ActivityProgress')~=status then p:SetAttribute('ActivityProgress',status) end
                     local job=p:GetAttribute('PetJob')
                     if job and job~=p:GetAttribute('EquippedPet') and os.clock()-d.LastJob>=C.JobInterval then
                         d.LastJob=os.clock()

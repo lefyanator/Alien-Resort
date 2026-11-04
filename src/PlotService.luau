@@ -32,10 +32,12 @@ local function objective()
         title="Your guest has checked in!"
         description="Occupied rooms earn tokens automatically. Watch the payment countdown above the room."
         target="StarterRoom"
-    elseif ((p:GetAttribute('Bond_Pebble') or 0)+(p:GetAttribute('Bond_Jelly') or 0)+(p:GetAttribute('Bond_Slime') or 0)+(p:GetAttribute('Bond_Lava') or 0))==0 then
+    elseif S.Unlocked.Reception and p:GetAttribute('OwnsCleaner') and ((p:GetAttribute('Bond_Pebble') or 0)+(p:GetAttribute('Bond_Jelly') or 0)+(p:GetAttribute('Bond_Slime') or 0)+(p:GetAttribute('Bond_Lava') or 0))==0 then
         title='Take your pet on its first adventure'
         description='Open ADVENTURE, travel to the Commons, and finish training to earn Star Shards.'
         target='CommonsShuttle' cost=0
+    elseif (p:GetAttribute('RoomsCleaned') or 0)>0 and not p:GetAttribute('OwnsCleaner') then
+        title='Hire your cleaning crew' description='Open SHOP: the cleaner keeps all rooms earning while you explore.' target='StarterRoom' cost=80
     elseif nextUpgrade and balance(p)<price then
         title="Save for "..nextUpgrade.Name
         description=nextUpgrade.Description..". Guests are earning the tokens for you."

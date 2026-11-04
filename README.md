@@ -1,6 +1,6 @@
 # Alien Resort — Orbit & Oasis
 
-**Current version: 0.11.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
+**Current version: 0.12.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
 
 ## New: Cosmic Commons
 
@@ -57,3 +57,7 @@ Read DECLUTTER_STATUS.md for the stage-gated cafe, quieter world labels, Creator
 ## 0.11.0 — Cosmic overhaul milestone
 
 Read OVERHAUL_STATUS.md for implementation evidence and the outstanding acceptance gates from docs/OVERHAUL_BRIEF.md. The full overhaul remains in progress.
+
+## 0.12.0 — alien biomes and floating hotel
+
+ALIEN_WORLD_STATUS.md records the darker biome, alien plants/creatures, staged building silhouettes and unlockable Orbital Palace. Complete your Observatory to visit its sky deck.

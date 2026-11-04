@@ -1,5 +1,5 @@
 local G = {}
-local C = {cream=Color3.fromRGB(237,230,213), teal=Color3.fromRGB(69,230,193), dark=Color3.fromRGB(23,27,61), purple=Color3.fromRGB(139,92,246), coral=Color3.fromRGB(255,111,174), rock=Color3.fromRGB(67,62,93)}
+local C = {cream=Color3.fromRGB(207,198,218), teal=Color3.fromRGB(69,230,193), dark=Color3.fromRGB(23,27,61), purple=Color3.fromRGB(112,63,190), coral=Color3.fromRGB(255,125,39), rock=Color3.fromRGB(58,46,82)}
 G.Colors = C
 local function part(parent,name,size,pos,color,material,shape)
     local templates=shape==Enum.PartType.Ball and game.ReplicatedStorage:FindFirstChild('PetTemplates')
@@ -17,6 +17,33 @@ end
 G.KeepBelow=keepBelow
 -- Small reusable silhouettes; decorative parts never block players or raycasts.
 function G.Prop(parent,kind,pos,accent)
+    if kind=='SporeTree' or kind=='Tendril' or kind=='SkyRay' then
+        local m=Instance.new('Model') m.Name=kind m.Parent=parent
+        local function limb(name,size,offset,color,angle)
+            local v=part(m,name,size,pos+offset,color,nil,Enum.PartType.Ball) v.CanCollide=false v.CanQuery=false
+            v.CFrame*=CFrame.Angles(0,0,angle or 0) return v
+        end
+        if kind=='SkyRay' then
+            limb('Body',Vector3.new(4,1.2,2.6),Vector3.zero,C.purple)
+            for _,s in {-1,1} do
+                limb('Fin',Vector3.new(4,.4,3),Vector3.new(s*2,0,.4),C.coral,s*.22)
+                limb('Eye',Vector3.new(.4,.4,.3),Vector3.new(s*.7,.4,-1.1),C.teal)
+            end
+            limb('Tail',Vector3.new(.25,.3,4),Vector3.new(0,0,2.4),C.coral,.15)
+        else
+            limb('Root',Vector3.new(7,1.3,5),Vector3.new(0,.5,0),C.rock)
+            limb('CurvedStem',Vector3.new(1.3,8,1.6),Vector3.new(0,4,0),C.purple,.22)
+        if kind=='SporeTree' then
+            limb('MushroomCrown',Vector3.new(10,3,8),Vector3.new(-.8,8,0),accent or C.coral,-.12)
+            for i=1,3 do limb('SporeBulb',Vector3.new(.8,1.7,.8),Vector3.new(i*2-5,6.4,-1),C.teal) end
+        else
+            limb('UpperTendril',Vector3.new(1.4,5,1.8),Vector3.new(-1.8,8,0),C.coral,-.6)
+            limb('AlienBud',Vector3.new(3,3.8,3),Vector3.new(-3,10,0),C.teal)
+        end
+        end
+        m.WorldPivot=CFrame.new(pos) m:SetAttribute('Hover',kind=='SkyRay' and .6 or kind=='Tendril' and .18 or .08)
+        game.CollectionService:AddTag(m,'CosmicScenery') return m
+    end
     local library=game.ServerStorage:FindFirstChild('WorldProps')
     local key=kind=='Palm' and ({'PalmA','PalmB','PalmC'})[(math.floor(math.abs(pos.X+pos.Z))%3)+1] or kind=='Flowers' and 'Bush' or kind
     local template=library and library:FindFirstChild(key)
@@ -107,7 +134,7 @@ function G.DressCommons(root,origin)
     end
     terrace('LowerBelt',232,184,1.8,0,C.rock)
     terrace('DeckRim',228,180,4.1,0,C.dark)
-    terrace('CommonsDeck',222,174,5.4,0,Color3.fromRGB(190,185,171))
+    terrace('CommonsDeck',222,174,5.4,0,Color3.fromRGB(76,58,106))
     -- The underside reads as buoyant asteroid clusters rather than stacked cylinders.
     for _,rock in {{-68,-10,-28,83,34,74},{54,-14,-18,105,43,88},{-34,-22,48,88,51,72},{56,-13,62,64,34,57}} do
         local v=p('AsteroidRoot',Vector3.new(rock[4],rock[5],rock[6]),Vector3.new(rock[1],rock[2],rock[3]),C.rock,Enum.PartType.Ball)
@@ -127,8 +154,8 @@ function G.DressCommons(root,origin)
     end
     for _,z in {-88,87} do p('TerraceRail',Vector3.new(192,1.5,.7),Vector3.new(0,7,z),C.dark) end
     for _,x in {-109,109} do p('PromenadeRail',Vector3.new(.7,1.5,161),Vector3.new(x,7,0),C.dark) end
-    p('CentralPromenade',Vector3.new(10,.12,162),Vector3.new(0,6,0),C.cream)
-    p('ActivityWalk',Vector3.new(205,.12,7),Vector3.new(0,6,33),C.cream)
+    p('CentralPromenade',Vector3.new(10,.12,162),Vector3.new(0,6,0),Color3.fromRGB(133,115,159))
+    p('ActivityWalk',Vector3.new(205,.12,7),Vector3.new(0,6,33),Color3.fromRGB(133,115,159))
     for _,spec in {{-75,C.coral},{-25,C.purple},{25,C.teal},{75,C.coral}} do
         disc('ActivityGarden',13,.18,Vector3.new(spec[1],5.95,20),C.dark)
         if spec[1]==-25 then
@@ -181,11 +208,43 @@ function G.DressCommons(root,origin)
     disc('EvolutionRing',5,.4,Vector3.new(24,7,78),C.teal)
     p('EvolutionCore',Vector3.new(2.5,3.5,2.5),Vector3.new(24,10,81),C.coral,Enum.PartType.Ball)
     for _,pos in {Vector3.new(21,6,20),Vector3.new(29,6,20)} do G.Prop(art,'Flowers',origin+pos,C.coral) end
-    for _,pos in {Vector3.new(-100,6,73),Vector3.new(100,6,73)} do G.Prop(art,'Palm',origin+pos) end
+    for _,pos in {Vector3.new(-100,6,73),Vector3.new(100,6,73)} do G.Prop(art,'SporeTree',origin+pos) end
     for _,pos in {Vector3.new(-107,5.9,42),Vector3.new(102,5.9,42),Vector3.new(-42,5.9,86),Vector3.new(48,5.9,87)} do G.Prop(art,'Bush',origin+pos) end
     local beacon=root:FindFirstChild('Ancient Beacon')
     if beacon then beacon.Shape=Enum.PartType.Cylinder beacon.Size=Vector3.new(8,3,3) beacon.Orientation=Vector3.new(0,0,90) end
     p('BeaconLens',Vector3.new(5,4,5),Vector3.new(75,15,20),C.coral,Enum.PartType.Ball)
+    G.Prop(art,'SkyRay',origin+Vector3.new(-28,20,50))
+    G.Prop(art,'Tendril',origin+Vector3.new(104,7,48))
+    G.Prop(art,'SporeTree',origin+Vector3.new(-102,7,36))
+end
+function G.SkyHotel(parent,origin)
+    local m=folder(parent,'SkyHotel') m.ModelStreamingMode=Enum.ModelStreamingMode.Persistent
+    local center=origin+Vector3.new(0,62,50)
+    local function p(name,size,offset,color,shape)
+        local v=part(m,name,size,center+offset,color,nil,shape) v.CanCollide=false v.CanQuery=false return v
+    end
+    local function disc(name,radius,height,y,color)
+        local v=p(name,Vector3.new(height,radius*2,radius*2),Vector3.new(0,y,0),color,Enum.PartType.Cylinder) v.Orientation=Vector3.new(0,0,90) return v
+    end
+    p('MothershipHull',Vector3.new(104,16,80),Vector3.new(0,-6,0),C.dark,Enum.PartType.Ball)
+    p('OrangeFlightRim',Vector3.new(108,3,84),Vector3.new(0,-5,0),C.coral,Enum.PartType.Ball)
+    local floor=disc('SkyDeck',35,1,6,C.purple) floor.CanCollide=true floor.CanQuery=true
+    for i=1,12 do
+        local a=i*math.pi/6 local x,z=math.cos(a)*34,math.sin(a)*34
+        local rail=p('SkyRail',Vector3.new(18,3,.8),Vector3.new(x,8,z),C.coral,Enum.PartType.Ball) rail.CFrame=CFrame.new(rail.Position)*CFrame.Angles(0,math.pi/2-a,0) rail.CanCollide=true
+        local window=p('ObservationWindow',Vector3.new(10,5,.4),Vector3.new(math.cos(a)*31,14,math.sin(a)*27),C.teal) window.CFrame=CFrame.new(window.Position)*CFrame.Angles(0,math.pi/2-a,0) window.Material=Enum.Material.Glass window.Transparency=.4
+    end
+    for i,offset in {Vector3.new(-24,20,1),Vector3.new(0,26,0),Vector3.new(24,20,1)} do
+        p('SuspendedSuite',Vector3.new(18,20+(i%2)*10,20),offset,C.purple,Enum.PartType.Ball)
+        p('SuiteGlass',Vector3.new(18.5,5,20.5),offset+Vector3.new(0,2,0),C.teal,Enum.PartType.Ball)
+        p('SuiteCrown',Vector3.new(22,5,24),offset+Vector3.new(0,11,0),C.coral,Enum.PartType.Ball)
+    end
+    p('LiftSpine',Vector3.new(.6,57,.6),Vector3.new(0,-24,8),C.coral).Material=Enum.Material.Neon
+    textOn(m,'HotelName',center+Vector3.new(0,12,-31),Vector3.new(25,5,.5),'THE ORBITAL PALACE\nUNLOCK: COMPLETE OBSERVATORY',C.coral)
+    local ground=part(m,'BoardingLift',Vector3.new(7,.5,7),origin+Vector3.new(0,6.2,58),C.coral) ground.CanCollide=false
+    local exit=part(m,'ReturnLift',Vector3.new(7,.5,7),center+Vector3.new(0,7,23),C.coral) exit.CanCollide=false
+    for _,x in {-17,17} do G.Prop(m,'Chair',center+Vector3.new(x,6.5,22)) end
+    m:SetAttribute('UnlockStage',3) return m
 end
 function G.UFO(parent,pos)
     local m=folder(parent,"GuestShuttle")
@@ -226,10 +285,22 @@ end
 function G.Decorate(root)
     local d=folder(root,"ResortDetails")
     for _,spec in {{-49,18},{49,-12}} do
-        G.Prop(d,'Palm',Vector3.new(spec[1],5.35,spec[2]))
+        G.Prop(d,'SporeTree',Vector3.new(spec[1],5.35,spec[2]))
         G.Prop(d,'Bush',Vector3.new(spec[1]-3,5.35,spec[2]+5))
     end
     for _,spec in {{-46,39},{44,34},{-51,-26}} do G.Prop(d,'Bush',Vector3.new(spec[1],5.35,spec[2])) end
+    -- Raised habitat islands break the empty ground while preserving every guest lane.
+    for i,spec in {{-47,-8,8,4},{43,32,10,6},{-23,43,7,3}} do
+        local pos=Vector3.new(spec[1],5.2+spec[4]/2,spec[2])
+        local rock=part(d,'HabitatMound',Vector3.new(spec[3]*2,spec[4],spec[3]*1.4),pos,C.rock,Enum.Material.Slate,Enum.PartType.Ball) rock.CanCollide=false rock.CanQuery=false
+        G.Prop(d,i%2==0 and 'Tendril' or 'SporeTree',Vector3.new(spec[1],5.2+spec[4],spec[2]),i%2==0 and C.purple or C.coral)
+    end
+    G.Prop(d,'SkyRay',Vector3.new(23,17,36))
+    part(d,'SporeLookout',Vector3.new(16,1,13),Vector3.new(-38,8,34),C.dark,Enum.Material.Metal)
+    part(d,'LookoutRock',Vector3.new(18,5,15),Vector3.new(-38,5.5,34),C.rock,Enum.Material.Slate,Enum.PartType.Ball).CanCollide=false
+    for i=1,3 do part(d,'LookoutStep',Vector3.new(2.5,.8,6),Vector3.new(-24-i*2,5.3+i*.8,34),C.purple,Enum.Material.Metal) end
+    G.Prop(d,'Tendril',Vector3.new(-41,8.5,36))
+    for _,z in {28,40} do part(d,'LookoutRail',Vector3.new(15,2,.4),Vector3.new(-38,9.4,z),C.coral) end
 end
 function G.Build(parent,name,origin)
     -- Construct each independent model at local zero, then translate once.
@@ -238,7 +309,7 @@ function G.Build(parent,name,origin)
     local island=folder(root,"Island")
     cylinder(island,"UpperIsland",65,5,Vector3.new(0,2.5,0),C.purple)
     cylinder(island,"CreamRim",65.8,.7,Vector3.new(0,4,0),C.cream)
-    cylinder(island,"Ground",63,.7,Vector3.new(0,5,0),Color3.fromRGB(199,191,168))
+    cylinder(island,"Ground",63,.7,Vector3.new(0,5,0),Color3.fromRGB(74,56,98))
     for _,r in {{-20,-7,-7,78,30,77},{21,-9,10,75,32,68},{-5,-20,9,55,33,57}} do
         local rock=part(island,'AsteroidRoot',Vector3.new(r[4],r[5],r[6]),Vector3.new(r[1],r[2],r[3]),C.rock,Enum.Material.Slate,Enum.PartType.Ball)
         rock.Orientation=Vector3.new(12,r[1]*4,15) rock.CanCollide=false rock.CanQuery=false
@@ -283,6 +354,9 @@ function G.Build(parent,name,origin)
     for _,m in upgrades:GetChildren() do G.SetVisible(m,false) end
     for _,p in root:GetDescendants() do
         if p:IsA("BasePart") then p.CFrame+=origin end
+    end
+    for _,m in root:GetDescendants() do
+        if m:IsA('Model') and game.CollectionService:HasTag(m,'CosmicScenery') then m.WorldPivot+=origin end
     end
     root:SetAttribute("Origin",origin)
     root:SetAttribute("BuildVersion","0.7.0")

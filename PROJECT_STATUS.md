@@ -1,4 +1,8 @@
-# Latest: 0.11.0 — Cosmic overhaul milestone
+# Latest: 0.12.0 — alien biomes and Orbital Palace
+
+Read ALIEN_WORLD_STATUS.md for the five-point art pass, progression-gated floating hotel, elevated alien habitat and 30 additional art checks. Previous overhaul gates remain in OVERHAUL_STATUS.md.
+
+# Previous: 0.11.0 — Cosmic overhaul milestone
 
 Read OVERHAUL_STATUS.md for the full-scope acceptance tracker, real two-client capture/reward evidence, 183+31+37 checks, revised map/UI and remaining work. Full brief: docs/OVERHAUL_BRIEF.md. This is an ongoing overhaul, not a release-ready claim.
 

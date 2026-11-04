@@ -71,7 +71,11 @@ local world=nil local target=nil local highlight=nil local destination=nil local
 local tokenValue=0 local tokens=nil local display=Instance.new('NumberValue')
 display.Changed:Connect(function(value) tokenText.Text=T.Format(value) end)
 local numberTween=nil
-local coins={} local activeAliens={} local roomLabels={}
+local coins={} local activeAliens={} local roomLabels={} local scenery={}
+local function sceneryAdded(model) if model:IsA('Model') then scenery[model]=model:GetPivot() end end
+for _,model in Tags:GetTagged('CosmicScenery') do sceneryAdded(model) end
+Tags:GetInstanceAddedSignal('CosmicScenery'):Connect(sceneryAdded)
+Tags:GetInstanceRemovedSignal('CosmicScenery'):Connect(function(model)scenery[model]=nil end)
 local preview=nil
 local refresh,layout,open,updateWayfinder
 local drawer,selectedBuild,selectedAt,activityStatus
@@ -355,10 +359,16 @@ local function alienAdded(model) if model:IsA('Model') then activeAliens[model]=
 for _,model in Tags:GetTagged('ResortAlien') do alienAdded(model) end
 Tags:GetInstanceAddedSignal('ResortAlien'):Connect(alienAdded)
 Tags:GetInstanceRemovedSignal('ResortAlien'):Connect(function(model) activeAliens[model]=nil end)
+local initialView=false
 local function attachBeam(character)
     local hrp=character:WaitForChild('HumanoidRootPart',10)
     if hrp and beam and beam.Parent then
         local a=hrp:FindFirstChild('ResortWayfinder') or Instance.new('Attachment') a.Name='ResortWayfinder' a.Position=Vector3.new(0,-2,0) a.Parent=hrp beam.Attachment0=a
+        if not initialView and workspace.CurrentCamera then
+            initialView=true
+            local forward=(Vector3.new(180,hrp.Position.Y,240)-hrp.Position).Unit
+            workspace.CurrentCamera.CFrame=CFrame.lookAt(hrp.Position-forward*16+Vector3.new(0,7,0),hrp.Position+forward*20+Vector3.new(0,5,0))
+        end
     end
 end
 p.CharacterAdded:Connect(attachBeam)
@@ -421,6 +431,11 @@ Run.RenderStepped:Connect(function(dt)
     sceneClock+=dt
     if sceneClock>=1/30 then
         sceneClock=0 local camera=workspace.CurrentCamera
+        for model,rest in scenery do
+            if model.Parent and camera and (rest.Position-camera.CFrame.Position).Magnitude<180 then
+                model:PivotTo(rest+Vector3.new(0,motion and math.sin(now*1.2+rest.Position.X)*(model:GetAttribute('Hover') or .1) or 0,0))
+            end
+        end
         for model,state in activeAliens do
             if model.Parent and camera and model:IsDescendantOf(workspace) and (model:GetPivot().Position-camera.CFrame.Position).Magnitude<190 then
                 local position=model:GetPivot().Position local moving=(position-state.Last).Magnitude>.035 state.Last=position

@@ -61,7 +61,7 @@ function A.Start(resorts)
     local plaza=part('WELCOME / COSMIC COMMONS',Vector3.new(0,6,75),Vector3.new(32,1,18),colors.Teal)
     sign(plaza,'COSMIC COMMONS\nBuild a home. Adventure together. Evolve your crew.')
     local home=part('RETURN HOME',Vector3.new(-23,6,78),Vector3.new(8,1,8),colors.Gold)
-    local function homePlayer(p) local s=plot(p) if s then teleport(p,s.Origin+Vector3.new(0,10,-44)) end end
+    local function homePlayer(p) local s=plot(p) if s and p.Character then p.Character:PivotTo(resorts.SpawnCFrame(s)) end end
     prompt(home,'Return to your resort',function(p) if match and match.Team[p] then say(p,'Leave the match before returning home.') else homePlayer(p) end end)
     for _,s in resorts.Plots do
         local dock=Instance.new('Part') dock.Name='CommonsShuttle' dock.Size=Vector3.new(5,.3,5) dock.Position=s.Origin+Vector3.new(17,5.8,-53) dock.Anchored=true dock.Color=colors.Gold dock.Parent=s.Root
@@ -321,6 +321,13 @@ function A.Start(resorts)
         end
     end)
     require(script.Parent.Geometry).DressCommons(root,origin)
+    local palace=require(script.Parent.Geometry).SkyHotel(root,origin)
+    prompt(palace.BoardingLift,'Board the Orbital Palace',function(p)
+        if match and match.Team[p] then return end
+        if (p:GetAttribute('Stage_Observatory') or 0)<3 then say(p,'Complete your Observatory to unlock the floating Orbital Palace.') return end
+        teleport(p,palace.ReturnLift.Position+Vector3.new(0,4,0)) say(p,'Welcome to the Orbital Palace! Your completed resort unlocked this sky deck.')
+    end)
+    prompt(palace.ReturnLift,'Return to Commons',function(p) teleport(p,origin+Vector3.new(0,10,58)) end)
     -- Expose no reward or capture remote: interaction state remains server-owned.
     task.spawn(function()
         while root.Parent do

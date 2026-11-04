@@ -8,6 +8,10 @@ local Pets=require(script.Parent.PetService)
 local Extras=require(script.Parent.ResortExtras)
 local Service={Plots={},Assignments={},Started=false}
 local cooldown={}
+function Service.SpawnCFrame(plot)
+    local position=plot.Origin+Vector3.new(0,10,-44)
+    return CFrame.lookAt(position,Vector3.new(180,position.Y,240))
+end
 local function notice(p,message)
     p:SetAttribute('ResortNotice',message)
     p:SetAttribute('NoticeVersion',(p:GetAttribute('NoticeVersion') or 0)+1)
@@ -24,7 +28,7 @@ function Service.Assign(p)
             p:SetAttribute('GuideDetail','Your own island is ready. Hold the terminal prompt to begin.')
             p:SetAttribute('GuideTarget','ClaimTerminal')
             plot.Root.ClaimTerminal.ProximityPrompt.ObjectText=p.DisplayName..' / FREE PLOT'
-            if p.Character then p.Character:PivotTo(CFrame.new(plot.Origin+Vector3.new(0,10,-44))) end
+            if p.Character then p.Character:PivotTo(Service.SpawnCFrame(plot)) end
             return plot
         end
     end
@@ -80,7 +84,7 @@ function Service.Start()
         tokens.Changed:Connect(function() local plot=Service.Assignments[p] if plot and plot.Owner==p then plot.Refresh() end end)
         local function spawn(character)
             local hrp=character:WaitForChild('HumanoidRootPart',10) local plot=Service.Assignments[p]
-            if hrp and p.Character==character and plot and not p:GetAttribute('ArenaTeam') then character:PivotTo(CFrame.new(plot.Origin+Vector3.new(0,10,-44))) end
+            if hrp and p.Character==character and plot and not p:GetAttribute('ArenaTeam') then character:PivotTo(Service.SpawnCFrame(plot)) end
         end
         p.CharacterAdded:Connect(spawn) p.CharacterAppearanceLoaded:Connect(Extras.Robot)
         if p.Character then task.spawn(spawn,p.Character) task.spawn(Extras.Robot,p.Character) end
@@ -104,6 +108,6 @@ function Service.Start()
     task.spawn(function()
         while container.Parent do task.wait(.5) for _,plot in Service.Plots do Pets.Step(plot) end end
     end)
-    print('Alien Resort 0.11.0: Cosmic stadium, tested round rules and safe profile retries ready.')
+    print('Alien Resort 0.12.0: alien biomes and the unlockable Orbital Palace ready.')
 end
 return Service

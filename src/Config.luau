@@ -1,6 +1,6 @@
 -- Prototype defaults. Unpublished places work without network configuration.
 return {
-    Version = "0.11.0",
+    Version = "0.12.0",
     PlotCount = 4,
     Adventure={TrainingMinimum=10,ActivityCooldown=90,TreasureCooldown=180,TrainingTokens=15,TrainingShards=2,RescueTokens=20,RescueShards=3,TreasureTokens=8,BondReward=3,EvolutionShards=20,EvolutionBond=30,MatchSeconds=180,MatchMinimum=45,WinTokens=30,ParticipationTokens=15,WinShards=4,ParticipationShards=2,CaptureCooldown=12,TagCooldown=3,RespawnProtection=4,FlagReturnSeconds=15,AbilityCooldown=12,AbilityTokens=6,RequestTokens=12,JobInterval=60,JobTokens=3},
     PlotSpacing = 360,
@@ -33,6 +33,6 @@ return {
         {Id = "Kiosk", Name = "COSMIC SNACKS", Price = 100, Description = "+5 tokens per occupied room / payout"},
         {Id = "Room3", Name = "AURORA SUITE", Price = 180, Description = "A third guest room", RoomX = -35},
         {Id = "Lounge", Name = "STARGAZER LOUNGE", Price = 280, Description = "+5 tokens per occupied room / payout", Bonus = 5},
-        {Id = "Observatory", Name = "OBSERVATORY", Price = 420, Description = "+10 tokens per occupied room / payout", Bonus = 10},
+        {Id = "Observatory", Name = "OBSERVATORY", Price = 420, Description = "+10 per payout; unlock the Orbital Palace sky deck", Bonus = 10},
     },
 }

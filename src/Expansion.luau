@@ -3,8 +3,15 @@ local E={}
 function E.Build(root,G)
     if root:GetAttribute("BuildVersion")=="0.3.0" then return end
     local C=G.Colors
+    local orange=Color3.fromRGB(255,153,66)
+    local metal=Color3.fromRGB(33,37,58)
+    local plum=Color3.fromRGB(78,48,118)
     local function model(parent,name) local m=Instance.new("Model") m.Name=name m.Parent=parent return m end
     local function block(m,n,s,p,c) return G.Part(m,n,Vector3.new(unpack(s)),Vector3.new(unpack(p)),c or C.cream) end
+    local function curve(m,name,size,pos,color,stage)
+        local p=G.Part(m,name,Vector3.new(unpack(size)),Vector3.new(unpack(pos)),color,nil,Enum.PartType.Ball)
+        p.CanCollide=false p.CanTouch=false p.CanQuery=false p:SetAttribute('BuildStage',stage or 2) return p
+    end
     local function sign(m,n,x,y,z,w,h,words,color)
         local b=block(m,n,{w,h,.3},{x,y,z},C.dark)
         for _,face in {Enum.NormalId.Front,Enum.NormalId.Back} do
@@ -14,21 +21,21 @@ function E.Build(root,G)
     end
     local function shell(m,x,z,w,d,accent,title)
         block(m,"Foundation",{w+3,1,d+3},{x,5.5,z},C.dark)
-        block(m,"Floor",{w,.6,d},{x,6.3,z})
-        block(m,"BackWall",{w,10,.6},{x,11.3,z+d/2})
+        block(m,"Floor",{w,.6,d},{x,6.3,z},Color3.fromRGB(99,90,114))
+        block(m,"BackWall",{w,10,.6},{x,11.3,z+d/2},plum)
         for _,dx in {-w/2,w/2} do
             -- Actual window openings, with a low sill and header.
-            block(m,"WindowSill",{.6,3,d},{x+dx,8,z})
-            block(m,"WindowHeader",{.6,2,d},{x+dx,15.3,z})
+            block(m,"WindowSill",{.6,3,d},{x+dx,8,z},metal)
+            block(m,"WindowHeader",{.6,2,d},{x+dx,15.3,z},plum)
             local glass=block(m,"Glass",{.25,5,d-2},{x+dx,11.8,z},C.teal) glass.Material=Enum.Material.Glass glass.Transparency=.65
             for _,dz in {-d/2,0,d/2} do block(m,"WindowFrame",{.8,10,.6},{x+dx,11.3,z+dz},accent) end
         end
-        for _,dx in {-(w+6)/4,(w+6)/4} do block(m,"FrontWall",{(w-6)/2,10,.6},{x+dx,11.3,z-d/2}) end
+        for _,dx in {-(w+6)/4,(w+6)/4} do block(m,"FrontWall",{(w-6)/2,10,.6},{x+dx,11.3,z-d/2},plum) end
         block(m,"DoorHeader",{6,2,.8},{x,15.3,z-d/2},accent)
         for _,dx in {-3.2,3.2} do block(m,"DoorFrame",{.4,8,.9},{x+dx,10.3,z-d/2},accent) end
         block(m,"EntryStep",{7,.3,3},{x,5.9,z-d/2-1.5},C.dark)
         block(m,"RoofCornice",{w+2,.7,d+2},{x,16.6,z},accent)
-        block(m,"Roof",{w+1,1,d+1},{x,17.4,z})
+        block(m,"Roof",{w+1,1,d+1},{x,17.4,z},metal)
         block(m,"RoofCap",{w-1,.4,d-1},{x,18.1,z},C.dark)
         block(m,"EntranceCanopy",{9,.4,4},{x,14.5,z-d/2-1},accent)
         sign(m,"BuildingName",x,19.8,z-d/2-.5,w,2.5,title,accent)
@@ -82,16 +89,17 @@ function E.Build(root,G)
     sign(reception,"TowerSign",-37,26,-23.7,5,5,"i",C.cream)
     local district=model(root,"NorthPromenade")
     block(district,"ExtensionLand",{74,4,44},{0,2.5,76},C.rock)
-    block(district,"PromenadeDeck",{74,.7,44},{0,5,76},C.cream)
+    block(district,"PromenadeDeck",{74,.7,44},{0,5,76},metal)
     for _,x in {-37,37} do
-        local endcap=G.Part(district,'PromenadeEndcap',Vector3.new(.7,44,44),Vector3.new(x,5,76),C.cream,nil,Enum.PartType.Cylinder)
+        local endcap=G.Part(district,'PromenadeEndcap',Vector3.new(.7,44,44),Vector3.new(x,5,76),metal,nil,Enum.PartType.Cylinder)
         endcap.Orientation=Vector3.new(0,0,90)
         local rock=G.Part(district,'PromenadeAsteroid',Vector3.new(43,23,43),Vector3.new(x,-7,76),C.rock,Enum.Material.Slate,Enum.PartType.Ball)
         rock.CanCollide=false rock.CanQuery=false rock.Orientation=Vector3.new(12,x*2,10)
         G.KeepBelow(rock,.8)
     end
-    block(district,"Bridge",{12,1,18},{0,4.9,55},C.cream)
-    block(district,"Walkway",{105,.2,8},{0,5.5,62},C.dark)
+    block(district,"Bridge",{12,1,18},{0,4.9,55},metal)
+    block(district,"Walkway",{105,.2,8},{0,5.5,62},Color3.fromRGB(92,66,129))
+    for _,x in {-6,6} do local line=block(district,'BridgeInlay',{.22,.12,18},{x,5.46,55},orange) line.CanCollide=false line:SetAttribute('BuildStage',1) end
     for _,side in {-1,1} do
         for i=0,5 do
             local a=math.rad(-75+i*30) local x=side*(37+math.cos(a)*21) local z=76+math.sin(a)*21
@@ -149,6 +157,38 @@ function E.Build(root,G)
     for _,v in snack:GetChildren() do if v:IsA('BasePart') and (v.Name=='ServiceCounter' or v.Name=='WindowFrame' or v.Name=='DoorFrame') then v.Material=Enum.Material.Wood v.Color=Color3.fromRGB(108,76,57) end end
     for _,v in reception:GetChildren() do if v.Name=='FrontWall' then v:Destroy() end end
     local receptionDome=block(reception,'TowerDome',{7,5,7},{-37,29,-22},C.teal) receptionDome.Shape=Enum.PartType.Ball receptionDome:SetAttribute('BuildStage',2)
+    -- Pod hulls, a levitating split roof and living arches distinguish the resort services.
+    local pod=root.StarterRoom pod.CurvedRoof.Color=plum pod.CurvedRoof.Size=Vector3.new(24,10,22)
+    for _,side in {-1,1} do
+        curve(pod,'PodHull',{4.5,12,20},{-29+side*8.5,12,7},plum)
+        local stripe=curve(pod,'HullSeam',{.4,9,15},{-29+side*10.3,12,7},orange)
+        stripe.Material=Enum.Material.Neon
+    end
+    local moon=root.Upgrades.Room2 moon.CurvedRoof:Destroy()
+    for _,side in {-1,1} do
+        curve(moon,'FloatingRoof',{11,5,22},{29+side*6,19,7},C.purple)
+        local rim=curve(moon,'MaglevBand',{11.2,.6,22.2},{29+side*6,16.6,7},orange)
+        rim.Material=Enum.Material.Neon
+        curve(moon,'MaglevFoot',{2,2.3,4},{29+side*8,15.3,7},metal)
+    end
+    for _,side in {-1,1} do
+        local stem=curve(reception,'ReceptionArch',{3,14,4},{-28+side*10,13.5,-36},C.purple)
+        stem.Orientation=Vector3.new(0,0,side*18)
+        local tip=curve(reception,'ReceptionArchTip',{10,3.5,4},{-28+side*5.5,20.5,-36},orange)
+        tip.Orientation=Vector3.new(0,0,side*22)
+        local arm=curve(lounge,'LoungeTendril',{3.2,13,4},{side*11,13.2,77},plum)
+        arm.Orientation=Vector3.new(0,0,-side*23)
+        curve(lounge,'TendrilCrown',{7,3,5},{side*7,20,77},C.purple)
+    end
+    local hologram=model(reception,'HolographicWelcome')
+    sign(hologram,'Projection',-28,23,-37,12,3,'CHECK IN / EARTHLINGS WELCOME',orange)
+    hologram.Projection.Transparency=.35 hologram.Projection.CanCollide=false hologram.Projection.CanQuery=false
+    hologram.Projection:SetAttribute('BuildStage',2) hologram.WorldPivot=CFrame.new(-28,23,-37) hologram:SetAttribute('Hover',.3)
+    game.CollectionService:AddTag(hologram,'CosmicScenery')
+    for _,p in root.Island:GetChildren() do
+        if p.Name=='MainWalk' or p.Name=='CrossWalk' then p.Color=metal p.Material=Enum.Material.Metal
+        elseif p.Name=='PathInlay' then p.Color=orange end
+    end
     for _,m in {root.StarterRoom,root.Upgrades.Room2,root.Upgrades.Room3} do
         local floor=m.Floor.Position
         G.Prop(m,'Lamp',Vector3.new(floor.X-4,6.6,floor.Z+6),C.coral)

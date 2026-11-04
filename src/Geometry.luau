@@ -11,6 +11,14 @@ end
 G.Part=part
 -- Small reusable silhouettes; decorative parts never block players or raycasts.
 function G.Prop(parent,kind,pos,accent)
+    local library=game.ServerStorage:FindFirstChild('WorldProps')
+    local key=kind=='Palm' and ({'PalmA','PalmB','PalmC'})[(math.floor(math.abs(pos.X+pos.Z))%3)+1] or kind=='Flowers' and 'Bush' or kind
+    local template=library and library:FindFirstChild(key)
+    if template then
+        local copy=template:Clone() copy.Name=kind copy:PivotTo(CFrame.new(pos)*CFrame.Angles(0,math.rad(math.floor(pos.X*13+pos.Z*7)%360),0))
+        for _,v in copy:GetDescendants() do if v:IsA('BasePart') then v:SetAttribute('BuildStage',3) end end
+        copy.Parent=parent return copy
+    end
     local m=Instance.new('Model') m.Name=kind m.Parent=parent accent=accent or C.teal
     local function p(name,size,offset,color,shape)
         local v=part(m,name,size,pos+offset,color,nil,shape) v.CanCollide=false v.CanQuery=false v:SetAttribute('BuildStage',3) return v
@@ -83,9 +91,11 @@ function G.DressCommons(root,origin)
     p('ActivityWalk',Vector3.new(205,.12,7),Vector3.new(0,6,33),C.cream)
     for _,spec in {{-75,C.coral},{-25,C.purple},{25,C.teal},{75,C.coral}} do
         disc('ActivityGarden',13,.18,Vector3.new(spec[1],5.95,20),C.dark)
-        local canopy=p('ActivityCanopy',Vector3.new(25,4,23),Vector3.new(spec[1],17,21),spec[2],Enum.PartType.Ball)
-        for _,dx in {-10,10} do p('CanopyPillar',Vector3.new(.8,10,.8),Vector3.new(spec[1]+dx,11,28),C.cream) end
-        G.Prop(art,'Palm',origin+Vector3.new(spec[1]+10,6,27),spec[2])
+        if spec[1]==-25 then
+            p('BouncePavilion',Vector3.new(25,4,23),Vector3.new(spec[1],17,21),spec[2],Enum.PartType.Ball)
+            for _,dx in {-10,10} do p('CanopyPillar',Vector3.new(.8,10,.8),Vector3.new(spec[1]+dx,11,28),C.cream) end
+        end
+        G.Prop(art,'Bush',origin+Vector3.new(spec[1]+10,6,29),spec[2])
     end
     for i=1,3 do disc('BounceCoil',3+i*.5,.35,Vector3.new(-25,7+i*.65,20),C.purple) end
     p('ScannerDish',Vector3.new(6,2,6),Vector3.new(-75,11,24),C.coral,Enum.PartType.Ball)
@@ -202,42 +212,12 @@ function G.SetVisible(model,visible)
     end
 end
 function G.Decorate(root)
-    if root:FindFirstChild("ResortDetails") then return end
     local d=folder(root,"ResortDetails")
-    -- A small furnished arrival plaza gives the island an identifiable centre.
-    for _,x in {-13,13} do
-        part(d,"BenchSeat",Vector3.new(7,.6,2.5),Vector3.new(x,7,-20),C.cream)
-        part(d,"BenchBack",Vector3.new(7,2,.4),Vector3.new(x,8,-18.8),C.purple)
-        for _,dx in {-2.5,2.5} do part(d,"BenchLeg",Vector3.new(.5,1.5,1.8),Vector3.new(x+dx,6,-20),C.dark) end
+    for _,spec in {{-49,18},{49,-12}} do
+        G.Prop(d,'Palm',Vector3.new(spec[1],5.35,spec[2]))
+        G.Prop(d,'Bush',Vector3.new(spec[1]-3,5.35,spec[2]+5))
     end
-    for _,x in {-12,12} do
-        cylinder(d,"ArrivalBollard",.55,2,Vector3.new(x,7,25),C.dark)
-        cylinder(d,"ArrivalGlow",.65,.4,Vector3.new(x,8,25),C.teal,Enum.Material.Neon)
-    end
-    for i=1,4 do
-        local x=-15-i*2
-        G.Prop(d,'Luggage',Vector3.new(x,5.6,30),i%2==0 and C.coral or C.purple)
-    end
-    for _,room in {root.StarterRoom,root.Upgrades.Room2} do
-        local x=room.Floor.Position.X
-        part(room,"Rug",Vector3.new(6,.1,6),Vector3.new(x-3,6.7,7),C.purple)
-        cylinder(room,"BedsideTable",1.2,2,Vector3.new(x-3,7.6,12),C.cream)
-        part(room,"LampStem",Vector3.new(.2,1.4,.2),Vector3.new(x-3,9,12),C.dark)
-        part(room,"LampShade",Vector3.new(1.6,1.3,1.6),Vector3.new(x-3,10,12),C.coral,nil,Enum.PartType.Ball)
-        part(room,"EntryAwning",Vector3.new(8,.4,4),Vector3.new(x,14.2,-2),C.purple)
-        textOn(room,"WelcomeMat",Vector3.new(x,6.8,-2.5),Vector3.new(4,.5,.2),"WELCOME",C.teal)
-    end
-    -- Raised garden clusters fill edges without blocking the walking routes.
-    for _,p in {{-43,-4},{43,-4},{-28,36},{28,36}} do
-        cylinder(d,"GardenBed",5,.6,Vector3.new(p[1],5.8,p[2]),C.dark)
-        plant(d,p[1],p[2])
-        for i=1,4 do
-            local a=i*math.pi/2
-            local crystal=part(d,"Crystal",Vector3.new(1,2+i*.3,1),Vector3.new(p[1]+math.cos(a)*3,7,p[2]+math.sin(a)*3),i%2==0 and C.teal or C.purple,Enum.Material.Glass) crystal.Shape=Enum.PartType.Ball crystal.Orientation=Vector3.new(15,0,25) crystal.CanCollide=false
-        end
-    end
-    textOn(d,"ArrivalBoard",Vector3.new(-18,11,31),Vector3.new(12,5,.5),"SPACEPORT\nGUEST ARRIVALS",C.teal)
-    root:SetAttribute("BuildVersion","0.2.0")
+    for _,spec in {{-46,39},{44,34},{-51,-26}} do G.Prop(d,'Bush',Vector3.new(spec[1],5.35,spec[2])) end
 end
 function G.Build(parent,name,origin)
     -- Construct each independent model at local zero, then translate once.
@@ -246,7 +226,7 @@ function G.Build(parent,name,origin)
     local island=folder(root,"Island")
     cylinder(island,"UpperIsland",65,5,Vector3.new(0,2.5,0),C.purple)
     cylinder(island,"CreamRim",65.8,.7,Vector3.new(0,4,0),C.cream)
-    cylinder(island,"Ground",63,.7,Vector3.new(0,5,0),Color3.fromRGB(102,134,143))
+    cylinder(island,"Ground",63,.7,Vector3.new(0,5,0),Color3.fromRGB(199,191,168))
     for i=1,3 do cylinder(island,"FloatingRock",58-i*10,6,Vector3.new(0,-i*5,0),C.rock) end
     part(island,"MainWalk",Vector3.new(12,.3,105),Vector3.new(0,5.5,0),C.cream)
     for _,z in {-10,20} do part(island,"CrossWalk",Vector3.new(90,.3,8),Vector3.new(0,5.5,z),C.cream) end
@@ -283,11 +263,10 @@ function G.Build(parent,name,origin)
     local claim=part(root,"ClaimTerminal",Vector3.new(5,4,3),Vector3.new(0,7.5,-35),C.dark)
     part(root,"ClaimTop",Vector3.new(5.4,.4,3.4),Vector3.new(0,9.7,-35),C.teal,Enum.Material.Neon)
     local cp=Instance.new("ProximityPrompt") cp.ActionText="Claim free resort" cp.ObjectText="YOUR SPACE GETAWAY" cp.MaxActivationDistance=12 cp.HoldDuration=.2 cp.RequiresLineOfSight=false cp.Parent=claim
-    textOn(root,"ResortSign",Vector3.new(0,18,-48),Vector3.new(34,7,1),"ORBIT & OASIS\nALIEN RESORT TYCOON",C.cream)
-    for _,x in {-17,17} do part(root,"SignPost",Vector3.new(.7,14,.7),Vector3.new(x,12,-48),C.teal) end
-    for _,pos in {{-49,-23},{49,-23},{-47,28},{47,28},{-18,-45},{18,-45}} do plant(root,pos[1],pos[2]) end
-    for i=1,12 do
-        local a=i*math.pi*2/12 local x,z=math.cos(a)*59,math.sin(a)*59
+    textOn(root,"ResortSign",Vector3.new(-17,9,-51),Vector3.new(14,2,.4),"ORBIT & OASIS",C.cream)
+    part(root,"SignPost",Vector3.new(.4,3,.4),Vector3.new(-17,7,-51),C.dark)
+    for i=1,6 do
+        local a=i*math.pi*2/6 local x,z=math.cos(a)*59,math.sin(a)*59
         part(root,"BeaconPost",Vector3.new(.5,3,.5),Vector3.new(x,7,z),C.dark)
         part(root,"Beacon",Vector3.new(1.1,.4,1.1),Vector3.new(x,8.7,z),C.teal,Enum.Material.Neon)
     end

@@ -14,6 +14,10 @@ return function(requireModule)
     local plots={}
     local assertions=0
     local function check(value,message) assertions+=1 assert(value,message) end
+    local gateModel=Instance.new('Model') local counter=Instance.new('Part') counter.Name='ServiceCounter' counter.Parent=gateModel
+    local serving=Instance.new('ProximityPrompt') serving.Enabled=false serving:SetAttribute('RequiresBuild',3) serving.Parent=counter
+    for stage=0,3 do requireModule('ResortExtras').SetStage(gateModel,stage) check(serving.Enabled==(stage==3),'service interaction follows construction stage') end
+    gateModel:Destroy()
     check(not Rules.CompletedRequest(10,'Jelly',11,'Pebble'),'wrong completed pet cannot fulfill request')
     check(not Rules.CompletedRequest(10,'Jelly',9,'Jelly'),'old course cannot fulfill new request')
     check(Rules.CompletedRequest(10,'Jelly',11,'Jelly'),'matching completed course fulfills request')

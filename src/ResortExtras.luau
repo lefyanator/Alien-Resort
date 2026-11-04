@@ -19,6 +19,7 @@ function X.SetStage(model,stage)
             local visible=stage>=level
             p.Transparency=visible and p:GetAttribute('OriginalTransparency') or 1
             p.CanCollide=visible and p:GetAttribute('OriginalCollision') or false
+        elseif p:IsA('ProximityPrompt') and p:GetAttribute('RequiresBuild') then p.Enabled=stage>=p:GetAttribute('RequiresBuild')
         elseif p:IsA('SurfaceGui') then p.Enabled=stage>=2 end
     end
 end
@@ -108,12 +109,11 @@ function X.New(S,root,refresh)
         else
             p:SetAttribute('Owns'..id,true)
             if id=='Garden' then
-                for _,x in {-43,43} do G.Prop(extras,'Flowers',origin+Vector3.new(x,5.7,-17),G.Colors.coral) end
+                for _,x in {-43,43} do G.Prop(extras,'Flowers',origin+Vector3.new(x,5.35,-17),G.Colors.coral) end
             elseif id=='Tables' then
-                for _,x in {37,45} do
-                    localPart(extras,'TableStem',Vector3.new(.5,3,.5),CFrame.new(x,7,-39),G.Colors.dark)
-                    local top=localPart(extras,'TableTop',Vector3.new(.5,5,5),CFrame.new(x,8.5,-39)*CFrame.Angles(0,0,math.pi/2),G.Colors.cream) top.Shape=Enum.PartType.Cylinder
-                    for _,dz in {-3.5,3.5} do local pos=origin+Vector3.new(x,5.7,-39+dz) local chair=G.Prop(extras,'Chair',pos,G.Colors.coral) chair:PivotTo(CFrame.new(pos)*CFrame.Angles(0,dz>0 and 0 or math.pi,0)) end
+                for _,z in {-26,-38} do
+                    G.Prop(extras,'CafeTable',origin+Vector3.new(44,5.35,z))
+                    for _,dz in {-3,3} do local pos=origin+Vector3.new(44,5.35,z+dz) local chair=G.Prop(extras,'Chair',pos,G.Colors.coral) chair:PivotTo(CFrame.new(pos)*CFrame.Angles(0,dz>0 and 0 or math.pi,0)) end
                 end
             end
         end

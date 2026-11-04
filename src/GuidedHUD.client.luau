@@ -15,24 +15,24 @@ local gui=Instance.new('ScreenGui') gui.Name='AlienResortHUD' gui.ResetOnSpawn=f
 local screen=Instance.new('Frame') screen.Name='SafeArea' screen.Size=UDim2.fromScale(1,1) screen.BackgroundTransparency=1 screen.Parent=gui
 local function place(o,x,y,w,h) o.Position=UDim2.fromOffset(x,y) o.Size=UDim2.fromOffset(w,h) return o end
 local function label(parent,name,value,size,color,x,y,w,h,z) return place(T.Text(parent,name,value,size,color,z),x,y,w,h) end
-local wallet=place(T.Panel(screen,'Wallet',C.Ink,5),12,12,244,88)
-T.Stroke(wallet,Color3.fromRGB(65,81,108),1)
+local wallet=place(T.Panel(screen,'Wallet',C.Ink,5),12,12,200,64)
+T.Round(wallet,30) T.Stroke(wallet,C.Gold,2)
 local walletScale=Instance.new('UIScale') walletScale.Parent=wallet
-local coin=T.Coin(wallet,44,6) coin.Position=UDim2.fromOffset(14,24)
-label(wallet,'Brand','RESORT TOKENS',10,C.Gold,70,10,150,14,6)
-local tokenText=label(wallet,'Tokens','0',27,C.White,70,26,158,32,6)
-local rate=label(wallet,'Income','Your island is getting ready',11,Color3.fromRGB(185,205,222),14,64,220,17,6)
+local coin=T.Coin(wallet,34,6) coin.Position=UDim2.fromOffset(12,10)
+label(wallet,'Brand','TOKENS',9,C.Gold,58,6,120,12,6)
+local tokenText=label(wallet,'Tokens','0',25,C.White,58,18,130,28,6) tokenText.Font=Enum.Font.FredokaOne
+local rate=label(wallet,'Income','Your island is getting ready',10,Color3.fromRGB(215,228,243),12,46,176,14,6)
 local fxButton=place(T.Button(screen,'Motion','FX ON',C.Cream,6),0,12,88,40)
 local motion=true
 fxButton.Activated:Connect(function() motion=not motion fxButton.Text=motion and 'FX ON' or 'FX QUIET' end)
-local guide=place(T.Panel(screen,'Guide',C.White,4),280,12,440,88) T.Stroke(guide)
-local guideTitle=label(guide,'Title','Preparing your resort...',16,C.Ink,14,10,410,25)
-local guideDetail=label(guide,'Detail','A whole island. A tiny crew. Your next adventure.',12,C.Muted,14,36,410,32)
+local guide=place(T.Panel(screen,'Guide',C.Ink,4),280,12,380,64) T.Round(guide,24) T.Stroke(guide,C.Gold,2) guide.BackgroundTransparency=.12
+local guideTitle=label(guide,'Title','Preparing your resort...',16,C.Gold,14,7,352,22) guideTitle.Font=Enum.Font.FredokaOne
+local guideDetail=label(guide,'Detail','A whole island. A tiny crew. Your next adventure.',12,C.White,14,30,352,28)
 local progress=T.Panel(guide,'Progress',C.Soft,5) progress.Position=UDim2.new(0,14,1,-10) progress.Size=UDim2.new(1,-28,0,4)
 local progressFill=T.Panel(progress,'Fill',C.Teal,6) progressFill.Size=UDim2.fromScale(0,1)
 local nav={}
 for i,spec in {{'Pets','PETS',C.Lilac},{'Build','BUILD',C.Teal},{'Shop','SHOP',C.Gold}} do
-    local b=T.Button(screen,spec[1],spec[2],spec[3],6) nav[spec[1]]=b
+    local b=T.Button(screen,spec[1],spec[2],spec[3],6) T.NavIcon(b,spec[1]) nav[spec[1]]=b
 end
 local save=label(screen,'SaveStatus','',10,C.Muted,12,0,280,16,3)
 local toast=T.Panel(screen,'Notice',C.Ink,80) toast.AnchorPoint=Vector2.new(.5,0) toast.Visible=false
@@ -148,21 +148,22 @@ end
 layout=function()
     local w,h=screen.AbsoluteSize.X,screen.AbsoluteSize.Y if w<1 then return end
     local compact=w<920
-    local walletWidth=math.min(244,w-116) place(wallet,12,12,walletWidth,88)
-    tokenText.Size=UDim2.new(1,-84,0,32) rate.Size=UDim2.new(1,-28,0,17)
-    place(fxButton,w-100,12,88,40)
+    place(wallet,12,12,math.min(200,w-104),64)
+    tokenText.Size=UDim2.new(1,-70,0,28) rate.Size=UDim2.new(1,-24,0,14)
+    place(fxButton,w-80,12,68,36) fxButton.TextSize=11
+    local names={'Pets','Build','Shop','Adventure'}
     if h<500 and w>=600 then
-        place(guide,268,12,w-380,88)
-        for i,name in {'Pets','Build','Shop'} do place(nav[name],12+(i-1)*94,110,86,44) end
+        place(guide,224,12,w-320,64)
+        for i,name in names do if nav[name] then place(nav[name],12+((i-1)%2)*76,94+math.floor((i-1)/2)*76,64,64) end end
     elseif compact then
-        place(guide,12,110,w-24,78)
-        local bw=(w-40)/3
-        for i,name in {'Pets','Build','Shop'} do place(nav[name],12+(i-1)*(bw+8),198,bw,44) end
+        place(guide,12,88,w-24,64)
+        local bw=math.min(76,(w-48)/4)
+        for i,name in names do if nav[name] then place(nav[name],12+(i-1)*(bw+8),164,bw,70) end end
     else
-        local gw=math.min(520,w-560) place(guide,(w-gw)/2,12,gw,88)
-        for i,name in {'Pets','Build','Shop'} do place(nav[name],12,120+(i-1)*66,86,56) end
+        local gw=math.min(380,w-440) place(guide,(w-gw)/2,12,gw,64)
+        for i,name in names do if nav[name] then place(nav[name],12,104+(i-1)*86,70,70) end end
     end
-    guideTitle.Size=UDim2.new(1,-28,0,25) guideDetail.Size=UDim2.new(1,-28,0,32)
+    guideTitle.Size=UDim2.new(1,-28,0,22) guideDetail.Size=UDim2.new(1,-28,0,28)
     place(save,12,h-20,w-24,16)
     place(boosts,12,h-68,math.min(320,w-24),44)
     local mw=math.min(900,w-24) local mh=math.min(590,h-24)
@@ -289,7 +290,7 @@ local function earnings(amount)
     local pop=T.Panel(screen,'Gain',C.Gold,92) pop.Size=UDim2.fromOffset(290,34) pop.AnchorPoint=Vector2.new(.5,0)
     local text=label(pop,'Text','CHA-CHING!  +'..T.Format(amount),17,C.Ink,0,0,290,34,93) text.TextXAlignment=Enum.TextXAlignment.Center
     local w=screen.AbsoluteSize.X local popupWidth=math.min(290,w-24) pop.Size=UDim2.fromOffset(popupWidth,34) text.Size=UDim2.fromScale(1,1)
-    pop.Position=UDim2.fromOffset(math.clamp(wallet.Position.X.Offset+wallet.AbsoluteSize.X+148,popupWidth/2+12,w-popupWidth/2-12),wallet.Position.Y.Offset+56)
+    pop.Position=UDim2.fromOffset(w*.5,screen.AbsoluteSize.Y-(w<600 and 200 or 110))
     task.delay(.85,function()
         if pop.Parent then
             Tween:Create(text,TweenInfo.new(.3),{TextTransparency=1}):Play()
@@ -328,8 +329,8 @@ task.spawn(function()
     while not p:GetAttribute('PlotName') do p:GetAttributeChangedSignal('PlotName'):Wait() end
     world=workspace:WaitForChild('ResortPlots'):WaitForChild(p:GetAttribute('PlotName'))
     world:WaitForChild('StarterRoom'):WaitForChild('Floor') world:WaitForChild('Upgrades'):WaitForChild('Room3'):WaitForChild('Floor')
-    marker=Instance.new('BillboardGui') marker.Name='NextStepMarker' marker.Size=UDim2.fromOffset(200,76) marker.StudsOffsetWorldSpace=Vector3.new(0,7,0) marker.AlwaysOnTop=true marker.MaxDistance=180 marker.Parent=gui
-    local caption=label(marker,'Caption','',15,C.Gold,0,0,200,76,5) caption.TextXAlignment=Enum.TextXAlignment.Center caption.TextStrokeTransparency=.35
+    marker=Instance.new('BillboardGui') marker.Name='NextStepMarker' marker.Size=UDim2.fromOffset(120,48) marker.StudsOffsetWorldSpace=Vector3.new(0,7,0) marker.AlwaysOnTop=true marker.MaxDistance=100 marker.Parent=gui
+    local caption=label(marker,'Caption','',13,C.Gold,0,0,120,48,5) caption.TextXAlignment=Enum.TextXAlignment.Center caption.TextStrokeTransparency=.35
     highlight=Instance.new('Highlight') highlight.FillColor=C.Teal highlight.FillTransparency=.82 highlight.OutlineColor=C.Cream highlight.Parent=world
     destination=Instance.new('Attachment') destination.Position=Vector3.new(0,1.5,0)
     beam=Instance.new('Beam') beam.Color=ColorSequence.new(C.Teal) beam.Width0=.14 beam.Width1=.14 beam.FaceCamera=true beam.Attachment1=destination beam.Parent=world
@@ -339,7 +340,7 @@ task.spawn(function()
     end
     p.CharacterAdded:Connect(character) if p.Character then task.spawn(character,p.Character) end
     for _,room in {world.StarterRoom,world.Upgrades.Room2,world.Upgrades.Room3} do
-        local bb=Instance.new('BillboardGui') bb.Size=UDim2.fromOffset(180,46) bb.Adornee=room.Floor bb.StudsOffsetWorldSpace=Vector3.new(0,14,0) bb.MaxDistance=75 bb.Parent=gui
+        local bb=Instance.new('BillboardGui') bb.Size=UDim2.fromOffset(150,40) bb.Adornee=room.Floor bb.StudsOffsetWorldSpace=Vector3.new(0,14,0) bb.MaxDistance=22 bb.Parent=gui
         local panel=T.Panel(bb,'Room',C.Ink,2) panel.Size=UDim2.fromScale(1,1)
         local text=label(panel,'Status','',12,C.White,8,4,164,38,3) text.TextXAlignment=Enum.TextXAlignment.Center
         table.insert(roomLabels,{Room=room,Gui=bb,Text=text})
@@ -391,7 +392,7 @@ Run.RenderStepped:Connect(function(dt)
     if modal.Visible and currentTab=='Shop' then refresh() end
     for _,entry in roomLabels do
         local room=entry.Room
-        entry.Gui.Enabled=room.Floor.Transparency<1 and (room:GetAttribute('Stage')==nil or room:GetAttribute('Stage')==3)
+        entry.Gui.Enabled=room.Floor.Transparency<1 and room:GetAttribute('Occupied')==true and (room:GetAttribute('Stage')==nil or room:GetAttribute('Stage')==3)
         local status=room:GetAttribute('GuestStatus') or 'Ready for guests'
         if status=='Occupied' then
             local seconds=math.max(0,math.ceil((room:GetAttribute('NextPaymentAt') or 0)-workspace:GetServerTimeNow()))
@@ -413,6 +414,7 @@ end)
 -- Adventure drawer: travel, useful pet actions, jobs, and progression.
 local adventureRemote=Replicated:WaitForChild('ResortAdventure')
 local play=T.Button(screen,'Adventure','ADVENTURE',C.Teal,8)
+T.NavIcon(play,'Adventure') nav.Adventure=play
 drawer=T.Panel(screen,'AdventureDrawer',C.Cream,45) drawer.AnchorPoint=Vector2.new(.5,.5) drawer.Position=UDim2.fromScale(.5,.5) drawer.Visible=false T.Stroke(drawer)
 local title=label(drawer,'Title','BUILD. BOND. ADVENTURE.',17,C.Ink,14,12,400,25,46)
 local summary=label(drawer,'Progress','',13,C.Ink,14,44,400,112,46)
@@ -431,7 +433,7 @@ for i,entry in definitions do
 end
 local function activityLayout()
     local w,h=screen.AbsoluteSize.X,screen.AbsoluteSize.Y
-    play.Position=UDim2.fromOffset(w-100,64) play.Size=UDim2.fromOffset(88,44) play.TextSize=12
+    layout()
     drawer.Size=UDim2.fromOffset(math.min(520,w-24),math.min(490,h-24)) title.Size=UDim2.new(1,-78,0,25) summary.Size=UDim2.new(1,-28,0,112)
     actionGrid.CellSize=UDim2.new(.5,-8,0,44)
 end
@@ -448,6 +450,6 @@ activityStatus=function()
 end
 play.Activated:Connect(function() local was=drawer.Visible open(nil) drawer.Visible=not was scrim.Visible=not was activityStatus() if not was then GuiService.SelectedObject=exit end end)
 exit.Activated:Connect(function() open(nil) end)
-for _,button in nav do button.Activated:Connect(function() drawer.Visible=false end) end
+for name,button in nav do if name~='Adventure' then button.Activated:Connect(function() drawer.Visible=false end) end end
 p.AttributeChanged:Connect(activityStatus) screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(activityLayout)
 activityLayout() activityStatus()

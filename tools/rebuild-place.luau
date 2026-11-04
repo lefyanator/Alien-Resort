@@ -32,6 +32,9 @@ local replicated=place:GetService('ReplicatedStorage')
 local old=replicated:FindFirstChild('PetTemplates') if old then old:Destroy() end
 local templates=roblox.deserializeModel(fs.readFile('art/PetTemplates.rbxm'))[1]
 templates.Parent=replicated
+local propStorage=place:GetService('ServerStorage')
+local oldProps=propStorage:FindFirstChild('WorldProps') if oldProps then oldProps:Destroy() end
+roblox.deserializeModel(fs.readFile('art/WorldProps.rbxm'))[1].Parent=propStorage
 local server=place:GetService('ServerScriptService'):FindFirstChild('AlienResort')
 local starter=place:GetService('StarterPlayer'):FindFirstChild('StarterPlayerScripts')
 for _,name in fs.readDir('src') do

@@ -31,3 +31,13 @@ for _,id in {'Pebble','Jelly','Slime','Lava'} do
     end
 end
 print('PASS: four Blender templates, shared mesh and animation metadata are embedded.')
+local props=place:GetService('ServerStorage'):FindFirstChild('WorldProps')
+assert(props and #props:GetChildren()==6,'Missing curated Creator Store props')
+for _,model in props:GetChildren() do
+    assert(model:GetAttribute('SourceAssetId'),'Missing prop attribution')
+    for _,p in model:GetDescendants() do
+        assert(not p:IsA('LuaSourceContainer'),'Executable code in prop bundle')
+        if p:IsA('BasePart') then assert(p.Anchored and not p.CanCollide and not p.CanTouch and not p.CanQuery,'Invalid prop physics') end
+    end
+end
+print('PASS: six attributed static Creator Store templates embedded.')

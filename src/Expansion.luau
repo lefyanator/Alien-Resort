@@ -45,7 +45,7 @@ function E.Build(root,G)
         block(m,"Rug",{7,.08,8},{x-4,6.65,z},accent)
         block(m,"Desk",{5,.5,2},{x-5,9,z+6},C.dark)
         for _,dx in {-7,-3} do block(m,"DeskLeg",{.3,2.5,1.5},{x+dx,7.8,z+6},C.dark) end
-        block(m,"Chair",{2,1.5,2},{x-5,7.5,z+3.5},accent)
+        local chair=G.Prop(m,'Chair',Vector3.new(x-5,6.6,z+3.5)) chair:PivotTo(CFrame.new(x-5,6.6,z+3.5))
         block(m,"Wardrobe",{3,7,3},{x-7,10,z-5},C.dark)
         sign(m,"RoomUse",x,12,z+8.5,8,2,"GUEST SUITE",accent)
         m:SetAttribute("GuestRoom",true)
@@ -119,15 +119,18 @@ function E.Build(root,G)
     local barrel=block(observatory,'SkyTelescope',{2.8,2.8,12},{35,23,79},C.teal) barrel.Shape=Enum.PartType.Cylinder barrel.Size=Vector3.new(12,3,3) barrel.Orientation=Vector3.new(0,0,35) barrel:SetAttribute('BuildStage',3)
     for _,v in snack:GetChildren() do if v.Name=='FrontWall' or v.Name=='RoofCap' then v:Destroy() end end
     local cafeRoof=snack:FindFirstChild('Roof') cafeRoof.Color=C.coral cafeRoof.Size=Vector3.new(26,2,23)
+    cafeRoof.Color=Color3.fromRGB(172,92,63)
+    for _,v in snack:GetChildren() do if v:IsA('BasePart') and (v.Name=='ServiceCounter' or v.Name=='WindowFrame' or v.Name=='DoorFrame') then v.Material=Enum.Material.Wood v.Color=Color3.fromRGB(108,76,57) end end
+    for _,v in reception:GetChildren() do if v.Name=='FrontWall' then v:Destroy() end end
     local receptionDome=block(reception,'TowerDome',{7,5,7},{-37,29,-22},C.teal) receptionDome.Shape=Enum.PartType.Ball receptionDome:SetAttribute('BuildStage',2)
     for _,m in {root.StarterRoom,root.Upgrades.Room2,root.Upgrades.Room3} do
         local floor=m.Floor.Position
         G.Prop(m,'Lamp',Vector3.new(floor.X-4,6.6,floor.Z+6),C.coral)
         G.Prop(m,'Luggage',Vector3.new(floor.X-7,6.6,floor.Z-4),C.purple)
     end
-    G.Prop(reception,'Palm',Vector3.new(-36,6.6,-22))
+    G.Prop(reception,'Bush',Vector3.new(-36,6.6,-22))
     G.Prop(snack,'Flowers',Vector3.new(37,6.6,-35),C.coral)
-    for _,x in {-48,13,49} do G.Prop(district,'Palm',Vector3.new(x,5.7,94)) end
+    G.Prop(district,'Palm',Vector3.new(49,5.35,94))
     root:SetAttribute("BuildVersion","0.3.0")
 end
 return E

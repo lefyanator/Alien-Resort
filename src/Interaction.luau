@@ -7,6 +7,7 @@ function I.Near(player,part,distance)
     return hrp~=nil and humanoid~=nil and humanoid.Health>0 and (hrp.Position-part.Position).Magnitude<=(distance or 16)
 end
 function I.Bind(prompt,authorize,callback)
+    if typeof(prompt)=='Instance' then prompt.Exclusivity=Enum.ProximityPromptExclusivity.OneGlobally end
     local holds=setmetatable({},{__mode='k'})
     prompt.PromptButtonHoldBegan:Connect(function(p)
         if prompt.Enabled and authorize(p) and I.Near(p,prompt.Parent) then

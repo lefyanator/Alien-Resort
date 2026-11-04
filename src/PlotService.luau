@@ -67,10 +67,10 @@ local function refresh()
         local stage=S.Owner and (S.Owner:GetAttribute("Stage_"..u.Id) or 0) or 0
         local price=Extras.StagePrice(u,math.min(stage,2))
         local available=S.Owner~=nil and not unlocked and (i==1 or S.Unlocked[Config.Upgrades[i-1].Id])
-        b.Transparency=unlocked and 1 or .05
+        b.Transparency=available and .15 or 1
         b.BuildPrompt.Enabled=available==true
         b.BuildPrompt.ObjectText=u.Name.." / "..Config.StageNames[math.min(stage+1,3)].." / "..price.." tokens"
-        b.Label.Enabled=not unlocked and (not S.Owner or available==true)
+        b.Label.Enabled=false
         local affordable=available and balance(S.Owner)>=price
         local status
         if not S.Owner then status="Claim your resort first"

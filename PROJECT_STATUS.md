@@ -1,4 +1,8 @@
-# Latest: 0.10.0 — smooth companions and polish
+# Latest: 0.10.1 — declutter and Creator Store props
+
+Read DECLUTTER_STATUS.md for the screenshot-driven fixes, free asset credits, construction-gated cafe interaction and 183 engine checks. Previous results below are historical.
+
+# Previous: 0.10.0 — smooth companions and polish
 
 Read POLISH_STATUS.md for implemented art/GUI/gameplay changes, 179 engine checks, desktop and layout evidence, and remaining release gates. Previous milestones below are historical.
 

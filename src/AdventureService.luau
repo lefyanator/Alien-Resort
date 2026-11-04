@@ -64,8 +64,8 @@ function A.Start(resorts)
     local function homePlayer(p) local s=plot(p) if s then teleport(p,s.Origin+Vector3.new(0,10,-44)) end end
     prompt(home,'Return to your resort',function(p) if match and match.Team[p] then say(p,'Leave the match before returning home.') else homePlayer(p) end end)
     for _,s in resorts.Plots do
-        local dock=Instance.new('Part') dock.Name='CommonsShuttle' dock.Size=Vector3.new(7,1,7) dock.Position=s.Origin+Vector3.new(9,6,-43) dock.Anchored=true dock.Color=colors.Gold dock.Parent=s.Root
-        sign(dock,'SHUTTLE TO COSMIC COMMONS\nActivities / Star Shards / pet evolution')
+        local dock=Instance.new('Part') dock.Name='CommonsShuttle' dock.Size=Vector3.new(5,.3,5) dock.Position=s.Origin+Vector3.new(17,5.8,-53) dock.Anchored=true dock.Color=colors.Gold dock.Parent=s.Root
+        local caption=sign(dock,'TO THE COMMONS') caption.Parent.MaxDistance=16 caption.Parent.Size=UDim2.fromOffset(130,32)
         prompt(dock,'Travel to the Commons',function(p) if plot(p)==s and not (match and match.Team[p]) then teleport(p,origin+Vector3.new(0,10,75)) end end)
     end
     -- Ordered traversal checkpoints. Rewards require elapsed time and all checkpoints.
@@ -130,16 +130,17 @@ function A.Start(resorts)
     local beacon=part('Ancient Beacon',Vector3.new(75,10,20),Vector3.new(3,8,3),colors.Ink)
     local garden=part('Wilted Garden',Vector3.new(25,6.8,20),Vector3.new(6,.6,6),colors.Ink)
     for _,s in resorts.Plots do
-        local counter=Instance.new('Part') counter.Name='CafeServing' counter.Anchored=true counter.Size=Vector3.new(3,.5,3) counter.Position=s.Origin+Vector3.new(29,10.5,-33) counter.Color=colors.Gold counter.Parent=s.Root
-        prompt(counter,'Serve a guest snack',function(p)
+        local counter=s.Root.Upgrades.Kiosk.ServiceCounter
+        local serving=prompt(counter,'Serve a guest snack',function(p)
             if plot(p)~=s or (p:GetAttribute('Stage_Kiosk') or 0)<3 then say(p,'Complete your Cosmic Cafe first.') return end
             if not ready(p,'CafeServe',C.ActivityCooldown) then say(p,'Guests are still enjoying their snacks.') return end
             reward(p,8,1)
         end)
+        serving.Name='CafeServing' serving.ObjectText='Cosmic Cafe' serving:SetAttribute('RequiresBuild',3) serving.Enabled=false
         local telescope=s.Root.Upgrades.Observatory:FindFirstChild('TelescopeStand')
-        if telescope then prompt(telescope,'Read expedition clue',function(p)
+        if telescope then local clue=prompt(telescope,'Read expedition clue',function(p)
             if plot(p)==s and (p:GetAttribute('Stage_Observatory') or 0)==3 then say(p,'Expedition clue: three stardust deposits surround the Commons. Bring Pip!') end
-        end) end
+        end) clue:SetAttribute('RequiresBuild',3) clue.Enabled=false end
     end
     local evo=part('EVOLUTION LAB',Vector3.new(24,6,78),Vector3.new(8,1,8),colors.Lilac or colors.Blue)
     sign(evo,'EVOLUTION LAB\n'..C.EvolutionShards..' Star Shards + '..C.EvolutionBond..' bonding / use Evolve')

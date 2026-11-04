@@ -91,7 +91,7 @@ function X.New(S,root,refresh)
         local prompt=Instance.new('ProximityPrompt') prompt.Name='CleanPrompt' prompt.ActionText='Clean room (+3 tokens)' prompt.ObjectText='Guest room' prompt.HoldDuration=Config.CleanSeconds prompt.MaxActivationDistance=12 prompt.RequiresLineOfSight=false prompt.Enabled=false prompt.Parent=room.Floor
         Interaction.Bind(prompt,function(p) return p==S.Owner and p:GetAttribute('ProfileReady') end,function(p)
             local hrp=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
-            -- HoldDuration already enforced the wait; Began can miss on some touch devices.
+            -- Interaction.Bind validates the completed hold before this callback.
             if p==S.Owner and hrp and (hrp.Position-room.Floor.Position).Magnitude<=16 then finish(room,p,true) end
         end)
     end

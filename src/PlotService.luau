@@ -202,7 +202,7 @@ local function runRoom(roomId,x)
             warn("AlienResort guest loop: "..tostring(err))
             -- Retry only this plot generation; never restart work for a new owner.
             if alive(generation) then
-                S.LandingBusy=false
+                if S.LandingBusy==landingTicket then S.LandingBusy=false end
                 local room=roomId==1 and root.StarterRoom or root.Upgrades[roomId==2 and "Room2" or "Room3"]
                 if room:GetAttribute("Occupied") then room:SetAttribute("Occupied",false) S.Occupied=math.max(0,S.Occupied-1) end
                 updateRate()

@@ -1,3 +1,7 @@
+# Latest: 0.9.1 — Blender integration and code review
+
+Read CODE_REVIEW.md for current results and remaining work. The four templates are integrated and verified; the first-pass art notes below are historical.
+
 # Blender art first pass — 4 November 2026
 
 The art/ folder contains an editable Blender scene, four static pet FBX exports and a reproducible build script. These are original concept meshes for Pip, Juno, Sprout and Ember. They are NOT imported into Roblox yet and have no rigs or animation clips. See art/README.md for the integration contract and remaining work. The canonical playable game is still the verified 0.9.0 milestone below; no game scripts or gameplay were changed by this art pass.
@@ -70,3 +74,7 @@ Previous GitHub baseline: `ccdab7081812e6dc86e20fc276557ed768ac76dd`. The previo
 4. `ResortService` handles player lifecycle/routing; `PlotService` owns one island; `ResortExtras.New` closes over one plot; `PetService` owns catalogue/purchases/companions; `ProgressStore` owns persistence; `Interaction` owns prompt validation; Geometry/Expansion build visuals; HUD/Theme display state.
 5. Never accept client prices, balances, plot owners, or pet ownership. Preserve server validation and per-plot coordinates in future changes.
 6. Each collaborator uses their own accounts. GitHub collaborator access and Roblox Team Create permission are separate; the second collaborator's account/access has not been verified. ChatGPTs share context through committed files, not automatic shared memory.
+
+# Integration milestone 0.9.1 — 5 November 2026
+
+Blender pet templates are integrated, including original transforms, colours, motion metadata and first-open portraits. All active source and templates are saved in the canonical place. CODE_REVIEW.md records the full source review, bounded gameplay fixes, 174 imported-template engine checks and 77 procedural-fallback checks. Live cloud/multi-client testing remains outstanding. Saving is now to this GitHub repository; Obsidian is no longer used.

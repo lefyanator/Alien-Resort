@@ -61,9 +61,18 @@ return function(requireModule)
         for _,spec in Config.PetSpecies do
             local character=Visuals.Create(scratch,Vector3.zero,spec.Id)
             check(character.PrimaryPart~=nil and character:GetAttribute('SpeciesId')==spec.Id,'character identity')
-            local feature=({Pebble='ExplorerPack',Jelly='Ribbon',Slime='SproutStem',Lava='TailFlame'})[spec.Id]
+            local feature=({Pebble='ExplorerPack',Jelly='Ribbon',Slime='Leaf',Lava='TailFlame'})[spec.Id]
             check(character:FindFirstChild(feature)~=nil,'species has unique silhouette/accessory')
             check(#character:GetChildren()<=36,'character instance budget')
+            local templates=game.ReplicatedStorage:FindFirstChild('PetTemplates')
+            if templates and templates:FindFirstChild(spec.Id) then
+                check(character:GetAttribute('ArtSource')=='Blender','authored template chosen')
+                check(character.Body:IsA('MeshPart') and character.Body.MeshId~='','persistent mesh asset')
+                check(math.abs(select(2,character:GetBoundingBox()).Y-4.6)<.02,'normalized art height')
+                for _,part in character:GetChildren() do
+                    if part:IsA('BasePart') then check(not part.CanCollide and not part.CanTouch and not part.CanQuery,'visual-only mesh') end
+                end
+            end
             character:ScaleTo(.6) Visuals.Animate(character,4.5,true)
             check(character.PrimaryPart.Position.Magnitude<.01,'animation preserves gameplay pivot')
             character:Destroy()

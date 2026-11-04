@@ -371,6 +371,14 @@ Run.RenderStepped:Connect(function(dt)
 end)
 screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(layout)
 layout() refresh()
+-- Mesh portraits may be opened before their shared surface has streamed in.
+-- Preload instances (not raw mesh IDs, which are interpreted as image content).
+task.spawn(function()
+    local templates=Replicated:WaitForChild('PetTemplates',5)
+    if not templates then return end
+    local ok=pcall(function() game:GetService('ContentProvider'):PreloadAsync({templates}) end)
+    if ok and modal.Visible and currentTab=='Pets' then open('Pets') end
+end)
 
 -- Adventure drawer: travel, useful pet actions, jobs, and progression.
 local adventureRemote=Replicated:WaitForChild('ResortAdventure')

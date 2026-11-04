@@ -16,3 +16,18 @@ for _,name in fs.readDir('src') do
 end
 assert(count==15,'Expected all 15 active scripts')
 print('PASS: all '..count..' active place scripts match src/.')
+local templates=place:GetService('ReplicatedStorage'):FindFirstChild('PetTemplates')
+local exported=roblox.deserializeModel(fs.readFile('art/PetTemplates.rbxm'))[1]
+for _,id in {'Pebble','Jelly','Slime','Lava'} do
+    local model=templates and templates:FindFirstChild(id)
+    assert(model and model.PrimaryPart and model.PrimaryPart.Name=='CharacterRoot','Missing Blender template '..id)
+    assert(model:GetAttribute('ArtSource')=='Blender' and #model:GetChildren()==#exported[id]:GetChildren(),'Template mismatch '..id)
+    for _,p in model:GetChildren() do
+        if p:IsA('MeshPart') then
+            assert(tostring(p.MeshContent):find('rbxassetid://134081985420522',1,true),'Unverified mesh dependency')
+            assert(not p.CanCollide and not p.CanTouch and not p.CanQuery,'Collidable pet visual')
+            assert(p:GetAttribute('RestOffset') and p:GetAttribute('RestSize'),'Missing animation rest data')
+        end
+    end
+end
+print('PASS: four Blender templates, shared mesh and animation metadata are embedded.')

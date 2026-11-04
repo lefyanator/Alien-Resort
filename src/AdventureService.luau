@@ -79,7 +79,8 @@ function A.Start(resorts)
             elseif d.Training==i-1 and d.TrainingPet==p:GetAttribute('EquippedPet') then
                 d.Training=i
                 if i==5 then
-                    d.Training=0 d.CompletedTrainingAt=os.clock()
+                    d.Training=0
+                    if os.clock()-d.TrainingAt>=C.TrainingMinimum then d.CompletedTrainingAt=os.clock() end
                     if os.clock()-d.TrainingAt>=C.TrainingMinimum and ready(p,'TrainingReward',C.ActivityCooldown) then reward(p,C.TrainingTokens,C.TrainingShards,d.TrainingPet)
                     else say(p,'Course complete! Rewards recharge; explore another activity.') end
                 else say(p,'Checkpoint '..i..'! Next: '..(i+1)) end
@@ -162,12 +163,16 @@ function A.Start(resorts)
             local h=hrp(p) flags[i].Position=h and h.Position+Vector3.new(0,1,0) or bases[i].Position+Vector3.new(0,4,0)
         end end
     end
+    local function clearArenaPlayer(p)
+        p:SetAttribute('ArenaTeam',nil) p:SetAttribute('ArenaSeconds',nil) p:SetAttribute('CarryingStarcore',false)
+        local h=hrp(p) if h and h:FindFirstChild('TagRunner') then h.TagRunner.Enabled=false end
+    end
     local function finish(reason)
         if not match then return end
         local old=match
         resetFlag(1) resetFlag(2) match=nil
         for p,team in old.Team do
-            p:SetAttribute('ArenaTeam',nil) p:SetAttribute('CarryingStarcore',false) local h=hrp(p) if h and h:FindFirstChild('TagRunner') then h.TagRunner.Enabled=false end
+            clearArenaPlayer(p)
             if p.Parent==Players then
                 if (old.Contribution[p] or 0)>0 and os.clock()-old.Started>=C.MatchMinimum then
                     local won=old.Score[team]>old.Score[3-team]
@@ -198,7 +203,7 @@ function A.Start(resorts)
         for player in match.Team do say(player,'CAPTURE! Blue '..match.Score[1]..' : '..match.Score[2]..' Coral') end
     end) end
     prompt(queuePad,'Join / leave capture queue',function(p)
-        if match and match.Team[p] then drop(p) match.Team[p]=nil p:SetAttribute('ArenaTeam',nil) homePlayer(p) return end
+        if match and match.Team[p] then drop(p) match.Team[p]=nil clearArenaPlayer(p) homePlayer(p) return end
         queue[p]=not queue[p] or nil say(p,queue[p] and 'Queued! Training and rescue remain available while you wait.' or 'Left the queue.')
     end)
     local function setupCharacter(p,char)
@@ -228,7 +233,7 @@ function A.Start(resorts)
     remote.OnServerEvent:Connect(function(p,action,id)
         if type(action)~='string' or #action>32 or not plot(p) or not ready(p,'Remote',.35) then return end
         local s=plot(p) local pet=p:GetAttribute('EquippedPet') local inMatch=match and match.Team[p]
-        if action=='Home' then if inMatch then drop(p) match.Team[p]=nil p:SetAttribute('ArenaTeam',nil) end homePlayer(p)
+        if action=='Home' then if inMatch then drop(p) match.Team[p]=nil clearArenaPlayer(p) end homePlayer(p)
         elseif action=='Commons' then if not inMatch then teleport(p,origin+Vector3.new(0,10,75)) end
         elseif action=='Job' then
             if inMatch or type(id)~='string' or not Pets.Find(id) or not Pets.Owned(p,id) then return end
@@ -266,7 +271,7 @@ function A.Start(resorts)
             if inMatch or not I.Near(p,s.Root.ClaimTerminal) then return end
             if (p:GetAttribute('Stage_Reception') or 0)<3 then say(p,'Complete reception to accept guest requests.') return end
             if not ready(p,'GuestRequest',C.ActivityCooldown) then say(p,'No new request yet. Try the Commons!') return end
-            local d=data(p) d.RequestPet=pet d.RequestAt=os.clock() say(p,'Guest request: finish the training course with '..Pets.Find(pet).CharacterName..', then return here.')
+            local d=data(p) d.RequestPet=pet d.RequestAt=os.clock() d.RequestDone=false say(p,'Guest request: finish the training course with '..Pets.Find(pet).CharacterName..', then return here.')
         elseif action=='Deliver' then
             local d=data(p)
             if inMatch or not I.Near(p,s.Root.ClaimTerminal) or not d.RequestAt or not d.RequestDone then say(p,'Complete your training request, then return to your terminal.') return end

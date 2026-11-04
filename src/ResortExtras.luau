@@ -134,7 +134,7 @@ function X.New(S,root,refresh)
             task.wait(.5)
             local p=S.Owner
             if p then
-                local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid') if h then h.WalkSpeed=X.Boost(p,'Turbo') and 24 or 16 end
+                local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid') if h then h.WalkSpeed=p:GetAttribute('ArenaTeam') and 16 or (X.Boost(p,'Turbo') and 24 or 16) end
                 for _,room in rooms do room.Floor.CleanPrompt.HoldDuration=X.Boost(p,'Foam') and 1 or Config.CleanSeconds end
                 if p:GetAttribute('OwnsCleaner') and not cleaner then
                     cleaner=Instance.new('Model') cleaner.Name='CleanerBot' cleaner.Parent=extras

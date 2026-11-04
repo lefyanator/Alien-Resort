@@ -67,6 +67,7 @@ function Service.Start()
             notice(p,action=='Shop' and 'Supplies ready!' or (spec.CharacterName..': '..spec.Greeting))
         else notice(p,({funds='Not enough tokens!',owned='Already owned. Equip it from Pets.',active='This boost is still active!',locked='Buy this pet before equipping it.'})[why] or 'Unable to buy this item.') end
     end)
+    require(script.Parent.AdventureService).Start(Service)
     Progress.Start()
     local function setup(p)
         if p:GetAttribute('SetupStarted') then return end p:SetAttribute('SetupStarted',true)
@@ -90,6 +91,8 @@ function Service.Start()
         for id,owned in data.Owned do p:SetAttribute('Owns'..id,owned) end
         for id,owned in data.Pets do p:SetAttribute('Pet_'..id,owned) end
         p:SetAttribute('EquippedPet',data.EquippedPet)
+        p:SetAttribute('StarShards',data.StarShards)
+        for _,spec in Config.PetSpecies do p:SetAttribute('Bond_'..spec.Id,data.Bond[spec.Id]) p:SetAttribute('Evolved_'..spec.Id,data.Evolved[spec.Id]) end
         Progress.Ready(p) Service.Assign(p)
     end
     Players.PlayerAdded:Connect(function(p) task.spawn(setup,p) end)
@@ -101,6 +104,6 @@ function Service.Start()
     task.spawn(function()
         while container.Parent do task.wait(.1) for _,plot in Service.Plots do Pets.Step(plot) end end
     end)
-    print('Alien Resort 0.8: personal plots, cosmic characters, and responsive HUD ready.')
+    print('Alien Resort 0.9: Cosmic Commons, pet abilities, training, rescue and Starcore Capture ready.')
 end
 return Service

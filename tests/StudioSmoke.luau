@@ -8,6 +8,7 @@ return function(requireModule)
     local Config=requireModule('Config')
     local Interaction=requireModule('Interaction')
     local Visuals=requireModule('PetVisuals')
+    local Rules=requireModule('CaptureRules')
     local scratch=Instance.new('Folder')
     local characters={}
     local plots={}
@@ -47,6 +48,16 @@ return function(requireModule)
             check(plots[i].Claim(players[i])==true,'owner can claim')
         end
         local a,b=players[1],players[2]
+        check(Rules.CanCapture(1,1,{}, {Carrier=a},a),'capture with home flag')
+        check(not Rules.CanCapture(1,2,{}, {Carrier=a},a),'wrong base rejected')
+        check(not Rules.CanCapture(1,1,{Carrier=b}, {Carrier=a},a),'own carried flag blocks capture')
+        check(not Rules.CanCapture(1,1,{DroppedAt=1}, {Carrier=a},a),'own dropped flag blocks capture')
+        check(not Rules.CanCapture(1,1,{}, {Carrier=b},a),'wrong carrier rejected')
+        local sizes=Rules.TeamSize({[a]=1,[b]=2}) check(sizes[1]==1 and sizes[2]==1,'team counting')
+        local evolved=Progress.Normalize({StarShards=28,Bond={Pebble=34},Evolved={Pebble=true}})
+        check(evolved.StarShards==28 and evolved.Bond.Pebble==34 and evolved.Evolved.Pebble,'adventure migration')
+        local empty=Progress.Normalize(nil)
+        check(empty.StarShards==0 and empty.Bond.Pebble==0 and not empty.Evolved.Pebble,'legacy adventure defaults')
         for _,spec in Config.PetSpecies do
             local character=Visuals.Create(scratch,Vector3.zero,spec.Id)
             check(character.PrimaryPart~=nil and character:GetAttribute('SpeciesId')==spec.Id,'character identity')

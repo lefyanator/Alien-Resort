@@ -1,3 +1,5 @@
+Current gameplay version: 0.9.0. Read GAMEPLAY_STATUS.md before editing AdventureService or CaptureRules. Preserve separate plot state and server-owned reward checks.
+
 # Alien Resort project bible
 
 Cute space resort tycoon, branded **Orbit & Oasis**. Four personal floating islands, token income from alien guests, staged construction, cleaning, amenities, and permanent alien pets. The current visual pass is 0.8.0; follow UI_UX_SPEC.md for presentation and character rules.

@@ -24,6 +24,9 @@ function Pets.Refresh(plot)
     model:SetAttribute('CharacterName',spec.CharacterName)
     local tag=Instance.new('BillboardGui') tag.Name='CharacterName' tag.Adornee=model.PrimaryPart tag.Size=UDim2.fromOffset(130,24) tag.StudsOffsetWorldSpace=Vector3.new(0,2.4,0) tag.MaxDistance=35 tag.Parent=model
     local text=Instance.new('TextLabel') text.BackgroundTransparency=1 text.Size=UDim2.fromScale(1,1) text.Text=spec.CharacterName..' / '..spec.Name text.Font=Enum.Font.GothamBold text.TextSize=11 text.TextColor3=Color3.new(1,1,1) text.TextStrokeTransparency=.35 text.Parent=tag
+    if p:GetAttribute('Evolved_'..id) then
+        local halo=Instance.new('Part') halo.Name='EvolutionHalo' halo.Shape=Enum.PartType.Cylinder halo.Size=Vector3.new(.12,1.6,1.6) halo.CFrame=model:GetPivot()*CFrame.new(0,2,0)*CFrame.Angles(0,0,math.pi/2) halo.Color=Color3.fromRGB(255,210,94) halo.Material=Enum.Material.Neon halo.Anchored=true halo.CanCollide=false halo.CanTouch=false halo.CanQuery=false halo.Parent=model
+    end
     plot.Companion=model
 end
 function Pets.Buy(plot,p,id)
@@ -40,6 +43,7 @@ end
 function Pets.Equip(plot,p,id)
     if plot.Owner~=p or not p:GetAttribute('ProfileReady') then return false,'owner' end
     if not Pets.Find(id) or not Pets.Owned(p,id) then return false,'locked' end
+    if p:GetAttribute('PetJob')==id then p:SetAttribute('PetJob',nil) end
     p:SetAttribute('EquippedPet',id) Pets.Refresh(plot) return true
 end
 function Pets.Choose(player,sequence)

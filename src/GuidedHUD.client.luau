@@ -212,6 +212,7 @@ local function guideTarget(id)
     if id and id:sub(1,6)=='Clean_' then
         local name=id:sub(7) local room=name=='StarterRoom' and world.StarterRoom or world.Upgrades:FindFirstChild(name)
         if room then return room.Floor,room,'CLEAN ROOM' end
+    elseif id=='CommonsShuttle' and world:FindFirstChild('CommonsShuttle') then return world.CommonsShuttle,world.CommonsShuttle,'ADVENTURE SHUTTLE'
     elseif id=='ClaimTerminal' then return world.ClaimTerminal,world.ClaimTerminal,'CLAIM YOUR ISLAND'
     elseif id=='LandingPad' then return world.LandingPad.LandingSurface,world.LandingPad,'GUEST ARRIVING'
     elseif id=='StarterRoom' then return world.StarterRoom.Floor,world.StarterRoom,'GUEST INCOME'
@@ -370,3 +371,30 @@ Run.RenderStepped:Connect(function(dt)
 end)
 screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(layout)
 layout() refresh()
+
+-- Adventure drawer: travel, useful pet actions, jobs, and progression.
+local adventureRemote=Replicated:WaitForChild('ResortAdventure')
+local play=T.Button(screen,'Adventure','ADVENTURE',C.Teal,8)
+local drawer=T.Panel(screen,'AdventureDrawer',C.Cream,45) drawer.AnchorPoint=Vector2.new(.5,.5) drawer.Position=UDim2.fromScale(.5,.5) drawer.Visible=false T.Stroke(drawer)
+local title=label(drawer,'Title','BUILD. BOND. ADVENTURE.',17,C.Ink,14,12,400,25,46)
+local summary=label(drawer,'Progress','',12,C.Ink,14,44,400,55,46)
+local exit=T.Button(drawer,'Close','X',C.White,48) exit.Position=UDim2.new(1,-52,0,8) exit.Size=UDim2.fromOffset(44,44)
+local actions=Instance.new('ScrollingFrame') actions.Position=UDim2.fromOffset(12,108) actions.Size=UDim2.new(1,-24,1,-120) actions.AutomaticCanvasSize=Enum.AutomaticSize.Y actions.CanvasSize=UDim2.new() actions.BackgroundTransparency=1 actions.BorderSizePixel=0 actions.ScrollBarThickness=5 actions.ZIndex=46 actions.Parent=drawer
+local actionGrid=Instance.new('UIGridLayout') actionGrid.CellPadding=UDim2.fromOffset(8,8) actionGrid.Parent=actions
+local definitions={{'Commons','TO THE COMMONS'},{'Home','RETURN HOME'},{'Ability','USE PET ABILITY'},{'Evolve','EVOLVE AT LAB'},{'Request','ACCEPT GUEST REQUEST'},{'Deliver','DELIVER REQUEST'},{'Job','PIP: WORK / REST','Pebble'},{'Job','JUNO: WORK / REST','Jelly'},{'Job','SPROUT: WORK / REST','Slime'},{'Job','EMBER: WORK / REST','Lava'}}
+for i,entry in definitions do local button=T.Button(actions,'Action'..i,entry[2],i%2==0 and C.Soft or C.Teal,47) button.LayoutOrder=i button.TextSize=11 button.Activated:Connect(function() adventureRemote:FireServer(entry[1],entry[3]) if entry[1]=='Home' or entry[1]=='Commons' then drawer.Visible=false end end) end
+local function activityLayout()
+    local w,h=screen.AbsoluteSize.X,screen.AbsoluteSize.Y
+    play.Position=UDim2.fromOffset(w-112,64) play.Size=UDim2.fromOffset(100,44)
+    drawer.Size=UDim2.fromOffset(math.min(520,w-24),math.min(440,h-24)) title.Size=UDim2.new(1,-78,0,25) summary.Size=UDim2.new(1,-28,0,55)
+    actionGrid.CellSize=UDim2.new(.5,-8,0,44)
+end
+local function activityStatus()
+    local id=p:GetAttribute('EquippedPet') or 'Pebble'
+    summary.Text='Star Shards: '..(p:GetAttribute('StarShards') or 0)..' / '..config.Adventure.EvolutionShards..'   Bond: '..(p:GetAttribute('Bond_'..id) or 0)..' / '..config.Adventure.EvolutionBond..'\nJob: '..(p:GetAttribute('PetJob') or 'none')..(p:GetAttribute('ArenaTeam') and (' / Team '..p:GetAttribute('ArenaTeam')..' / '..(p:GetAttribute('ArenaSeconds') or 0)..'s') or '\nTraining, rescue and treasure all help you evolve.')
+end
+play.Activated:Connect(function() open(nil) drawer.Visible=not drawer.Visible activityStatus() end)
+exit.Activated:Connect(function() drawer.Visible=false end)
+for _,button in nav do button.Activated:Connect(function() drawer.Visible=false end) end
+p.AttributeChanged:Connect(activityStatus) screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(activityLayout)
+activityLayout() activityStatus()

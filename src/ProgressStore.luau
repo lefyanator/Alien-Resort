@@ -13,7 +13,7 @@ local function bounded(value,maximum)
 end
 function P.Normalize(data)
     data=type(data)=='table' and data or {}
-    local result={Version=2,Tokens=bounded(data.Tokens,100000000),Stages={},Owned={},Pets={Pebble=true},Earned=bounded(data.Earned,100000000),Species=data.Species==true,EquippedPet='Pebble'}
+    local result={Version=3,StarShards=bounded(data.StarShards,1000000),Bond={},Evolved={},Tokens=bounded(data.Tokens,100000000),Stages={},Owned={},Pets={Pebble=true},Earned=bounded(data.Earned,100000000),Species=data.Species==true,EquippedPet='Pebble'}
     local previous=true
     for _,u in Config.Upgrades do
         local n=previous and bounded(type(data.Stages)=='table' and data.Stages[u.Id],3) or 0
@@ -21,6 +21,8 @@ function P.Normalize(data)
     end
     for _,item in Config.Shop do if not item.Duration then result.Owned[item.Id]=type(data.Owned)=='table' and data.Owned[item.Id]==true end end
     for _,spec in Config.PetSpecies do
+        result.Bond[spec.Id]=bounded(type(data.Bond)=='table' and data.Bond[spec.Id],1000)
+        result.Evolved[spec.Id]=type(data.Evolved)=='table' and data.Evolved[spec.Id]==true
         if spec.Id~='Pebble' then result.Pets[spec.Id]=type(data.Pets)=='table' and data.Pets[spec.Id]==true end
         if data.EquippedPet==spec.Id and result.Pets[spec.Id] then result.EquippedPet=spec.Id end
     end
@@ -28,10 +30,10 @@ function P.Normalize(data)
 end
 function P.Snapshot(p)
     local stats=p:FindFirstChild('leaderstats') local tokens=stats and stats:FindFirstChild('Tokens')
-    local data={Tokens=tokens and tokens.Value or 0,Stages={},Owned={},Pets={},EquippedPet=p:GetAttribute('EquippedPet'),Earned=p:GetAttribute('EarnedTotal'),Species=p:GetAttribute('SpeciesDiscovered')}
+    local data={Tokens=tokens and tokens.Value or 0,Stages={},Owned={},Pets={},Bond={},Evolved={},StarShards=p:GetAttribute('StarShards'),EquippedPet=p:GetAttribute('EquippedPet'),Earned=p:GetAttribute('EarnedTotal'),Species=p:GetAttribute('SpeciesDiscovered')}
     for _,u in Config.Upgrades do data.Stages[u.Id]=p:GetAttribute('Stage_'..u.Id) end
     for _,item in Config.Shop do if not item.Duration then data.Owned[item.Id]=p:GetAttribute('Owns'..item.Id) end end
-    for _,spec in Config.PetSpecies do data.Pets[spec.Id]=p:GetAttribute('Pet_'..spec.Id) end
+    for _,spec in Config.PetSpecies do data.Pets[spec.Id]=p:GetAttribute('Pet_'..spec.Id) data.Bond[spec.Id]=p:GetAttribute('Bond_'..spec.Id) data.Evolved[spec.Id]=p:GetAttribute('Evolved_'..spec.Id) end
     return P.Normalize(data)
 end
 function P.Load(p)

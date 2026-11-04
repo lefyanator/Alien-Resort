@@ -32,6 +32,10 @@ local function objective()
         title="Your guest has checked in!"
         description="Occupied rooms earn tokens automatically. Watch the payment countdown above the room."
         target="StarterRoom"
+    elseif ((p:GetAttribute('Bond_Pebble') or 0)+(p:GetAttribute('Bond_Jelly') or 0)+(p:GetAttribute('Bond_Slime') or 0)+(p:GetAttribute('Bond_Lava') or 0))==0 then
+        title='Take your pet on its first adventure'
+        description='Open ADVENTURE, travel to the Commons, and finish training to earn Star Shards.'
+        target='CommonsShuttle' cost=0
     elseif nextUpgrade and balance(p)<price then
         title="Save for "..nextUpgrade.Name
         description=nextUpgrade.Description..". Guests are earning the tokens for you."
@@ -96,6 +100,7 @@ local function payoutAmount()
     local amount=Config.BasePayout+(S.Unlocked.Kiosk and Config.KioskBonus or 0)
     for _,u in Config.Upgrades do if S.Unlocked[u.Id] then amount+=u.Bonus or 0 end end
     if S.Owner then for _,u in Config.Shop do if u.Bonus and S.Owner:GetAttribute("Owns"..u.Id) then amount+=u.Bonus end end end
+    if S.Owner then amount+=S.Owner:GetAttribute('JobGuestBonus') or 0 end
     return amount
 end
 local function updateRate()

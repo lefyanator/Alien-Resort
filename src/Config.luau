@@ -1,8 +1,9 @@
 -- Prototype defaults. Unpublished places work without network configuration.
 return {
-    Version = "0.8.0",
+    Version = "0.9.0",
     PlotCount = 4,
-    PlotSpacing = 220,
+    Adventure={TrainingMinimum=10,ActivityCooldown=90,TreasureCooldown=180,TrainingTokens=15,TrainingShards=2,RescueTokens=20,RescueShards=3,TreasureTokens=8,BondReward=3,EvolutionShards=20,EvolutionBond=30,MatchSeconds=180,MatchMinimum=45,WinTokens=30,ParticipationTokens=15,WinShards=4,ParticipationShards=2,CaptureCooldown=12,TagCooldown=3,RespawnProtection=4,FlagReturnSeconds=15,AbilityCooldown=12,AbilityTokens=6,RequestTokens=12,JobInterval=60,JobTokens=3},
+    PlotSpacing = 360,
     CleanReward = 3,
     CleanSeconds = 3,
     PetSpecies = {

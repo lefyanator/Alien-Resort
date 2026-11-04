@@ -1,4 +1,10 @@
-# Shared handoff — Alien Resort 0.8.0
+# Adventure milestone 0.9.0 — 4 November 2026
+
+The same open Studio project now includes Cosmic Commons, shuttles, a solo/cooperative activity loop, pet abilities/jobs, bonding, evolution, and a Starcore Capture prototype. Read GAMEPLAY_STATUS.md for exact controls, rewards, limitations and validation. Previous visual milestone: e39ce19dff4e5f1a24aeeca0e108a56f3101e0fd. Before_Adventure_0_9 preserves previous scripts in ServerStorage.
+
+All 15 active embedded scripts match src/ and the saved canonical Alien Resort Tycoon.rbxl. 77 engine assertions passed and all 15 files compiled. This supersedes the older counts and future-feature lists below. No Roblox cloud publication was performed. Arena rounds still require a real two/four-player test, and the Commons is a functional prototype rather than final scenery.
+
+# Shared handoff — Alien Resort 0.9.0
 
 Updated 4 November 2026 (Australia/Brisbane). Repository: https://github.com/lefyanator/Alien-Resort
 

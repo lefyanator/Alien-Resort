@@ -1,6 +1,10 @@
 # Alien Resort — Orbit & Oasis
 
-**Current version: 0.8.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
+**Current version: 0.9.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
+
+## New: Cosmic Commons
+
+Claim your resort, then open **ADVENTURE** or use the gold Commons shuttle beside your terminal. Train your pet, help repair a stranded shuttle, excavate treasure with Pip, and earn Star Shards for evolution. Queue for Starcore Capture at the central arena. Return Home is available in the Adventure drawer. Read GAMEPLAY_STATUS.md for the exact prototype rules, pet jobs, and test limitations.
 
 ## Play
 

@@ -1,6 +1,6 @@
 # Alien Resort — Orbit & Oasis
 
-**Current version: 0.12.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
+**Current version: 0.13.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
 
 ## New: Cosmic Commons
 
@@ -9,6 +9,8 @@ Claim your resort, then open **ADVENTURE** or use the gold Commons shuttle besid
 ## Play
 
 Each player is assigned one of four independent floating islands. Hold **E**, use the controller prompt, or tap/hold the touch prompt at your own terminal to claim it. Your free Pebble guest arrives by UFO and earns tokens. Build six upgrades in three stages, clean dirty rooms, and buy permanent amenities or timed boosts. The fifth player waits for a plot to become free.
+
+The six-step opening guides you through your first earnings, cleaning, Moon Pod, Reception and cleaner robot. Completing the Observatory unlocks the floating Palace and VIP guests, who pay 20 extra tokens per payment. See OPENING_STATUS.md for the current test evidence.
 
 Open **PETS** to buy Jelly (120 tokens), Slime (300), and Lava (700). Pebble is free. These are permanent, direct purchases using earned tokens: no Robux or random eggs. Equip one companion to follow your character. Owning a species adds it to your own guest rotation; Jelly/Slime/Lava guests pay an extra 2/5/10 tokens per payout. Owning pets does not add rooms or multiply every species' income.
 

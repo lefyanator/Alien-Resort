@@ -1,16 +1,16 @@
 {
-  "version": "0.12.0",
+  "version": "0.13.0",
   "updated": "2026-11-05",
   "canonicalPlace": "Alien Resort Tycoon.rbxl",
   "studioPlaceId": "134333458970364",
-  "sourceVerification": "15 active sources match the rebuilt place; four Blender templates and mesh dependency verified",
+  "sourceVerification": "16 active sources match the rebuilt place; four Blender templates and six static Creator Store props verified",
   "cloudPublished": false,
   "backgroundGithubSync": false,
   "files": {
     "Alien Resort Tycoon.rbxl": {
-      "bytes": 497949,
-      "sha256": "3e2d83f637134499d3a5802d5f1422c00e7c6a782291c8fad7356f2d7553a3a4",
-      "gitBlobSha": "2078d94afec944410838e558e3fc833c244b4807"
+      "bytes": 503164,
+      "sha256": "f06e1ba54064162f3e8d01b1b6e5e9152fbdc1228763ce2476ea7689aec80e20",
+      "gitBlobSha": "600565b557e10358ca1a533664a498b7068a3b6b"
     },
     "src/AdventureService.luau": {
       "bytes": 32124,
@@ -28,9 +28,9 @@
       "gitBlobSha": "bb37da775b7b9d78d45d9ada4ed56124df44c981"
     },
     "src/Config.luau": {
-      "bytes": 3498,
-      "sha256": "9c1e759f74b174118ddb0c4d0986ed7e4415e6f9585593782b7c0782f2158f50",
-      "gitBlobSha": "9583a7e01226cd99faf39d50a03406ecabce4e94"
+      "bytes": 3547,
+      "sha256": "70a3519c0a3a2957013dc96079fc381b17f4803ba9e24810a2600cfbbdc59012",
+      "gitBlobSha": "e9df5f0d5da22d8e2aebf60b6a4e493f7c2a47f3"
     },
     "src/Expansion.luau": {
       "bytes": 13761,
@@ -43,9 +43,9 @@
       "gitBlobSha": "88f5df46bcf11957344442440627f4bf656d0b22"
     },
     "src/GuidedHUD.client.luau": {
-      "bytes": 48156,
-      "sha256": "562b75b0a25754cab295c88012a0de4c3d5308208c07dc524aa163b77e07df2b",
-      "gitBlobSha": "f181110d345615adf2f4315da1a8614092ca2f58"
+      "bytes": 53978,
+      "sha256": "e37b59849b78da5109be46199aad9f0df57ab91e44d39c2020bf69a99e61a744",
+      "gitBlobSha": "0d698f9fa383b434f59f1219ae6f7101701ef3e2"
     },
     "src/Interaction.luau": {
       "bytes": 1521,
@@ -63,24 +63,24 @@
       "gitBlobSha": "f518c30244d58c8f15331bb70063c646b72785ba"
     },
     "src/PlotService.luau": {
-      "bytes": 16979,
-      "sha256": "58e845084da6b642e4973f0d8b812676381d0fed800ea74edcecd828dda27bfa",
-      "gitBlobSha": "33ca2afdd2fb0be2c208c1886dc3e2a05df2d214"
+      "bytes": 18596,
+      "sha256": "843fcc203fb2c8770d99d6f526bc3496716a1303b88a7b26e5bed324e63ff4d3",
+      "gitBlobSha": "a6f5eecdbee4049b470adaa023a141d937038335"
     },
     "src/ProgressStore.luau": {
-      "bytes": 7297,
-      "sha256": "50b0fa90a8e38c0b312fb4d53750bfdca34b9c7711ede7bf1ffba3c5fc727c72",
-      "gitBlobSha": "1837c3037a318185836665b541f9ce5d4569d5e2"
+      "bytes": 7513,
+      "sha256": "004e958ec9d61ac245f70045d0e397ad97fca3a74ae7cfb8389b373a045fd9e7",
+      "gitBlobSha": "d6229fbf532f4bb4f156c563ebbf4bd59c2a5836"
     },
     "src/ResortExtras.luau": {
-      "bytes": 12490,
-      "sha256": "3ecc91b0afaf7cefb2ba4f6c24c20c9177460778a9eec4c9dea2b90fa48f3ee0",
-      "gitBlobSha": "eaf178a7a47d8916b14b3493b7449f6206ee30ec"
+      "bytes": 13341,
+      "sha256": "5ca6f1dd51006a5ec325e6073fedf8aeb726152ec61c1fd98a87336ac4c33055",
+      "gitBlobSha": "719aa7cc70f989046bd76efb5cf079225bee99d4"
     },
     "src/ResortService.luau": {
-      "bytes": 6734,
-      "sha256": "d97fa79ccd7a9f33dbd40be4868dc1ce40ae02d1f34e0f9b61e84276629d2b2d",
-      "gitBlobSha": "f35952afd01c638ada0b59910550ecc0ca91ead3"
+      "bytes": 7035,
+      "sha256": "187fec578a122d2434190a3bb55f2ef71be57e40005c1c366204f89439ea228f",
+      "gitBlobSha": "d6b86a537ce8c25b5145481ce1d0bfa2c8081392"
     },
     "src/SimulatorTheme.luau": {
       "bytes": 5080,
@@ -106,6 +106,11 @@
       "bytes": 106590,
       "sha256": "e78c8d50477cafca6d59c32b6ec0a22657293e9ac5e1d93544cbf6f5d50624c6",
       "gitBlobSha": "b83680a9fa3df88cdb03ec5ac59db0e73e0f2ac4"
+    },
+    "src/Opening.luau": {
+      "bytes": 3397,
+      "sha256": "82d887beb19b241567e480a80a28fb6910073febec1f3b95164ea3632a782aab",
+      "gitBlobSha": "71e6b211f77142e7a3e60d5fe7854c376da0ca08"
     }
   },
   "blenderMeshAsset": "rbxassetid://134081985420522"

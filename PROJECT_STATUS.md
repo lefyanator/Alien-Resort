@@ -1,4 +1,8 @@
-# Latest: 0.12.0 — alien biomes and Orbital Palace
+# Latest: 0.13.0 — guided opening and VIP bookings
+
+Read OPENING_STATUS.md for the six-step opening, guest/construction feedback, persistent counters, Observatory VIPs, 323 engine checks and the successful fresh-player loop. Physical-device, published persistence and multi-client release gates remain.
+
+# Previous: 0.12.0 — alien biomes and Orbital Palace
 
 Read ALIEN_WORLD_STATUS.md for the five-point art pass, progression-gated floating hotel, elevated alien habitat and 30 additional art checks. Previous overhaul gates remain in OVERHAUL_STATUS.md.
 

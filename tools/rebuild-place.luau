@@ -42,7 +42,10 @@ for _,name in fs.readDir('src') do
         local client=name:find('.client.luau',1,true)~=nil
         local instanceName=client and 'AlienResortHUD' or name:gsub('%.server%.luau$',''):gsub('%.luau$','')
         local instance=(client and starter or server):FindFirstChild(instanceName)
-        assert(instance,'Missing active script '..name)
+        if not instance then
+            instance=roblox.Instance.new(client and 'LocalScript' or name:find('.server.luau',1,true) and 'Script' or 'ModuleScript')
+            instance.Name=instanceName instance.Parent=client and starter or server
+        end
         instance.Source=fs.readFile('src/'..name)
     end
 end

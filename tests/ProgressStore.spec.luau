@@ -3,6 +3,12 @@ return function(requireModule)
     local P=requireModule('ProgressStore')
     local count=0 local sequence=0 local clock=1000
     local function check(value,message) count+=1 assert(value,message) end
+    local legacy=P.Normalize({})
+    check(legacy.RoomsCleaned==0 and legacy.GuestsServed==0,'legacy opening counters default safely')
+    local counters=P.Normalize({RoomsCleaned=7,GuestsServed=12})
+    check(counters.RoomsCleaned==7 and counters.GuestsServed==12,'opening counters survive normalization')
+    local malformed=P.Normalize({RoomsCleaned=-2,GuestsServed=0/0})
+    check(malformed.RoomsCleaned==0 and malformed.GuestsServed==0,'invalid opening counters are clamped')
     local function copy(value)
         if type(value)~='table' then return value end
         local result={} for k,v in value do result[k]=copy(v) end return result
@@ -38,6 +44,7 @@ return function(requireModule)
     local function apply(p,data)
         p.leaderstats.Tokens.Value=data.Tokens
         p:SetAttribute('EquippedPet',data.EquippedPet)
+        p:SetAttribute('RoomsCleaned',data.RoomsCleaned) p:SetAttribute('GuestsServed',data.GuestsServed)
         for id,value in data.Stages do p:SetAttribute('Stage_'..id,value) end
         for id,value in data.Pets do p:SetAttribute('Pet_'..id,value) end
         for id,value in data.Owned do p:SetAttribute('Owns'..id,value) end
@@ -47,12 +54,13 @@ return function(requireModule)
     check(s.Load(p).Tokens==0,'Studio defaults')
     check(s.Ready(p) and s.Save(p,true),'Studio session remains supported')
 
-    local db=backend({Data={Tokens=88,Stages={Room2=3},Owned={Cleaner=true}}})
+    local db=backend({Data={Tokens=88,Stages={Room2=3},Owned={Cleaner=true},RoomsCleaned=7,GuestsServed=12}})
     p=player() s=store(db) local data=s.Load(p)
     check(data.Tokens==88 and data.Stages.Room2==3 and data.Owned.Cleaner,'legacy fields migrated')
     check(db.Record.Data.Version==3 and db.Record.Lock.Expires==1180,'schema and lease retained')
     apply(p,data) check(s.Ready(p),'loaded profile ready') p.leaderstats.Tokens.Value=200
     check(s.Save(p,false) and db.Record.Data.Tokens==200,'autosave captures current profile')
+    check(db.Record.Data.RoomsCleaned==7 and db.Record.Data.GuestsServed==12,'autosave keeps completed opening counters')
     check(db.Record.Lock~=nil,'autosave renews lease')
     check(s.Save(p,true) and db.Record.Lock==nil,'release clears lease')
     local calls=db.Calls check(not s.Save(p,true) and db.Calls==calls,'released profile cannot write again')

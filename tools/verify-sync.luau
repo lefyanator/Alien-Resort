@@ -14,7 +14,7 @@ for _,name in fs.readDir('src') do
         count+=1
     end
 end
-assert(count==15,'Expected all 15 active scripts')
+assert(count==16,'Expected all 16 active scripts')
 print('PASS: all '..count..' active place scripts match src/.')
 local templates=place:GetService('ReplicatedStorage'):FindFirstChild('PetTemplates')
 local exported=roblox.deserializeModel(fs.readFile('art/PetTemplates.rbxm'))[1]

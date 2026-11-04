@@ -27,6 +27,8 @@ function Service.Assign(p)
             p:SetAttribute('GuideTitle','Claim your FREE resort')
             p:SetAttribute('GuideDetail','Your own island is ready. Hold the terminal prompt to begin.')
             p:SetAttribute('GuideTarget','ClaimTerminal')
+            p:SetAttribute('GuideStep',1) p:SetAttribute('GuideSteps',6) p:SetAttribute('GuideComplete',false)
+            p:SetAttribute('GuideAction','') p:SetAttribute('NextCost',0)
             plot.Root.ClaimTerminal.ProximityPrompt.ObjectText=p.DisplayName..' / FREE PLOT'
             if p.Character then p.Character:PivotTo(Service.SpawnCFrame(plot)) end
             return plot
@@ -67,8 +69,7 @@ function Service.Start()
         else return end
         if ok then
             plot.Refresh()
-            local spec=Pets.Find(id)
-            notice(p,action=='Shop' and 'Supplies ready!' or (spec.CharacterName..': '..spec.Greeting))
+            if action~='Shop' then local spec=Pets.Find(id) notice(p,spec.CharacterName..': '..spec.Greeting) end
         else notice(p,({funds='Not enough tokens!',owned='Already owned. Equip it from Pets.',active='This boost is still active!',locked='Buy this pet before equipping it.'})[why] or 'Unable to buy this item.') end
     end)
     require(script.Parent.AdventureService).Start(Service)
@@ -79,7 +80,7 @@ function Service.Start()
         local stats=Instance.new('Folder') stats.Name='leaderstats' stats.Parent=p
         local tokens=Instance.new('IntValue') tokens.Name='Tokens' tokens.Parent=stats
         p:SetAttribute('BuiltCount',0) p:SetAttribute('EarnedTotal',0)
-        p:SetAttribute('IncomePerTick',0) p:SetAttribute('OccupiedRooms',0) p:SetAttribute('GuestsServed',0)
+        p:SetAttribute('IncomePerTick',0) p:SetAttribute('OccupiedRooms',0) p:SetAttribute('GuestsServed',0) p:SetAttribute('RoomsCleaned',0)
         p:SetAttribute('GuideTitle','Preparing your resort...') p:SetAttribute('GuideDetail','Loading progress safely.')
         tokens.Changed:Connect(function() local plot=Service.Assignments[p] if plot and plot.Owner==p then plot.Refresh() end end)
         local function spawn(character)
@@ -91,6 +92,7 @@ function Service.Start()
         local data=Progress.Load(p) if not data or p.Parent~=Players then return end
         tokens.Value=data.Tokens
         p:SetAttribute('EarnedTotal',data.Earned) p:SetAttribute('SpeciesDiscovered',data.Species)
+        p:SetAttribute('RoomsCleaned',data.RoomsCleaned) p:SetAttribute('GuestsServed',data.GuestsServed)
         for id,stage in data.Stages do p:SetAttribute('Stage_'..id,stage) end
         for id,owned in data.Owned do p:SetAttribute('Owns'..id,owned) end
         for id,owned in data.Pets do p:SetAttribute('Pet_'..id,owned) end
@@ -108,6 +110,6 @@ function Service.Start()
     task.spawn(function()
         while container.Parent do task.wait(.5) for _,plot in Service.Plots do Pets.Step(plot) end end
     end)
-    print('Alien Resort 0.12.0: alien biomes and the unlockable Orbital Palace ready.')
+    print('Alien Resort 0.13.0: guided opening, expressive guests and VIP bookings ready.')
 end
 return Service

@@ -69,6 +69,8 @@ function X.New(S,root,refresh)
     local rooms={root.StarterRoom,root.Upgrades.Room2,root.Upgrades.Room3}
     local function dirty(room,value)
         room:SetAttribute('Dirty',value) room:SetAttribute('GuestStatus',value and 'Needs cleaning!' or 'Ready for guests')
+        room:SetAttribute('GuestMood',value and 'Needs care' or '') room:SetAttribute('GuestVIP',false)
+        room:SetAttribute('GuestSpeciesId',nil) room:SetAttribute('GuestSpecies',nil) room:SetAttribute('PaymentsLeft',0)
         room.Floor.CleanPrompt.Enabled=value
         local mess=room:FindFirstChild('GuestMess')
         if mess then mess:Destroy() end
@@ -86,7 +88,11 @@ function X.New(S,root,refresh)
         dirty(room,false)
         local sparkle=Instance.new('Sparkles') sparkle.SparkleColor=G.Colors.teal sparkle.Parent=room.Floor
         game:GetService('Debris'):AddItem(sparkle,2)
-        if manual then p.leaderstats.Tokens.Value+=Config.CleanReward p:SetAttribute('RoomsCleaned',(p:GetAttribute('RoomsCleaned') or 0)+1) end
+        if manual then
+            p.leaderstats.Tokens.Value+=Config.CleanReward p:SetAttribute('RoomsCleaned',(p:GetAttribute('RoomsCleaned') or 0)+1)
+            p:SetAttribute('ResortNotice','Room sparkling! +'..Config.CleanReward..' tokens. The next guest can check in.')
+            p:SetAttribute('NoticeVersion',(p:GetAttribute('NoticeVersion') or 0)+1)
+        end
         refresh() return true
     end
     for _,room in rooms do
@@ -118,7 +124,10 @@ function X.New(S,root,refresh)
             end
         end
         if item.Bonus then p:SetAttribute('IncomePerTick',(p:GetAttribute('IncomePerTick') or 0)+item.Bonus*(p:GetAttribute('OccupiedRooms') or 0)) end
-        p:SetAttribute('ResortNotice',item.Name..' ready!') p:SetAttribute('NoticeVersion',(p:GetAttribute('NoticeVersion') or 0)+1)
+        if not restoring then
+            p:SetAttribute('ResortNotice',id=='Cleaner' and 'Cleaner online! Dirty rooms are now cleaned automatically.' or item.Name..' ready!')
+            p:SetAttribute('NoticeVersion',(p:GetAttribute('NoticeVersion') or 0)+1)
+        end
         refresh() return true
     end
     local cleaner,working=false,false
@@ -138,6 +147,7 @@ function X.New(S,root,refresh)
                 if cleaner and not working then
                     for _,room in rooms do if room:GetAttribute('Dirty') then
                         working=true local generation=S.Generation local owner=p
+                        room:SetAttribute('GuestStatus','Cleaner on the way')
                         local bot=cleaner
                         task.spawn(function()
                             local destination=room.Floor.Position+Vector3.new(-3,1,0)
@@ -161,6 +171,7 @@ function X.New(S,root,refresh)
                             local lane=start.Z-origin.Z>50 and 62 or -10
                             local route={Vector3.new(start.X,6.8+origin.Y,lane+origin.Z),origin+Vector3.new(17,6.8,lane),origin+Vector3.new(17,6.8,north and 62 or -10),Vector3.new(destination.X,6.8+origin.Y,(north and 62 or -10)+origin.Z),destination}
                             for _,pos in route do if not move(pos) then if S.Generation==generation then working=false end return end end
+                            if S.Owner==owner and S.Generation==generation and room:GetAttribute('Dirty') then room:SetAttribute('GuestStatus','Cleaner working (6 seconds)') end
                             task.wait(6)
                             if S.Owner==owner and S.Generation==generation then finish(room,owner,false) end
                             if S.Generation==generation then working=false end

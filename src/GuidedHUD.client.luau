@@ -30,14 +30,19 @@ label(wallet,'Brand','TOKENS',9,C.Gold,58,6,120,12,6)
 local tokenText=label(wallet,'Tokens','0',25,C.White,58,18,130,28,6) tokenText.Font=Enum.Font.FredokaOne
 local rate=label(wallet,'Income','Your island is getting ready',10,Color3.fromRGB(215,228,243),12,46,176,14,6)
 local fxButton=place(T.Button(screen,'Motion','SETTINGS',C.Cream,6),0,12,88,44)
-local motion,roomStatus,soundOn=true,true,true
+local motion,roomStatus,soundOn=p:GetAttribute('ReducedMotion')~=true,true,p:GetAttribute('SoundsEnabled')~=false
 local settings,arena,arenaRefresh,settingsRefresh,resultSheet
 local playFeedback=function() end
-local guide=place(T.Panel(screen,'Guide',C.Ink,4),280,12,380,64) T.Round(guide,24) T.Stroke(guide,C.Gold,2) guide.BackgroundTransparency=.12
-local guideTitle=label(guide,'Title','Preparing your resort...',16,C.Gold,14,7,352,22) guideTitle.Font=Enum.Font.FredokaOne
-local guideDetail=label(guide,'Detail','A whole island. A tiny crew. Your next adventure.',12,C.White,14,30,352,28)
-local progress=T.Panel(guide,'Progress',C.Soft,5) progress.Position=UDim2.new(0,14,1,-10) progress.Size=UDim2.new(1,-28,0,4)
-local progressFill=T.Panel(progress,'Fill',C.Teal,6) progressFill.Size=UDim2.fromScale(0,1)
+local guide=place(T.Panel(screen,'Guide',C.Ink,4),280,12,440,124) T.Round(guide,24) T.Stroke(guide,C.Gold,2) guide.BackgroundTransparency=.12
+local guideStep=label(guide,'Step','YOUR FIRST TEN MINUTES',10,C.Teal,14,7,300,14)
+local guideTitle=label(guide,'Title','Preparing your resort...',16,C.Gold,14,23,300,36) guideTitle.Font=Enum.Font.FredokaOne
+local guideDetail=label(guide,'Detail','A whole island. A tiny crew. Your next adventure.',12,C.White,14,62,412,44)
+local guideAction=place(T.Button(guide,'NextAction','BUILD →',C.Teal,7),0,16,76,44) guideAction.Position=UDim2.new(1,-90,0,16) guideAction.TextSize=11 guideAction.Visible=false
+local progress=T.Panel(guide,'Progress',C.Soft,5) progress.BackgroundTransparency=1 progress.Position=UDim2.new(0,14,1,-10) progress.Size=UDim2.new(1,-28,0,4)
+local guideSegments={}
+for i=1,6 do
+    local segment=T.Panel(progress,'Step'..i,C.Soft,6) segment.Position=UDim2.new((i-1)/6,2,0,0) segment.Size=UDim2.new(1/6,-4,1,0) guideSegments[i]=segment
+end
 local nav={}
 for i,spec in {{'Pets','PETS',C.Lilac},{'Build','BUILD',C.Teal},{'Shop','SHOP',C.Gold}} do
     local b=T.Button(screen,spec[1],spec[2],spec[3],6) T.NavIcon(b,spec[1]) nav[spec[1]]=b
@@ -46,17 +51,22 @@ end
 local save=label(screen,'SaveStatus','',10,C.Muted,12,0,280,16,3)
 local toast=T.Panel(screen,'Notice',C.Ink,80) toast.AnchorPoint=Vector2.new(.5,0) toast.Visible=false
 local toastText=label(toast,'Message','',13,C.White,14,7,380,38,81)
+local toastScale=Instance.new('UIScale') toastScale.Parent=toast
 local toastVersion=0
-local function notify(message,errorStyle)
+local function notify(message,errorStyle,feedbackKind)
     toastVersion+=1 local id=toastVersion
     toastText.Text=message toast.BackgroundColor3=errorStyle and Color3.fromRGB(143,64,76) or C.Ink toast.Visible=true
-    if not errorStyle then playFeedback() end
+    toastScale.Scale=motion and .96 or 1
+    if motion then Tween:Create(toastScale,TweenInfo.new(.18,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play() end
+    if not errorStyle then playFeedback(feedbackKind) end
     task.delay(3.5,function() if id==toastVersion and toast.Parent then toast.Visible=false end end)
 end
 local scrim=T.Button(screen,'Scrim','',C.Ink,20) scrim.Size=UDim2.fromScale(1,1) scrim.BackgroundTransparency=.35 scrim.Visible=false scrim.Selectable=false
 local modal=T.Panel(screen,'Collection',C.Cream,30) modal.AnchorPoint=Vector2.new(.5,.5) modal.Position=UDim2.fromScale(.5,.5) modal.Visible=false T.Window(modal,C.Lilac)
 local heading=label(modal,'Heading','MEET YOUR COSMIC CREW',23,C.Ink,20,16,700,30,31)
 heading.Font=Enum.Font.FredokaOne heading.TextColor3=C.White heading.TextStrokeColor3=C.Ink heading.TextStrokeTransparency=0
+heading.TextScaled=true
+local headingTextSize=Instance.new('UITextSizeConstraint') headingTextSize.MinTextSize=10 headingTextSize.MaxTextSize=23 headingTextSize.Parent=heading
 local header=modal.Accent
 local subtitle=label(modal,'Subtitle','Buy once. Keep forever. Explore together.',12,C.Muted,20,68,700,24,31)
 local close=place(T.Button(modal,'Close','X',C.White,35),0,14,44,44)
@@ -77,7 +87,7 @@ for _,model in Tags:GetTagged('CosmicScenery') do sceneryAdded(model) end
 Tags:GetInstanceAddedSignal('CosmicScenery'):Connect(sceneryAdded)
 Tags:GetInstanceRemovedSignal('CosmicScenery'):Connect(function(model)scenery[model]=nil end)
 local preview=nil
-local refresh,layout,open,updateWayfinder
+local refresh,layout,open,openAdventure,updateWayfinder
 local drawer,selectedBuild,selectedAt,activityStatus
 local boosts=label(screen,'ActiveBoosts','',12,C.White,12,0,280,40,6)
 boosts.TextStrokeColor3=C.Ink boosts.TextStrokeTransparency=.1
@@ -169,22 +179,25 @@ layout=function()
     place(fxButton,w-100,12,88,44) fxButton.TextSize=11
     local names={'Pets','Build','Shop','Adventure'}
     if h<500 and w>=600 then
-        place(guide,224,12,w-336,64)
+        place(guide,224,12,w-336,124)
         for i,name in names do if nav[name] then place(nav[name],12+((i-1)%2)*76,94+math.floor((i-1)/2)*76,64,64) end end
     elseif compact then
-        place(guide,12,88,w-24,64)
+        place(guide,12,88,w-24,124)
         local bw=math.min(76,(w-48)/4)
-        for i,name in names do if nav[name] then place(nav[name],12+(i-1)*(bw+8),164,bw,70) end end
+        for i,name in names do if nav[name] then place(nav[name],12+(i-1)*(bw+8),224,bw,70) end end
     else
-        local gw=math.min(380,w-440) place(guide,(w-gw)/2,12,gw,64)
+        local gw=math.min(440,w-440) place(guide,(w-gw)/2,12,gw,124)
         for i,name in names do if nav[name] then place(nav[name],12,104+(i-1)*86,70,70) end end
     end
-    guideTitle.Size=UDim2.new(1,-28,0,22) guideDetail.Size=UDim2.new(1,-28,0,28)
+    guideStep.Size=UDim2.new(1,-28,0,14)
+    guideTitle.Size=UDim2.new(1,guideAction.Visible and -112 or -28,0,36) guideDetail.Size=UDim2.new(1,-28,0,44)
+    guideTitle.TextSize=guide.AbsoluteSize.X<350 and 14 or 16
+    guideDetail.TextSize=guide.AbsoluteSize.X<350 and 11 or 12
     place(save,12,h-20,w-24,16)
     place(boosts,12,h-68,math.min(320,w-24),44)
     local mw=math.min(900,w-24) local mh=math.min(590,h-24)
     modal.Size=UDim2.fromOffset(mw,mh) close.Position=UDim2.new(1,-60,0,14)
-    heading.Size=UDim2.new(1,-90,0,30) heading.TextSize=mw<500 and 17 or 23
+    heading.Size=UDim2.new(1,-90,0,30)
     subtitle.Size=UDim2.new(1,-40,0,24)
     local tabWidth=(mw-56)/3
     for i,name in {'Pets','Build','Shop'} do place(tabs[name],20+(i-1)*(tabWidth+8),100,tabWidth,44) end
@@ -240,6 +253,11 @@ open=function(name)
     if Input:GetLastInputType()==Enum.UserInputType.Gamepad1 then GuiService.SelectedObject=close end
 end
 for name,button in nav do button.Activated:Connect(function() open(name) end) end
+guideAction.Activated:Connect(function()
+    local action=p:GetAttribute('GuideAction')
+    if action=='Adventure' then if openAdventure then openAdventure() end
+    elseif action=='Build' or action=='Shop' then open(action) end
+end)
 for name,button in tabs do button.Activated:Connect(function() open(name) end) end
 close.Activated:Connect(function() open(nil) end) scrim.Activated:Connect(function() open(nil) end)
 Input.InputBegan:Connect(function(input,processed)
@@ -289,7 +307,15 @@ refresh=function()
     guideDetail.Text=p:GetAttribute('GuideDetail') or 'Loading your progress safely.'
     save.Text=p:GetAttribute('SaveStatus') or 'Loading progress...'
     local cost=p:GetAttribute('NextCost') or 0
-    progress.Visible=cost>0 progressFill.Size=UDim2.fromScale(cost>0 and math.clamp(tokenValue/cost,0,1) or 0,1)
+    local steps=math.clamp(p:GetAttribute('GuideSteps') or 6,1,6)
+    local step=math.clamp(p:GetAttribute('GuideStep') or 1,1,steps)
+    local complete=p:GetAttribute('GuideComplete')==true
+    guideStep.Text=complete and 'OPENING COMPLETE  •  EXPLORE & EXPAND' or ('STEP '..step..' / '..steps..(cost>0 and ('  •  '..T.Format(math.min(tokenValue,cost))..' / '..T.Format(cost)..' TOKENS') or '  •  FIRST TEN MINUTES'))
+    for i,segment in guideSegments do segment.Visible=i<=steps segment.BackgroundColor3=(complete or i<step) and C.Teal or i==step and C.Gold or C.Soft end
+    local action=p:GetAttribute('GuideAction')
+    guideAction.Visible=owner and (action=='Build' or action=='Shop' or action=='Adventure')
+    guideAction.Text=action=='Adventure' and 'TRAVEL →' or action=='Shop' and 'SHOP →' or 'BUILD →'
+    guideTitle.Size=UDim2.new(1,guideAction.Visible and -112 or -28,0,36)
     for _,entry in cards do
         local spec=entry.Spec local button=entry.Button local text,color
         if currentTab=='Pets' then
@@ -319,13 +345,16 @@ refresh=function()
         button.Interactable=pending==nil
     end
 end
-local function earnings(amount)
-    playFeedback()
-    local pop=T.Panel(screen,'Gain',C.Gold,92) pop.Size=UDim2.fromOffset(290,34) pop.AnchorPoint=Vector2.new(.5,0)
-    local text=label(pop,'Text','CHA-CHING!  +'..T.Format(amount),17,C.Ink,0,0,290,34,93) text.TextXAlignment=Enum.TextXAlignment.Center
-    local w=screen.AbsoluteSize.X local popupWidth=math.min(290,w-24) pop.Size=UDim2.fromOffset(popupWidth,34) text.Size=UDim2.fromScale(1,1)
+local latestGain
+local function earnings(amount,vip)
+    playFeedback(vip and 'VIP' or 'Payment')
+    if latestGain then latestGain:Destroy() end
+    local pop=T.Panel(screen,'Gain',vip and C.Lilac or C.Gold,92) pop.Size=UDim2.fromOffset(320,40) pop.AnchorPoint=Vector2.new(.5,0) latestGain=pop
+    local message=(vip and 'VIP PAYMENT!  +' or 'GUEST PAYMENT  +')..T.Format(amount)..' TOKENS'
+    local text=label(pop,'Text',message,14,vip and C.White or C.Ink,0,0,320,40,93) text.TextXAlignment=Enum.TextXAlignment.Center
+    local w=screen.AbsoluteSize.X local popupWidth=math.min(320,w-24) pop.Size=UDim2.fromOffset(popupWidth,40) text.Size=UDim2.fromScale(1,1)
     pop.Position=UDim2.fromOffset(w*.5,screen.AbsoluteSize.Y-(w<600 and 200 or 110))
-    task.delay(.85,function()
+    task.delay(1.4,function()
         if pop.Parent then
             Tween:Create(text,TweenInfo.new(.3),{TextTransparency=1}):Play()
             Tween:Create(pop,TweenInfo.new(.3),{BackgroundTransparency=1,Position=pop.Position-UDim2.fromOffset(0,motion and 16 or 0)}):Play()
@@ -344,15 +373,63 @@ local function earnings(amount)
 end
 tokens=p:WaitForChild('leaderstats'):WaitForChild('Tokens') tokenValue=tokens.Value display.Value=tokenValue
 tokens.Changed:Connect(function(value)
-    local gain=value-tokenValue tokenValue=value
+    tokenValue=value
     if numberTween then numberTween:Cancel() end
     numberTween=Tween:Create(display,TweenInfo.new(motion and .35 or 0,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Value=value}) numberTween:Play()
-    if gain>0 and p:GetAttribute('ProfileReady') then earnings(gain) end
     refresh()
 end)
+local payoutQueued=false
+p:GetAttributeChangedSignal('PayoutVersion'):Connect(function()
+    if payoutQueued then return end payoutQueued=true
+    task.defer(function()
+        payoutQueued=false
+        -- A replication batch can contain several payments. Announce its latest
+        -- payment; the token wallet independently shows the full balance.
+        local amount=p:GetAttribute('LastPayout') or 0
+        if not gui.Parent or amount<=0 or not p:GetAttribute('ProfileReady') then return end
+        earnings(amount,p:GetAttribute('LastPayoutVIP')==true)
+    end)
+end)
+local constructionEffects={} local buildStages={}
+for _,upgrade in config.Upgrades do buildStages[upgrade.Id]=p:GetAttribute('Stage_'..upgrade.Id) or 0 end
+local function clearConstruction(id)
+    local effect=constructionEffects[id] if not effect then return end
+    constructionEffects[id]=nil
+    for _,tween in effect.Tweens do tween:Cancel() end
+    for part,value in effect.Parts do if part.Parent then part.LocalTransparencyModifier=value end end
+    effect.Highlight:Destroy()
+end
+local function clearAllConstruction()
+    local ids={} for id in constructionEffects do table.insert(ids,id) end
+    for _,id in ids do clearConstruction(id) end
+end
+local function revealConstruction(id,stage)
+    clearConstruction(id)
+    if not motion or not world or not p:GetAttribute('ProfileReady') then return end
+    local upgrades=world:FindFirstChild('Upgrades') local building=upgrades and upgrades:FindFirstChild(id)
+    if not building then return end
+    local glow=Instance.new('Highlight') glow.Name='ConstructionReveal' glow.Adornee=building glow.FillColor=C.Teal glow.FillTransparency=.6 glow.OutlineColor=C.Gold glow.OutlineTransparency=.15 glow.DepthMode=Enum.HighlightDepthMode.Occluded glow.Parent=building
+    local effect={Parts={},Tweens={},Highlight=glow} constructionEffects[id]=effect
+    for _,part in building:GetDescendants() do
+        if part:IsA('BasePart') and part:GetAttribute('BuildStage')==stage then
+            local original=part.LocalTransparencyModifier effect.Parts[part]=original part.LocalTransparencyModifier=math.max(original,.8)
+            local tween=Tween:Create(part,TweenInfo.new(.35,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{LocalTransparencyModifier=original}) table.insert(effect.Tweens,tween) tween:Play()
+        end
+    end
+    local fade=Tween:Create(glow,TweenInfo.new(.45),{FillTransparency=1,OutlineTransparency=1}) table.insert(effect.Tweens,fade) fade:Play()
+    task.delay(.46,function() if constructionEffects[id]==effect then clearConstruction(id) end end)
+end
 p.AttributeChanged:Connect(function(key)
     if key=='GuideTarget' or key:sub(1,6)=='Stage_' then updateWayfinder() end
+    if key:sub(1,6)=='Stage_' then
+        local id=key:sub(7) local stage=p:GetAttribute(key) or 0 local previous=buildStages[id] or 0 buildStages[id]=stage
+        if stage>previous then task.defer(function() if gui.Parent then revealConstruction(id,stage) end end) end
+    end
     if key=='NoticeVersion' then pending=nil notify(p:GetAttribute('ResortNotice') or '') end
+    if key=='GuestEventVersion' then
+        local message=p:GetAttribute('LastGuestEvent')
+        if message and message~='' then notify(message,false,message:find('VIP',1,true) and 'VIP' or 'Payment') end
+    end
     if key:sub(1,5)~='Arena' and key~='ActivityProgress' and key~='ProtectedUntil' then refresh() end
 end)
 local function alienAdded(model) if model:IsA('Model') then activeAliens[model]={Last=model:GetPivot().Position,Follow=model:GetPivot()} end end
@@ -373,6 +450,7 @@ local function attachBeam(character)
 end
 p.CharacterAdded:Connect(attachBeam)
 local function bindWorld(newWorld)
+    clearAllConstruction()
     if marker then marker:Destroy() end if highlight then highlight:Destroy() end if destination then destination:Destroy() end if beam then beam:Destroy() end if preview then preview:Destroy() preview=nil end
     for _,entry in roomLabels do entry.Gui:Destroy() end roomLabels={}
     world=newWorld marker=nil highlight=nil destination=nil beam=nil
@@ -472,9 +550,9 @@ Run.RenderStepped:Connect(function(dt)
         local floor=room:FindFirstChild('Floor')
         entry.Gui.Enabled=roomStatus and floor~=nil and floor.Transparency<1 and room:GetAttribute('Occupied')==true and (room:GetAttribute('Stage')==nil or room:GetAttribute('Stage')==3)
         local status=room:GetAttribute('GuestStatus') or 'Ready for guests'
-        if status=='Occupied' then
+        if (room:GetAttribute('NextPaymentAt') or 0)>workspace:GetServerTimeNow()-.5 then
             local seconds=math.max(0,math.ceil((room:GetAttribute('NextPaymentAt') or 0)-workspace:GetServerTimeNow()))
-            entry.Text.Text=(room:GetAttribute('GuestSpecies') or 'Alien')..' checked in\nNext payout in '..seconds..'s'
+            entry.Text.Text=(room:GetAttribute('GuestVIP') and '★ VIP ' or '')..(room:GetAttribute('GuestSpecies') or 'Alien')..' guest\nPayment in '..seconds..'s / '..(room:GetAttribute('PaymentsLeft') or 1)..' left'
         else entry.Text.Text=status end
     end
 end)
@@ -543,7 +621,10 @@ activityStatus=function()
     summary.Text='RESORT RATING '..stars..'/5  •  '..stages..'/18 BUILD STAGES\nNext: '..(nextBuild or 'Evolve your crew and master Starcore Capture')..'\nSHARDS '..(p:GetAttribute('StarShards') or 0)..'/'..config.Adventure.EvolutionShards..'    BOND '..(p:GetAttribute('Bond_'..id) or 0)..'/'..config.Adventure.EvolutionBond..'\nJob: '..(p:GetAttribute('PetJob') or 'none')..' / Power: '..(cooldown>0 and (cooldown..'s') or 'READY')..'\n'..(p:GetAttribute('ActivityProgress') or 'Build your resort, then explore the Commons.')
     actionButtons[11].Text=p:GetAttribute('ArenaTeam') and 'LEAVE MATCH' or p:GetAttribute('ArenaQueued') and 'LEAVE QUEUE' or 'JOIN STARCORE CAPTURE'
 end
-play.Activated:Connect(function() local was=drawer.Visible open(nil) drawer.Visible=not was scrim.Visible=not was activityStatus() if not was then GuiService.SelectedObject=exit end end)
+openAdventure=function()
+    local was=drawer.Visible open(nil) drawer.Visible=not was scrim.Visible=not was activityStatus() if not was then GuiService.SelectedObject=exit end
+end
+play.Activated:Connect(openAdventure)
 exit.Activated:Connect(function() open(nil) end)
 for name,button in nav do if name~='Adventure' then button.Activated:Connect(function() drawer.Visible=false end) end end
 p.AttributeChanged:Connect(function() if drawer.Visible then activityStatus() end end) screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(activityLayout)
@@ -554,8 +635,10 @@ local SoundService=game:GetService('SoundService')
 local feedback=SoundService:FindFirstChild('UIFeedback') or Instance.new('SoundGroup') feedback.Name='UIFeedback' feedback.Parent=SoundService
 local chime=Instance.new('Sound') chime.Name='CosmicFeedback' chime.SoundId='rbxassetid://1293433423' chime.SoundGroup=feedback chime.Volume=.12 chime.PlaybackSpeed=1.4 chime.Parent=SoundService
 local lastSound=-math.huge
-playFeedback=function() if soundOn and os.clock()-lastSound>.8 then lastSound=os.clock() chime:Play() end end
-gui.Destroying:Connect(function() chime:Destroy() end)
+playFeedback=function(kind)
+    if soundOn and os.clock()-lastSound>.8 then lastSound=os.clock() chime.PlaybackSpeed=kind=='VIP' and 1.7 or kind=='Payment' and 1.2 or 1.4 chime:Play() end
+end
+gui.Destroying:Connect(function() clearAllConstruction() chime:Destroy() end)
 settings=T.Panel(screen,'Settings',C.Cream,50) settings.AnchorPoint=Vector2.new(.5,.5) settings.Position=UDim2.fromScale(.5,.5) settings.Visible=false T.Window(settings,C.Lilac)
 local settingsTitle=label(settings,'Title','MAKE IT YOURS',22,C.White,18,14,250,32,51) settingsTitle.Font=Enum.Font.FredokaOne
 local settingsClose=place(T.Button(settings,'Close','X',C.White,53),0,12,44,44)
@@ -572,6 +655,10 @@ settingsRefresh=function()
     settingButtons.Audio.Text=soundOn and 'ON' or 'MUTED' settingButtons.Audio.BackgroundColor3=soundOn and C.Teal or C.Soft
     settingButtons.Labels.Text=roomStatus and 'ON' or 'HIDDEN' settingButtons.Labels.BackgroundColor3=roomStatus and C.Teal or C.Soft
     T.Motion=motion feedback.Volume=soundOn and 1 or 0
+    if not motion then
+        clearAllConstruction() walletScale.Scale=1 toastScale.Scale=1
+        for _,entry in coins do entry.Frame:Destroy() end table.clear(coins)
+    end
 end
 settingButtons.Motion.Activated:Connect(function() motion=not motion settingsRefresh() end)
 settingButtons.Audio.Activated:Connect(function() soundOn=not soundOn settingsRefresh() end)

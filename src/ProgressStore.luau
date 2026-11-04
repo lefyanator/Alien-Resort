@@ -11,6 +11,7 @@ end
 function P.Normalize(data)
     data=type(data)=='table' and data or {}
     local result={Version=3,StarShards=bounded(data.StarShards,1000000),Bond={},Evolved={},Tokens=bounded(data.Tokens,100000000),Stages={},Owned={},Pets={Pebble=true},Earned=bounded(data.Earned,100000000),Species=data.Species==true,EquippedPet='Pebble'}
+    result.RoomsCleaned=bounded(data.RoomsCleaned,1000000) result.GuestsServed=bounded(data.GuestsServed,1000000)
     local previous=true
     for _,u in Config.Upgrades do
         local n=previous and bounded(type(data.Stages)=='table' and data.Stages[u.Id],3) or 0
@@ -28,6 +29,7 @@ end
 function P.Snapshot(p)
     local stats=p:FindFirstChild('leaderstats') local tokens=stats and stats:FindFirstChild('Tokens')
     local data={Tokens=tokens and tokens.Value or 0,Stages={},Owned={},Pets={},Bond={},Evolved={},StarShards=p:GetAttribute('StarShards'),EquippedPet=p:GetAttribute('EquippedPet'),Earned=p:GetAttribute('EarnedTotal'),Species=p:GetAttribute('SpeciesDiscovered')}
+    data.RoomsCleaned=p:GetAttribute('RoomsCleaned') data.GuestsServed=p:GetAttribute('GuestsServed')
     for _,u in Config.Upgrades do data.Stages[u.Id]=p:GetAttribute('Stage_'..u.Id) end
     for _,item in Config.Shop do if not item.Duration then data.Owned[item.Id]=p:GetAttribute('Owns'..item.Id) end end
     for _,spec in Config.PetSpecies do data.Pets[spec.Id]=p:GetAttribute('Pet_'..spec.Id) data.Bond[spec.Id]=p:GetAttribute('Bond_'..spec.Id) data.Evolved[spec.Id]=p:GetAttribute('Evolved_'..spec.Id) end

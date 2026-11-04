@@ -59,7 +59,8 @@ function Pets.Step(plot)
         local id=model:GetAttribute('SpeciesId') local now=os.clock()
         local bob=id=='Jelly' and (.4+math.sin(now*2)*.3) or id=='Slime' and math.abs(math.sin(now*3))*.18 or 0
         local target=hrp.CFrame*CFrame.new(3,-1.5+bob,3)
-        model:PivotTo(model:GetPivot():Lerp(target,.28))
+        -- Coarse server position keeps streaming relevant; clients draw the smooth follow.
+        if (model:GetPivot().Position-target.Position).Magnitude>8 then model:PivotTo(target) end
     end
 end
 return Pets

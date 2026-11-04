@@ -1,7 +1,14 @@
--- Shared procedural character art. Used by world pets and live 3D menu portraits.
+-- Shared Blender templates with procedural fallback, used by pets and portraits.
 local V={}
 local C={Ink=Color3.fromRGB(25,35,62),Cream=Color3.fromRGB(255,246,222),Teal=Color3.fromRGB(66,221,193),Coral=Color3.fromRGB(255,142,126),Lilac=Color3.fromRGB(180,143,247),Gold=Color3.fromRGB(255,211,93)}
 function V.Create(parent,position,id)
+    local templates=game:GetService('ReplicatedStorage'):FindFirstChild('PetTemplates')
+    local template=templates and templates:FindFirstChild(id)
+    if template and template:IsA('Model') and template.PrimaryPart and template:GetAttribute('ArtVersion')==1 then
+        local imported=template:Clone()
+        imported.Name=id..'Guest' imported:PivotTo(CFrame.new(position)) imported.Parent=parent
+        return imported
+    end
     local model=Instance.new('Model') model.Name=id..'Guest'
     local function part(name,size,offset,color,shape,animated)
         local p=Instance.new((name=='FlameEar' or name=='Wing') and 'WedgePart' or 'Part') p.Name=name p.Size=size
@@ -82,6 +89,10 @@ function V.Create(parent,position,id)
     end
     model:SetAttribute('SpeciesId',id) model.Parent=parent
     return model
+end
+function V.Follow(current,target,dt)
+    if (current.Position-target.Position).Magnitude>60 then return target end
+    return current:Lerp(target,1-math.exp(-12*dt))
 end
 function V.Animate(model,t,moving)
     if not model.Parent or not model.PrimaryPart then return end

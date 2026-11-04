@@ -32,10 +32,12 @@ local function objective()
         title="Your guest has checked in!"
         description="Occupied rooms earn tokens automatically. Watch the payment countdown above the room."
         target="StarterRoom"
-    elseif ((p:GetAttribute('Bond_Pebble') or 0)+(p:GetAttribute('Bond_Jelly') or 0)+(p:GetAttribute('Bond_Slime') or 0)+(p:GetAttribute('Bond_Lava') or 0))==0 then
+    elseif S.Unlocked.Reception and p:GetAttribute('OwnsCleaner') and ((p:GetAttribute('Bond_Pebble') or 0)+(p:GetAttribute('Bond_Jelly') or 0)+(p:GetAttribute('Bond_Slime') or 0)+(p:GetAttribute('Bond_Lava') or 0))==0 then
         title='Take your pet on its first adventure'
         description='Open ADVENTURE, travel to the Commons, and finish training to earn Star Shards.'
         target='CommonsShuttle' cost=0
+    elseif (p:GetAttribute('RoomsCleaned') or 0)>0 and not p:GetAttribute('OwnsCleaner') then
+        title='Hire your cleaning crew' description='Open SHOP: the cleaner keeps all rooms earning while you explore.' target='StarterRoom' cost=80
     elseif nextUpgrade and balance(p)<price then
         title="Save for "..nextUpgrade.Name
         description=nextUpgrade.Description..". Guests are earning the tokens for you."
@@ -65,10 +67,10 @@ local function refresh()
         local stage=S.Owner and (S.Owner:GetAttribute("Stage_"..u.Id) or 0) or 0
         local price=Extras.StagePrice(u,math.min(stage,2))
         local available=S.Owner~=nil and not unlocked and (i==1 or S.Unlocked[Config.Upgrades[i-1].Id])
-        b.Transparency=unlocked and 1 or .05
+        b.Transparency=available and .15 or 1
         b.BuildPrompt.Enabled=available==true
         b.BuildPrompt.ObjectText=u.Name.." / "..Config.StageNames[math.min(stage+1,3)].." / "..price.." tokens"
-        b.Label.Enabled=not unlocked and (not S.Owner or available==true)
+        b.Label.Enabled=false
         local affordable=available and balance(S.Owner)>=price
         local status
         if not S.Owner then status="Claim your resort first"
@@ -202,7 +204,7 @@ local function runRoom(roomId,x)
             warn("AlienResort guest loop: "..tostring(err))
             -- Retry only this plot generation; never restart work for a new owner.
             if alive(generation) then
-                S.LandingBusy=false
+                if S.LandingBusy==landingTicket then S.LandingBusy=false end
                 local room=roomId==1 and root.StarterRoom or root.Upgrades[roomId==2 and "Room2" or "Room3"]
                 if room:GetAttribute("Occupied") then room:SetAttribute("Occupied",false) S.Occupied=math.max(0,S.Occupied-1) end
                 updateRate()

@@ -14,6 +14,18 @@ return function(requireModule)
     local plots={}
     local assertions=0
     local function check(value,message) assertions+=1 assert(value,message) end
+    local gateModel=Instance.new('Model') local counter=Instance.new('Part') counter.Name='ServiceCounter' counter.Parent=gateModel
+    local serving=Instance.new('ProximityPrompt') serving.Enabled=false serving:SetAttribute('RequiresBuild',3) serving.Parent=counter
+    for stage=0,3 do requireModule('ResortExtras').SetStage(gateModel,stage) check(serving.Enabled==(stage==3),'service interaction follows construction stage') end
+    gateModel:Destroy()
+    check(not Rules.CompletedRequest(10,'Jelly',11,'Pebble'),'wrong completed pet cannot fulfill request')
+    check(not Rules.CompletedRequest(10,'Jelly',9,'Jelly'),'old course cannot fulfill new request')
+    check(Rules.CompletedRequest(10,'Jelly',11,'Jelly'),'matching completed course fulfills request')
+    local goal=CFrame.new(8,0,0) local slow=CFrame.identity local fast=CFrame.identity
+    for _=1,10 do slow=Visuals.Follow(slow,goal,.1) end
+    for _=1,60 do fast=Visuals.Follow(fast,goal,1/60) end
+    check((slow.Position-fast.Position).Magnitude<.001,'follow smoothing independent of frame rate')
+    check(Visuals.Follow(CFrame.identity,CFrame.new(100,0,0),1/60).Position.X==100,'follow snaps across teleports')
     local function player(id)
         local p={UserId=id,DisplayName='Test'..id,Parent=game:GetService('Players'),Attributes={ProfileReady=true,EquippedPet='Pebble'}}
         local stats={Tokens={Value=10000}}
@@ -61,9 +73,18 @@ return function(requireModule)
         for _,spec in Config.PetSpecies do
             local character=Visuals.Create(scratch,Vector3.zero,spec.Id)
             check(character.PrimaryPart~=nil and character:GetAttribute('SpeciesId')==spec.Id,'character identity')
-            local feature=({Pebble='ExplorerPack',Jelly='Ribbon',Slime='SproutStem',Lava='TailFlame'})[spec.Id]
+            local feature=({Pebble='ExplorerPack',Jelly='Ribbon',Slime='Leaf',Lava='TailFlame'})[spec.Id]
             check(character:FindFirstChild(feature)~=nil,'species has unique silhouette/accessory')
             check(#character:GetChildren()<=36,'character instance budget')
+            local templates=game.ReplicatedStorage:FindFirstChild('PetTemplates')
+            if templates and templates:FindFirstChild(spec.Id) then
+                check(character:GetAttribute('ArtSource')=='Blender','authored template chosen')
+                check(character.Body:IsA('MeshPart') and character.Body.MeshId~='','persistent mesh asset')
+                check(math.abs(select(2,character:GetBoundingBox()).Y-4.6)<.02,'normalized art height')
+                for _,part in character:GetChildren() do
+                    if part:IsA('BasePart') then check(not part.CanCollide and not part.CanTouch and not part.CanQuery,'visual-only mesh') end
+                end
+            end
             character:ScaleTo(.6) Visuals.Animate(character,4.5,true)
             check(character.PrimaryPart.Position.Magnitude<.01,'animation preserves gameplay pivot')
             character:Destroy()

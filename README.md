@@ -1,6 +1,6 @@
 # Alien Resort — Orbit & Oasis
 
-**Current version: 0.9.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
+**Current version: 0.10.1. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
 
 ## New: Cosmic Commons
 
@@ -41,3 +41,15 @@ The token wallet counts smoothly and celebrates earnings with a gold CHA-CHING b
 Keyboard: **P** Pets, **B** Build, **M** Shop; **E** operates world prompts. Controller Y opens Pets and B closes menus. Visible buttons support touch and pointer input. Pet and shop purchases remain server validated.
 
 Read `UI_UX_SPEC.md` for the art direction, color tokens, animation timings, and implementation rules. Read `PROJECT_STATUS.md` before changing shared code.
+
+## 0.9.1 — Blender pets and review
+
+The canonical place now embeds four Blender-authored MeshPart templates, shared by pets, guests, workers and collection portraits. Existing part animations and procedural fallback remain. First-open mesh preloading and bounded request/arena/landing-lock fixes are included. Read CODE_REVIEW.md for the all-source review, 174 imported-art checks, 77 fallback checks, validation limits and next priorities. Blender is only needed to edit art, not to run the game.
+
+## 0.10.0 — smooth companions and polish
+
+Read POLISH_STATUS.md for the implemented visual, UI and gameplay changes and their verification limits. Full assessment: GAME_ASSESSMENT.md.
+
+## 0.10.1 — declutter and free props
+
+Read DECLUTTER_STATUS.md for the stage-gated cafe, quieter world labels, Creator Store prop credits and compact icon HUD. art/WorldProps.rbxm is required for the curated props.

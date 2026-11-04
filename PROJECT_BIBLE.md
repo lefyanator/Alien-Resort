@@ -1,4 +1,4 @@
-Current gameplay version: 0.9.0. Read GAMEPLAY_STATUS.md before editing AdventureService or CaptureRules. Preserve separate plot state and server-owned reward checks.
+Current gameplay version: 0.10.1. Read GAMEPLAY_STATUS.md before editing AdventureService or CaptureRules. Preserve separate plot state and server-owned reward checks.
 
 # Alien Resort project bible
 
@@ -16,3 +16,5 @@ Read `PROJECT_STATUS.md` for the current implementation, verification, and remai
 - Both collaborators and their ChatGPTs read the latest GitHub handoff and coordinate before changing the same place. Commit significant milestones and keep validation claims honest.
 
 Future work should prioritize actual multi-client and published persistence validation, mobile UI, guest animation and pathing, and progression depth. Extra features are not considered shipped until tested.
+
+Current maintenance milestone: 0.9.1 (Blender templates and source review). Read CODE_REVIEW.md before overlapping edits. Preserve ReplicatedStorage/PetTemplates and art/PetTemplates.rbxm along with all 15 source files; shared pet mesh is rbxassetid://134081985420522. Obsidian is no longer part of the save workflow.

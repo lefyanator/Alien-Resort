@@ -1,0 +1,7 @@
+* text=auto
+*.luau text eol=lf
+*.py text eol=lf
+*.rbxl binary
+*.rbxm binary
+*.blend binary
+*.fbx binary

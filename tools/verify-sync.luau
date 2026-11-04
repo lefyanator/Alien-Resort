@@ -10,7 +10,7 @@ for _,name in fs.readDir('src') do
         local client=name:find('.client.luau',1,true)~=nil
         local instanceName=client and 'AlienResortHUD' or name:gsub('%.server%.luau$',''):gsub('%.luau$','')
         local instance=(client and starter or server):FindFirstChild(instanceName)
-        assert(instance and instance.Source==fs.readFile('src/'..name),'Out of sync: '..name)
+        assert(instance and instance.Source:gsub('\r\n','\n')==fs.readFile('src/'..name):gsub('\r\n','\n'),'Out of sync: '..name)
         count+=1
     end
 end

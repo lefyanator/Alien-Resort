@@ -34,7 +34,7 @@ Reviewed all 15 active Luau files on 2026-11-05. This branch integrates the exis
 - All 15 active scripts compiled in Studio.
 - Live Studio: all four coloured pets rendered in world and collection cards; first-open portraits worked after the preload fix.
 - Live scripted traversal and real E-key holds exercised checkpoints 1–5. With test-only shortened reward cooldown/minimum duration, training awarded 15 tokens/2 shards. Replacing the completed guest request then trying to deliver immediately was rejected without shards. Fixtures were discarded on Stop. An initial diagnostic used the command environment's separate module cache and failed to find runtime state; the actual gameplay checks used the server Script environment.
-- Native Studio instances were exported through SerializationService and rebuilt locally with Lune. verify-sync checks all active embedded source plus the four templates and persistent mesh dependency. No Roblox place publication was performed.
+- Native Studio instances were exported through SerializationService and rebuilt locally with Lune. verify-sync checks all active embedded source plus the four templates and persistent mesh dependency. Source line endings are pinned to LF; verification tolerates CRLF from older Windows checkouts. No Roblox place publication was performed.
 
 ## Highest-value remaining work
 

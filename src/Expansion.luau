@@ -54,6 +54,13 @@ function E.Build(root,G)
         for _,dx in {-7,-3} do block(m,"DeskLeg",{.3,2.5,1.5},{x+dx,7.8,z+6},C.dark) end
         local chair=G.Prop(m,'Chair',Vector3.new(x-5,6.6,z+3.5)) chair:PivotTo(CFrame.new(x-5,6.6,z+3.5))
         block(m,"Wardrobe",{3,7,3},{x-7,10,z-5},C.dark)
+        for _,dx in {-.72,.72} do
+            block(m,'WardrobeDoor',{1.35,6.5,.12},{x-7+dx,10,z-6.56},plum)
+            block(m,'WardrobeHandle',{.1,.9,.16},{x-7+dx*.28,10,z-6.68},orange)
+        end
+        block(m,'DeskTablet',{2,.12,1.2},{x-5,9.34,z+6},accent)
+        local display=block(m,'TabletScreen',{1.8,.9,.12},{x-5,9.8,z+6.5},metal)
+        display.Orientation=Vector3.new(-12,0,0)
         sign(m,"RoomUse",x,12,z+8.5,8,2,"GUEST SUITE",accent)
         m:SetAttribute("GuestRoom",true)
         return m
@@ -69,6 +76,11 @@ function E.Build(root,G)
     sign(reception,"DeskLabel",-28,8.5,-26.6,9,1.5,"CHECK IN HERE",C.teal)
     sign(reception,"KeyWall",-28,13,-19.5,12,3,"WELCOME TO\nORBIT & OASIS",C.teal)
     for i=1,5 do block(reception,"RoomKey",{.4,.9,.3},{-34+i*2,10.5,-19.5},C.coral) end
+    for _,x in {-35,-21} do
+        local post=block(reception,'QueuePost',{.3,2.5,.3},{x,7.85,-31},metal)
+        curve(reception,'QueueFinial',{.65,.65,.65},{x,9.2,-31},orange,3)
+        block(reception,'QueueBase',{1.2,.2,1.2},{x,6.7,-31},metal)
+    end
     local snack=model(root.Upgrades,"Kiosk") shell(snack,29,-28,22,18,C.coral,"COSMIC CAFE")
     block(snack,"ServiceCounter",{17,3,3},{29,8,-32},C.coral)
     block(snack,"CounterTop",{18,.4,4},{29,9.7,-32},C.cream)
@@ -165,6 +177,13 @@ function E.Build(root,G)
         stripe.Material=Enum.Material.Neon
     end
     local moon=root.Upgrades.Room2 moon.CurvedRoof:Destroy()
+    -- Supported fascia clears the front of the entire roof envelope (z=-4.1).
+    moon.BuildingName.Position=Vector3.new(29,19.8,-5.2)
+    moon.BuildingName.Size=Vector3.new(17,2.5,.3)
+    for _,x in {22,36} do
+        local bracket=block(moon,'SignBracket',{.35,3.5,1.6},{x,18.3,-4.5},metal)
+        bracket:SetAttribute('BuildStage',2)
+    end
     for _,side in {-1,1} do
         curve(moon,'FloatingRoof',{11,5,22},{29+side*6,19,7},C.purple)
         local rim=curve(moon,'MaglevBand',{11.2,.6,22.2},{29+side*6,16.6,7},orange)
@@ -197,6 +216,62 @@ function E.Build(root,G)
     G.Prop(reception,'Bush',Vector3.new(-36,6.6,-22))
     G.Prop(snack,'Flowers',Vector3.new(37,6.6,-35),C.coral)
     G.Prop(district,'Palm',Vector3.new(49,5.35,94))
+    -- Replace placeholder furniture only when the matching authored kit is installed.
+    local function furnish(m,asset,cf,names)
+        local replacement=G.Asset(m,asset,cf)
+        if replacement then
+            for _,v in m:GetChildren() do if names[v.Name] then v:Destroy() end end
+        end
+    end
+    furnish(reception,'ReceptionDesk',CFrame.new(-28,6.6,-25),{CheckInDesk=true,DeskTop=true,MonitorStand=true,Monitor=true,DeskLabel=true})
+    furnish(snack,'CafeCounter',CFrame.new(29,6.6,-32),{CounterTop=true,MoonPastry=true,DrinkCup=true,Straw=true})
+    if snack:FindFirstChild('CafeCounter') then
+        -- Keep the named prompt anchor; its collision and visibility cannot obstruct the mesh.
+        snack.ServiceCounter.Size=Vector3.new(.2,.2,.2)
+        snack.ServiceCounter.Position=Vector3.new(29,8,-33.5)
+        snack.ServiceCounter.Transparency=1 snack.ServiceCounter.CanCollide=false
+    end
+    for _,m in {root.StarterRoom,root.Upgrades.Room2,root.Upgrades.Room3} do
+        local pos=m.Floor.Position
+        furnish(m,'SuiteBed',CFrame.new(pos.X+4,6.6,pos.Z+3),{BedFrame=true,Mattress=true,Blanket=true,Headboard=true,Pillow=true})
+    end
+    local function collider(m,size,pos)
+        local p=block(m,'FurnitureCollision',size,pos,metal) p.Transparency=1 p.CanCollide=true p.CanQuery=false p:SetAttribute('BuildStage',3)
+    end
+    if reception:FindFirstChild('ReceptionDesk') then collider(reception,{10,3,2.7},{-28,8.1,-25}) end
+    if snack:FindFirstChild('CafeCounter') then collider(snack,{13,3,2.8},{29,8.1,-32}) end
+    for _,m in {root.StarterRoom,root.Upgrades.Room2,root.Upgrades.Room3} do
+        if m:FindFirstChild('SuiteBed') then local p=m.Floor.Position collider(m,{6.8,2,8},{p.X+4,7.6,p.Z+3}) end
+    end
+    local roof=G.Asset(moon,'MoonRoof',CFrame.new(29,16.8,7))
+    if roof then
+        for _,v in moon:GetChildren() do if v.Name=='FloatingRoof' or v.Name=='MaglevBand' then v:Destroy() end end
+        for _,v in roof:GetChildren() do v:SetAttribute('BuildStage',2) end
+        roof.Name='FloatingRoof'
+    end
+    local portico=G.Asset(reception,'ReceptionPortico',CFrame.new(-28,6.1,-39))
+    if portico then
+        for _,v in reception:GetChildren() do if v.Name=='ReceptionArch' or v.Name=='ReceptionArchTip' or v.Name=='EntranceCanopy' then v:Destroy() end end
+        for _,v in portico:GetChildren() do v:SetAttribute('BuildStage',2) end
+    end
+    local awning=G.Asset(snack,'CafeAwning',CFrame.new(29,14.5,-39))
+    if awning then
+        for _,v in snack:GetChildren() do if v.Name=='StripedAwning' or v.Name=='EntranceCanopy' then v:Destroy() end end
+        for _,v in awning:GetChildren() do v:SetAttribute('BuildStage',2) end
+    end
     root:SetAttribute("BuildVersion","0.3.0")
+    -- Signs are always in front of roof geometry, including rotated roof wings.
+    for _,m in {root.StarterRoom,moon,aurora,reception,snack,lounge,observatory} do
+        local name=m.BuildingName local front=name.Position.Z
+        for _,v in m:GetDescendants() do
+            if v:IsA('BasePart') and (v.Name:find('Roof') or v.Name=='MaglevBand' or v.Name:find('CafeAwning')) then
+                local cf,s=v.CFrame,v.Size
+                local half=(math.abs(cf.RightVector.Z)*s.X+math.abs(cf.UpVector.Z)*s.Y+math.abs(cf.LookVector.Z)*s.Z)/2
+                front=math.min(front,v.Position.Z-half-1.2)
+            end
+        end
+        name.Position=Vector3.new(name.Position.X,name.Position.Y,front)
+        for _,v in name:GetDescendants() do if v:IsA('TextLabel') then v.TextColor3=Color3.fromRGB(249,228,182) end end
+    end
 end
 return E

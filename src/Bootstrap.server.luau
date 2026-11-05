@@ -3,10 +3,16 @@ for _,name in {'SimulatorTheme','PetVisuals'} do
     local clone=script.Parent[name]:Clone() clone.Parent=game.ReplicatedStorage
 end
 local display=game:GetService("ReplicatedStorage"):FindFirstChild("ResortDisplayConfig")
-if not display then
+if display then display:Destroy() end
     display=script.Parent.Config:Clone()
     display.Name="ResortDisplayConfig"
     display.Parent=game:GetService("ReplicatedStorage")
+local kit=game.ServerStorage:FindFirstChild('ResortKit')
+if kit then
+    local old=game.ReplicatedStorage:FindFirstChild('ResortPortraits') if old then old:Destroy() end
+    local portraits=Instance.new('Folder') portraits.Name='ResortPortraits'
+    for _,name in {'CleanerBot','RobotHelmet','SporeTree','CafeCounter'} do kit[name]:Clone().Parent=portraits end
+    portraits.Parent=game.ReplicatedStorage
 end
 local lighting=game:GetService("Lighting")
 lighting.ClockTime=14

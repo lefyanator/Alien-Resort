@@ -1,6 +1,8 @@
 # Alien Resort — Orbit & Oasis
 
-**Current version: 0.13.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
+**Current version: 0.14.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
+
+New: 12 original Blender resort assets, clear roof/sign spacing, detailed furniture and robots, readable Commons equipment, colourful menus and a replayable 12-lesson TUTORIAL. See ART_REFINEMENT_STATUS.md for validation and art/review for actual game screenshots.
 
 ## New: Cosmic Commons
 

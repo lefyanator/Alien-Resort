@@ -1,0 +1,149 @@
+{
+  "palette": {
+    "ink": "22293F",
+    "plum": "613E94",
+    "orange": "F09A42",
+    "mint": "65E3BA",
+    "cream": "F9E4B6",
+    "pink": "E986C2",
+    "steel": "71849D",
+    "soil": "39334C"
+  },
+  "assets": {
+    "MoonRoof": {
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "objects": [
+        "MoonRoof__ink",
+        "MoonRoof__plum",
+        "MoonRoof__orange",
+        "MoonRoof__mint",
+        "MoonRoof__cream"
+      ],
+      "triangles": 6800,
+      "localBounds": [
+        [
+          -12.019999504089355,
+          -10.970000267028809,
+          0.0
+        ],
+        [
+          12.019999504089355,
+          10.970000267028809,
+          3.700665235519409
+        ]
+      ]
+    },
+    "ReceptionPortico": {
+      "origin": [
+        32.0,
+        0.0,
+        0.0
+      ],
+      "objects": [
+        "ReceptionPortico__ink",
+        "ReceptionPortico__plum",
+        "ReceptionPortico__orange",
+        "ReceptionPortico__mint",
+        "ReceptionPortico__cream",
+        "ReceptionPortico__steel"
+      ],
+      "triangles": 3104,
+      "localBounds": [
+        [
+          -7.350000381469727,
+          -1.6520767211914062,
+          0.0
+        ],
+        [
+          7.349998474121094,
+          1.500333309173584,
+          11.870000839233398
+        ]
+      ]
+    },
+    "CafeAwning": {
+      "origin": [
+        0.0,
+        29.0,
+        0.0
+      ],
+      "objects": [
+        "CafeAwning__ink",
+        "CafeAwning__plum",
+        "CafeAwning__orange",
+        "CafeAwning__cream"
+      ],
+      "triangles": 2344,
+      "localBounds": [
+        [
+          -12.0,
+          -2.6000003814697266,
+          -0.07715234160423279
+        ],
+        [
+          12.0,
+          2.6199989318847656,
+          1.7499091625213623
+        ]
+      ]
+    },
+    "TreasureChest": {
+      "origin": [
+        33.0,
+        24.0,
+        0.0
+      ],
+      "objects": [
+        "TreasureChest__ink",
+        "TreasureChest__plum",
+        "TreasureChest__orange",
+        "TreasureChest__mint",
+        "TreasureChest__pink",
+        "TreasureChest__steel"
+      ],
+      "triangles": 1920,
+      "localBounds": [
+        [
+          -1.8999996185302734,
+          -1.5600013732910156,
+          0.030000001192092896
+        ],
+        [
+          1.9000015258789062,
+          1.9785575866699219,
+          2.9833507537841797
+        ]
+      ]
+    },
+    "TrainingGate": {
+      "origin": [
+        48.0,
+        23.0,
+        0.0
+      ],
+      "objects": [
+        "TrainingGate__ink",
+        "TrainingGate__plum",
+        "TrainingGate__orange",
+        "TrainingGate__mint"
+      ],
+      "triangles": 1548,
+      "localBounds": [
+        [
+          -5.174999237060547,
+          -1.0,
+          0.0
+        ],
+        [
+          5.174999237060547,
+          1.0,
+          6.949999809265137
+        ]
+      ]
+    }
+  }
+}

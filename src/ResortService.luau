@@ -110,6 +110,6 @@ function Service.Start()
     task.spawn(function()
         while container.Parent do task.wait(.5) for _,plot in Service.Plots do Pets.Step(plot) end end
     end)
-    print('Alien Resort 0.13.0: guided opening, expressive guests and VIP bookings ready.')
+    print('Alien Resort '..Config.Version..': authored resort art and field guide ready.')
 end
 return Service

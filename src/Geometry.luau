@@ -15,8 +15,17 @@ local function keepBelow(p,ceiling)
     p.CFrame-=Vector3.new(0,math.max(0,p.Position.Y+halfHeight-ceiling),0)
 end
 G.KeepBelow=keepBelow
+-- Uploaded Blender meshes retain authored topology and floor-based pivots.
+function G.Asset(parent,kind,cf)
+    local library=game.ServerStorage:FindFirstChild('ResortKit')
+    local template=library and library:FindFirstChild(kind)
+    if not template then return nil end
+    local copy=template:Clone() copy:PivotTo(cf) copy.Parent=parent return copy
+end
 -- Small reusable silhouettes; decorative parts never block players or raycasts.
 function G.Prop(parent,kind,pos,accent)
+    local authored=G.Asset(parent,kind,CFrame.new(pos))
+    if authored then return authored end
     if kind=='SporeTree' or kind=='Tendril' or kind=='SkyRay' then
         local m=Instance.new('Model') m.Name=kind m.Parent=parent
         local function limb(name,size,offset,color,angle)
@@ -171,9 +180,13 @@ function G.DressCommons(root,origin)
         local cp=root:FindFirstChild('Training '..i)
         if cp then
             local localPos=cp.Position-origin
+            local gate=G.Asset(art,'TrainingGate',CFrame.new(cp.Position+Vector3.new(0,.5,0)))
+            if not gate then
             for _,dx in {-4.5,4.5} do p('TrainingArch',Vector3.new(.7,6,.7),localPos+Vector3.new(dx,3,0),C.coral) end
             p('ArchTop',Vector3.new(10,.7,.7),localPos+Vector3.new(0,6,0),C.teal)
+            end
             p('CourseStripe',Vector3.new(8,.15,2),localPos+Vector3.new(0,.6,0),C.cream)
+            textOn(art,'GateNumber',cp.Position+Vector3.new(0,7,0),Vector3.new(4,2,.2),tostring(i)..' / 5',C.coral)
         end
     end
     for _,v in root:GetChildren() do
@@ -182,11 +195,21 @@ function G.DressCommons(root,origin)
             disc('CoverCap',4.2,.3,v.Position-origin+Vector3.new(0,3,0),C.teal)
         elseif v.Name:find('Rescue system',1,true) then
             G.Prop(art,'Console',v.Position+Vector3.new(0,1,0),C.coral)
+            G.Asset(art,'RescueEngine',CFrame.new(v.Position+Vector3.new(0,1,3)))
         elseif v.Name:find('Buried stardust',1,true) then
-            v.Transparency=0 v.Shape=Enum.PartType.Ball v.Color=C.purple
-            p('TreasureGem',Vector3.new(1.5,2.8,1.5),v.Position-origin+Vector3.new(0,1.5,0),C.teal,Enum.PartType.Ball)
+            local chest=G.Asset(art,'TreasureChest',CFrame.new(v.Position+Vector3.new(0,-.5,0)))
+            v.Transparency=chest and 1 or 0 v.Shape=Enum.PartType.Ball v.Color=C.purple
+            if not chest then p('TreasureGem',Vector3.new(1.5,2.8,1.5),v.Position-origin+Vector3.new(0,1.5,0),C.teal,Enum.PartType.Ball) end
         end
     end
+    textOn(art,'TrainingBrief',origin+Vector3.new(-69,11,36),Vector3.new(23,4,.3),'PET TRAINING\nFOLLOW GATES 1 > 5',C.teal)
+    textOn(art,'RescueBrief',origin+Vector3.new(65,13,32),Vector3.new(23,4,.3),'SHUTTLE RESCUE\nREPAIR ALL 3 SYSTEMS',C.coral)
+    for _,v in root:GetChildren() do if v.Name:find('Buried stardust',1,true) then
+        local at=v.Position-origin
+        p('ExcavationRim',Vector3.new(6,.2,6),at+Vector3.new(0,-.6,0),C.dark)
+        textOn(art,'TreasureBrief',v.Position+Vector3.new(0,5,1.5),Vector3.new(8,2,.2),'PIP\'S DIG SITE',C.coral)
+        for _,dx in {-2.6,2.6} do p('DigSiteBeacon',Vector3.new(.3,3,.3),at+Vector3.new(dx,1,2),C.coral) end
+    end end
     for _,z in {-78,-8} do p('ArenaBoundary',Vector3.new(178,.2,.5),Vector3.new(0,6.5,z),C.teal) end
     for _,x in {-77,77} do disc('GoalCrest',8,.15,Vector3.new(x,7.6,-43),x<0 and C.teal or C.coral) end
     -- Team goals use different colour and a ring silhouette visible across the field.

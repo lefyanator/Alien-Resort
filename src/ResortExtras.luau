@@ -54,6 +54,14 @@ function X.Robot(character)
         local p=part(suit,name,size,head.CFrame*offset,color) p.Anchored=false p.Massless=true
         local w=Instance.new('WeldConstraint') w.Part0=head w.Part1=p w.Parent=p return p
     end
+    local helmet=G.Asset(suit,'RobotHelmet',head.CFrame*CFrame.new(0,-1,0))
+    if helmet then
+        for _,v in helmet:GetDescendants() do if v:IsA('BasePart') then
+            v.Anchored=false v.Massless=true v.CanCollide=false
+            local joint=Instance.new('WeldConstraint') joint.Part0=head joint.Part1=v joint.Parent=v
+        end end
+        return
+    end
     weld('Helmet',Vector3.new(2.15,1.85,1.8),CFrame.new(),G.Colors.cream).Shape=Enum.PartType.Ball
     weld('FaceScreen',Vector3.new(1.85,1.15,.35),CFrame.new(0,0,-.77),G.Colors.dark).Shape=Enum.PartType.Ball
     for _,x in {-.45,.45} do local e=weld('Eye',Vector3.new(.3,.32,.1),CFrame.new(x,.12,-.92),G.Colors.teal) e.Material=Enum.Material.Neon end
@@ -139,10 +147,13 @@ function X.New(S,root,refresh)
                 local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid') if h then h.WalkSpeed=p:GetAttribute('ArenaLocked') and 0 or p:GetAttribute('ArenaTeam') and 16 or (X.Boost(p,'Turbo') and 24 or 16) end
                 for _,room in rooms do room.Floor.CleanPrompt.HoldDuration=X.Boost(p,'Foam') and 1 or Config.CleanSeconds end
                 if p:GetAttribute('OwnsCleaner') and not cleaner then
+                    cleaner=G.Asset(extras,'CleanerBot',CFrame.new(origin+Vector3.new(-10,5.8,-28)))
+                    if not cleaner then
                     cleaner=Instance.new('Model') cleaner.Name='CleanerBot' cleaner.Parent=extras
                     local body=part(cleaner,'Body',Vector3.new(2.6,1.2,2.6),CFrame.new(origin+Vector3.new(-10,6.4,-28)),G.Colors.purple) body.Shape=Enum.PartType.Ball cleaner.PrimaryPart=body
                     part(cleaner,'Face',Vector3.new(1.6,.5,.15),body.CFrame*CFrame.new(0,.3,-1.2),G.Colors.teal)
                     part(cleaner,'Brush',Vector3.new(3,.2,3),body.CFrame*CFrame.new(0,-.5,0),G.Colors.dark)
+                    end
                 end
                 if cleaner and not working then
                     for _,room in rooms do if room:GetAttribute('Dirty') then

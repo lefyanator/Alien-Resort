@@ -1,16 +1,16 @@
 {
-  "version": "0.13.0",
+  "version": "0.14.0",
   "updated": "2026-11-05",
   "canonicalPlace": "Alien Resort Tycoon.rbxl",
   "studioPlaceId": "134333458970364",
-  "sourceVerification": "16 active sources match the rebuilt place; four Blender templates and six static Creator Store props verified",
+  "sourceVerification": "16 sources; 12 Blender resort templates; native mesh sizes and transforms; no review fixtures; reopened in Studio",
   "cloudPublished": false,
   "backgroundGithubSync": false,
   "files": {
     "Alien Resort Tycoon.rbxl": {
-      "bytes": 503164,
-      "sha256": "f06e1ba54064162f3e8d01b1b6e5e9152fbdc1228763ce2476ea7689aec80e20",
-      "gitBlobSha": "600565b557e10358ca1a533664a498b7068a3b6b"
+      "bytes": 516066,
+      "sha256": "18736b0989372b70aa6562e26a60573c588e3de41f9e6aba07c268073e8d1e13",
+      "gitBlobSha": "f10f65c3c34b05b2f64eef97fe80ba9b60b4a982"
     },
     "src/AdventureService.luau": {
       "bytes": 32124,
@@ -18,9 +18,9 @@
       "gitBlobSha": "2ff23e516d74860de6a9795512afe03f702b967a"
     },
     "src/Bootstrap.server.luau": {
-      "bytes": 839,
-      "sha256": "7865ddf2129b89d0e008ae35523129a2b9da255ab4f8ee2dad6b4aef3669a971",
-      "gitBlobSha": "9f2eeb9e1bf8a8623a21804e408d62ece3a745e7"
+      "bytes": 1262,
+      "sha256": "60db5dc14537c0e727496c4d9c0cf9124dfb48a376ca3ac01100d77d8445ddb8",
+      "gitBlobSha": "a0f8ab238a6ad7c832059efe521652d4c4e01f6b"
     },
     "src/CaptureRules.luau": {
       "bytes": 2737,
@@ -29,28 +29,33 @@
     },
     "src/Config.luau": {
       "bytes": 3547,
-      "sha256": "70a3519c0a3a2957013dc96079fc381b17f4803ba9e24810a2600cfbbdc59012",
-      "gitBlobSha": "e9df5f0d5da22d8e2aebf60b6a4e493f7c2a47f3"
+      "sha256": "a93e0a758a2aa3c3bd26b0de7c3ceb8f10197ce7685c613c6b001c1e55698a25",
+      "gitBlobSha": "2f7e9392ece54303586594cdc2dc9f230ef21951"
     },
     "src/Expansion.luau": {
-      "bytes": 13761,
-      "sha256": "b3b6948e4e2b6eb2a36959829a81b84f601c4664def0e5032836b92391cb1913",
-      "gitBlobSha": "e4b2f91531aa568691d58ac8f7c02b304149a4a1"
+      "bytes": 18304,
+      "sha256": "a14b504438eb712c65a4c7852a990d330e1c5613d87b0d6af55507bcc00a8ee1",
+      "gitBlobSha": "2359e0ca91ece07a53ff458cd9634033cb674c9f"
     },
     "src/Geometry.luau": {
-      "bytes": 25111,
-      "sha256": "519779ff9c1c617a4cea8074c56600618639142ee52315363ef2536296e71853",
-      "gitBlobSha": "88f5df46bcf11957344442440627f4bf656d0b22"
+      "bytes": 26721,
+      "sha256": "1384202d41d21c9b5376120adeedd25d76524e947e10a1f402f306e54b0f3d50",
+      "gitBlobSha": "d615ba043a69469cceed84681bd027cccbe4c6fb"
     },
     "src/GuidedHUD.client.luau": {
-      "bytes": 53978,
-      "sha256": "e37b59849b78da5109be46199aad9f0df57ab91e44d39c2020bf69a99e61a744",
-      "gitBlobSha": "0d698f9fa383b434f59f1219ae6f7101701ef3e2"
+      "bytes": 61857,
+      "sha256": "6e22f240ef0fd225d51c4cc6992010d9e63d5073f8926c1d860c70867518a932",
+      "gitBlobSha": "137c750cc35ad53434816a10b38cbb47c7b2ca1d"
     },
     "src/Interaction.luau": {
       "bytes": 1521,
       "sha256": "ecd4f57c9ba765ec702bc87968ae46b9fcb60f37f3aa3151db7d8c73ea3ee445",
       "gitBlobSha": "0da83c127bdb66c35efbea4f8148bb7ebf550fb3"
+    },
+    "src/Opening.luau": {
+      "bytes": 3397,
+      "sha256": "82d887beb19b241567e480a80a28fb6910073febec1f3b95164ea3632a782aab",
+      "gitBlobSha": "71e6b211f77142e7a3e60d5fe7854c376da0ca08"
     },
     "src/PetService.luau": {
       "bytes": 3913,
@@ -73,45 +78,209 @@
       "gitBlobSha": "d6229fbf532f4bb4f156c563ebbf4bd59c2a5836"
     },
     "src/ResortExtras.luau": {
-      "bytes": 13341,
-      "sha256": "5ca6f1dd51006a5ec325e6073fedf8aeb726152ec61c1fd98a87336ac4c33055",
-      "gitBlobSha": "719aa7cc70f989046bd76efb5cf079225bee99d4"
+      "bytes": 13877,
+      "sha256": "75f8c249bbd14ca74a72f07fe7794317f42a771ec7fa362fedddd3d532820919",
+      "gitBlobSha": "8f550d64a96fd46e0bf7745e087691f93b97935e"
     },
     "src/ResortService.luau": {
-      "bytes": 7035,
-      "sha256": "187fec578a122d2434190a3bb55f2ef71be57e40005c1c366204f89439ea228f",
-      "gitBlobSha": "d6b86a537ce8c25b5145481ce1d0bfa2c8081392"
+      "bytes": 7034,
+      "sha256": "7670f137dfebabe70c6f8d5f2bf71c4f5ff7a6539e3c35228c93b31cc160f97f",
+      "gitBlobSha": "8253bbed8601264a1df5c9d5ac7207fbd0fcd9d2"
     },
     "src/SimulatorTheme.luau": {
-      "bytes": 5080,
-      "sha256": "178405fc7c9e8f418abcf01c8d88a47bd15b25366df15175904290030cf07c5a",
-      "gitBlobSha": "2b4404a484f1a1aebb4ded2f5d3633609a82c259"
+      "bytes": 7338,
+      "sha256": "0884a0700dfdabe6fc55bfe14e2fa53f38b3724760e872d76714842f3758c2eb",
+      "gitBlobSha": "edc7cf737f75650b3c11ebae17df8eea5bb82a66"
     },
-    "art/PetTemplates.rbxm": {
-      "bytes": 13454,
-      "sha256": "dbc039871b973b1bc3ed7b19558c7fa94372dd964a4ac4a15fb118389a0ec614",
-      "gitBlobSha": "bda861bbb8221823d3f091d10400c4bcc81c1475"
+    "tools/build-kit-template.luau": {
+      "bytes": 1098,
+      "sha256": "d74f6674f9c124b0d7b200be286c9f6f3ca04596c8cbfaf97a5ca7ce873751e4",
+      "gitBlobSha": "54c72300cbe06018d47985f1ca6d37cac2e3a393"
     },
-    "art/roblox-pets.json": {
-      "bytes": 27852,
-      "sha256": "a55610ffdebc94af6b783e9f0c2a4e943b59ba336ce91e37eb0296ca729412ee",
-      "gitBlobSha": "fa836d60e0af525d337c9e7ec192f6ae900285f5"
+    "tools/check-opening.luau": {
+      "bytes": 1717,
+      "sha256": "e86b26721b33655ec230f45b162989555f81ad1cfb8fe89a888a116c919f74ea",
+      "gitBlobSha": "4d0d6c97fe6cb5d4f271374cc32886c382c161c0"
+    },
+    "tools/install-blender-pets.luau": {
+      "bytes": 1809,
+      "sha256": "4ee39f996edfa7e7df747c443f3333e08203f1759a042a72c0c97cfb91b99917",
+      "gitBlobSha": "1b1153e805310ca943ceafbe171095a82392be1c"
+    },
+    "tools/rebuild-place.luau": {
+      "bytes": 2980,
+      "sha256": "d7ea8b2da60ab8829f5febb85fee6241bb73fe58c78deb237c5fdc0328fb86b6",
+      "gitBlobSha": "2bb9e868bedcccdda5d9a563c3e6f2f471511fff"
+    },
+    "tools/verify-sync.luau": {
+      "bytes": 4142,
+      "sha256": "68fd9b01f5d9ebfb59480a36a3e6a796860a011028a45120565aaec71a630158",
+      "gitBlobSha": "e0711f92803e86c2056337ce7c5f61b2ff4968e1"
+    },
+    "tests/AlienArt.spec.luau": {
+      "bytes": 4083,
+      "sha256": "f577e5667e97b7a8c0b7640947d7dc0569e097938b15af865b04c2b38e330c8f",
+      "gitBlobSha": "69954097c71b942d3100ebd0fe43695238f27379"
+    },
+    "tests/CaptureRounds.spec.luau": {
+      "bytes": 2729,
+      "sha256": "fae1435ddf3091be69ea4c274d30d8bd3886bb9f15624bf03bbeab1f4cadf5dc",
+      "gitBlobSha": "b9850e810c2ee39f792e93c3e1446b3d8d412e8e"
+    },
+    "tests/OpeningLoop.spec.luau": {
+      "bytes": 8135,
+      "sha256": "edc4883aff70d4a29a96314b81da52afd9dc6e6e4676972f1d63a41cf88f96ca",
+      "gitBlobSha": "95ef4e1c8f9ea3ab38f1b06890ad22efca81007e"
+    },
+    "tests/ProgressStore.spec.luau": {
+      "bytes": 8037,
+      "sha256": "8982d767c738e4986a7e2a183b173f782f57adace5ac383934cc0e8c8927888f",
+      "gitBlobSha": "0dc02d052ce365c6ab92f4647cb2814ca745d884"
+    },
+    "tests/StudioSmoke.luau": {
+      "bytes": 10707,
+      "sha256": "614da21393c8f411455a1e2578fb09b77fb44fc024065109e9eb20f0aa0c7459",
+      "gitBlobSha": "b66439db950c08985ed0472a616dfd5b0308a43a"
+    },
+    "art/Alien-Resort-Kit.blend": {
+      "bytes": 494904,
+      "sha256": "82f2be7903a5ea127f36bdac47320f74e9368c3275f02a396aaa1a348e32d439",
+      "gitBlobSha": "2699d5af4b3761e51dfe2e3b9892f07bb6c4a02f"
+    },
+    "art/Alien-Resort-Pets.blend": {
+      "bytes": 202807,
+      "sha256": "7b9592f01c10f5c31bc3029908461a0eee2a81cc7e131c8a97d3ddb94ac8f15c",
+      "gitBlobSha": "8810f508bd912477389d072fc8cdd1478845dda3"
+    },
+    "art/Architecture-review.png": {
+      "bytes": 1689616,
+      "sha256": "49d08dd5e536489302c15af3b756fe6b7e6b0074c782ee6747ad295296ca3b55",
+      "gitBlobSha": "366c8426578b94b50d0a4f0ee560ffa020575b74"
+    },
+    "art/Architecture.blend": {
+      "bytes": 218331,
+      "sha256": "d33c8b6e3132eead3d25a263f80e27fac9002d6f6fe534b8d91f79c1ba6a801b",
+      "gitBlobSha": "167987c13b94933a4daae3b13ddb0a095abf9052"
+    },
+    "art/Architecture.fbx": {
+      "bytes": 321052,
+      "sha256": "38a17761f8eed8938b1cd25671dadee373b338a3dd264081fef6aa1aa5570e81",
+      "gitBlobSha": "1978f979e6b0ae508d1104fd74c739f4ed82f1ee"
+    },
+    "art/Architecture.json": {
+      "bytes": 3017,
+      "sha256": "c1c0efe7d9077d230781c91b477d388d74dec1223084e969e97660eb76c0b306",
+      "gitBlobSha": "4502852089cc5e90c1494b9c86944235035660ba"
+    },
+    "art/build_architecture.py": {
+      "bytes": 10960,
+      "sha256": "833e94988099ec70c4ad6d44cc46eb51a6dc70e20d343fdda35f7b8719f840b9",
+      "gitBlobSha": "5566cd3e394a408d08960232ab3e71c9e9ea53b6"
+    },
+    "art/build_pets.py": {
+      "bytes": 5675,
+      "sha256": "2d1505abfba64e88954ac245e39c6ca11f9ba5c6b43fa44255d87d9f73ada929",
+      "gitBlobSha": "9b3892b187243654c1e33ef08912dab9ce9a83fd"
+    },
+    "art/build_resort_kit.py": {
+      "bytes": 10109,
+      "sha256": "2cea4c0bba773e31e010d76034e7d21101e8bc38dadc5d36258987866e04bc08",
+      "gitBlobSha": "597a4898aa7cd3e6b0c9b1bd8e306d8de8ee42f1"
+    },
+    "art/Ember.fbx": {
+      "bytes": 186060,
+      "sha256": "0abbde04b867518fadd196bb711ac19701fb6c332c8aba020612a9ffeb762852",
+      "gitBlobSha": "eaa2c04ba9b64a45b4e542063f97bd96ab874939"
+    },
+    "art/export_roblox.py": {
+      "bytes": 4070,
+      "sha256": "e54b27dc95d35404d2c2519086543606234acb7c7a6543d46542b699572e71d1",
+      "gitBlobSha": "0089e1fc4013510f173cb1dbc2cad0c377539d94"
+    },
+    "art/Juno.fbx": {
+      "bytes": 224700,
+      "sha256": "300e01dec70f6a01ae7f5fac087eaad0d81cd19cbdfd2147b01d0051e7d7abfe",
+      "gitBlobSha": "8f4388956c9aae77c078cdc023c3a68cd5b7d738"
+    },
+    "art/Pet-lineup.png": {
+      "bytes": 1257050,
+      "sha256": "481236b61bc1068e77973000e4b3fa894d639b0b2bfecddcb3d0e5c8896508ff",
+      "gitBlobSha": "45997b423e0d8f8e48d3a4ea9dc047eb7267b3c9"
     },
     "art/PetSurface.obj": {
       "bytes": 7986,
       "sha256": "18d7bdb7bebf7d22e588fdffea1099680f966dd8903d399e4e270016bac4886b",
       "gitBlobSha": "08129a4542db627d6f4b1aff0cc998f9464546b4"
     },
+    "art/PetTemplates.rbxm": {
+      "bytes": 13454,
+      "sha256": "dbc039871b973b1bc3ed7b19558c7fa94372dd964a4ac4a15fb118389a0ec614",
+      "gitBlobSha": "bda861bbb8221823d3f091d10400c4bcc81c1475"
+    },
+    "art/Pip.fbx": {
+      "bytes": 169260,
+      "sha256": "f2092efdd620a3eb0e5ff6a623ed8f91b23d1cc87c8e0bb46697bc26ebae6ee2",
+      "gitBlobSha": "74e27676d4f36bb7a4ea1f45b46c4484f629a5bf"
+    },
+    "art/resort-kit.json": {
+      "bytes": 2018,
+      "sha256": "6dd216be9dbf1e087eb3b6d3b594ea482b48bfa3f14a7eda60ba5840d0b4ac3a",
+      "gitBlobSha": "1fe02910c8eaf4cbde309b15eb7845de2ec0f856"
+    },
+    "art/ResortKit-review.png": {
+      "bytes": 1547193,
+      "sha256": "452cd42b896d5fe36708e55e9aeae3fe328d5265764161e0d465982ee99e9462",
+      "gitBlobSha": "a3a737c468b79fb8c593f5f946ae6dd0b1e2b893"
+    },
+    "art/ResortKit.fbx": {
+      "bytes": 815788,
+      "sha256": "9d7b4ad42480717f6ea72995e77b17005c387c37be6d500d8df3f9de1bcbfeea",
+      "gitBlobSha": "97d1ff7bb724e7e27ca9181c5f7309087ba5f338"
+    },
+    "art/ResortKit.rbxm": {
+      "bytes": 5037,
+      "sha256": "f58cd3af671071ff5c57968923351fa419b1f2d06536105cddb19b6e15fde532",
+      "gitBlobSha": "12ac0c0057778169d3c3675b16c6cdd66a74ae7e"
+    },
+    "art/roblox-pets.json": {
+      "bytes": 27852,
+      "sha256": "a55610ffdebc94af6b783e9f0c2a4e943b59ba336ce91e37eb0296ca729412ee",
+      "gitBlobSha": "fa836d60e0af525d337c9e7ec192f6ae900285f5"
+    },
+    "art/roblox-resort-kit.json": {
+      "bytes": 38579,
+      "sha256": "93cf404942f982546183adaf75ffb0cfecf9af65543b3296c857ea63c2e84ce6",
+      "gitBlobSha": "d98668f1dfd9e2a72339dd68d60a525ce2c036a7"
+    },
+    "art/Sprout.fbx": {
+      "bytes": 138172,
+      "sha256": "34023ed73960d458d65db057fee4d9b47d7009fb2de66d13e9b0c1ad05b027c6",
+      "gitBlobSha": "03b604bef822ce236ec26d1d7c150c069de3e030"
+    },
     "art/WorldProps.rbxm": {
       "bytes": 106590,
       "sha256": "e78c8d50477cafca6d59c32b6ec0a22657293e9ac5e1d93544cbf6f5d50624c6",
       "gitBlobSha": "b83680a9fa3df88cdb03ec5ac59db0e73e0f2ac4"
     },
-    "src/Opening.luau": {
-      "bytes": 3397,
-      "sha256": "82d887beb19b241567e480a80a28fb6910073febec1f3b95164ea3632a782aab",
-      "gitBlobSha": "71e6b211f77142e7a3e60d5fe7854c376da0ca08"
+    "art/review/commons-training.jpg": {
+      "bytes": 133138,
+      "sha256": "39244bd34f853c5f4693fb69af82ac8103cff8ca8b3c5a911697bcd14bfc5751",
+      "gitBlobSha": "b8f1e424cbdaf282e36b1dd3c159afb7a84529b4"
+    },
+    "art/review/moon-hotel.jpg": {
+      "bytes": 163149,
+      "sha256": "e1e5c7a6fc3f5c33683547647a879f034997c9f791de1fa073ad81cbe31e3c19",
+      "gitBlobSha": "a14139fef08bc17a23de5307887d82a27f65cd43"
+    },
+    "art/review/shop.jpg": {
+      "bytes": 139723,
+      "sha256": "5d0a1dbe1ef59a20df539491ec337041838272fdda8407b0e2aae951609d0bc0",
+      "gitBlobSha": "151d1ce15c6d4f90e67255290692524d362a19b4"
+    },
+    "art/review/tutorial.jpg": {
+      "bytes": 117230,
+      "sha256": "107763ea8ca2ca291ba5252e6136d448436569799d16a0878e81e87f0a3227fb",
+      "gitBlobSha": "1e63d5335391ca629217a84323ec0a8cce7f6de1"
     }
-  },
-  "blenderMeshAsset": "rbxassetid://134081985420522"
+  }
 }

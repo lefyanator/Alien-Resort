@@ -1,5 +1,13 @@
 # Blender pet art — integrated 0.9.1
 
+## Resort art — integrated 0.14.0
+
+`Alien-Resort-Kit.blend` and `Architecture.blend` contain the 12 original assets now used in the game. Reproduce them with Blender 5.2 background runs of `build_resort_kit.py` and `build_architecture.py`. The FBXs preserve custom topology, consolidated by material. Review PNGs are Blender renders; art/review JPGs are actual Studio game captures.
+
+The uploaded asset IDs, native mesh sizes, colours and normalized transforms are in `roblox-resort-kit.json`; `ResortKit.rbxm` is the installed template bundle. Rebuild it with `lune run tools/build-kit-template.luau`, then rebuild the canonical place. Important: the serialized MeshPart fields are MeshContent and InitialSize; omitting InitialSize distorts imported geometry. `tools/verify-sync.luau` checks both fields and compressed-transform tolerances. All meshes are anchored visual parts; Expansion adds simple stage-aware furniture collision boxes. R15 animations drive the helmet through welds; cleaner movement uses the existing route system.
+
+For a new import: Studio Importer, Upload to Roblox, anchored, preserve separate named meshes; use scale .01 for these FBXs to convert centimetres to the intended stud dimensions. Asset origins in Architecture.json map Blender (x,y,z) to Roblox (-x,z,y). Recolour from the named palette and normalize each asset pivot to floor-zero. The current uploaded templates are already normalized and need no reimport to play.
+
 Open Alien-Resort-Pets.blend in Blender. The gallery contains Pip (Pebble), Juno (Jelly), Sprout (Slime), and Ember (Lava), with separate named mesh parts and coloured materials. Each FBX contains only its pet, centred at the origin, exported before gallery placement. build_pets.py reproduces the scene and exports using Blender 5.2.
 
 Next art work: texture atlas and mesh consolidation, articulation/animation preparation, evolved variants, UFO and Commons landmark redesign, then two-player performance/plot isolation testing. Blender source changes do not automatically sync into Studio or GitHub.

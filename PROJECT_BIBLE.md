@@ -1,4 +1,4 @@
-Current gameplay version: 0.10.1. Read GAMEPLAY_STATUS.md before editing AdventureService or CaptureRules. Preserve separate plot state and server-owned reward checks.
+Current gameplay version: 0.13.0. Read OPENING_STATUS.md for the guided opening and remaining live-test gates. Read GAMEPLAY_STATUS.md before editing AdventureService or CaptureRules. Preserve separate plot state and server-owned reward checks.
 
 # Alien Resort project bible
 

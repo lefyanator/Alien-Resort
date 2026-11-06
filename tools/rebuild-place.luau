@@ -35,6 +35,8 @@ templates.Parent=replicated
 local propStorage=place:GetService('ServerStorage')
 local oldProps=propStorage:FindFirstChild('WorldProps') if oldProps then oldProps:Destroy() end
 roblox.deserializeModel(fs.readFile('art/WorldProps.rbxm'))[1].Parent=propStorage
+local oldKit=propStorage:FindFirstChild('ResortKit') if oldKit then oldKit:Destroy() end
+roblox.deserializeModel(fs.readFile('art/ResortKit.rbxm'))[1].Parent=propStorage
 local server=place:GetService('ServerScriptService'):FindFirstChild('AlienResort')
 local starter=place:GetService('StarterPlayer'):FindFirstChild('StarterPlayerScripts')
 for _,name in fs.readDir('src') do
@@ -42,7 +44,10 @@ for _,name in fs.readDir('src') do
         local client=name:find('.client.luau',1,true)~=nil
         local instanceName=client and 'AlienResortHUD' or name:gsub('%.server%.luau$',''):gsub('%.luau$','')
         local instance=(client and starter or server):FindFirstChild(instanceName)
-        assert(instance,'Missing active script '..name)
+        if not instance then
+            instance=roblox.Instance.new(client and 'LocalScript' or name:find('.server.luau',1,true) and 'Script' or 'ModuleScript')
+            instance.Name=instanceName instance.Parent=client and starter or server
+        end
         instance.Source=fs.readFile('src/'..name)
     end
 end

@@ -1,4 +1,20 @@
-# Latest: 0.10.1 — declutter and Creator Store props
+# Latest: 0.14.0 — authored resort art and field guide
+
+Read ART_REFINEMENT_STATUS.md for the 12 imported Blender assets, roof/sign fix, Commons equipment, GUI and replayable tutorial. 529 engine assertions passed; final shop text/prices fit six simulated viewport sizes. Canonical place was reopened in Studio and checked. Published persistence, physical mobile and new multiplayer load tests remain release gates.
+
+# Previous: 0.13.0 — guided opening and VIP bookings
+
+Read OPENING_STATUS.md for the six-step opening, guest/construction feedback, persistent counters, Observatory VIPs, 323 engine checks and the successful fresh-player loop. Physical-device, published persistence and multi-client release gates remain.
+
+# Previous: 0.12.0 — alien biomes and Orbital Palace
+
+Read ALIEN_WORLD_STATUS.md for the five-point art pass, progression-gated floating hotel, elevated alien habitat and 30 additional art checks. Previous overhaul gates remain in OVERHAUL_STATUS.md.
+
+# Previous: 0.11.0 — Cosmic overhaul milestone
+
+Read OVERHAUL_STATUS.md for the full-scope acceptance tracker, real two-client capture/reward evidence, 183+31+37 checks, revised map/UI and remaining work. Full brief: docs/OVERHAUL_BRIEF.md. This is an ongoing overhaul, not a release-ready claim.
+
+# Previous: 0.10.1 — declutter and Creator Store props
 
 Read DECLUTTER_STATUS.md for the screenshot-driven fixes, free asset credits, construction-gated cafe interaction and 183 engine checks. Previous results below are historical.
 

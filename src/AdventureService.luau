@@ -8,7 +8,7 @@ local Rules=require(script.Parent.CaptureRules)
 local A={}
 local C=Config.Adventure
 function A.Start(resorts)
-    local state={} local queue={} local match=nil local serial=0 local queueAt=nil
+    local state={} local queue={} local match=nil local serial=0 local queueAt=nil local nextRoundAt=0
     local root=Instance.new('Model') root.Name='CosmicCommons' root.Parent=workspace
     local origin=Vector3.new(180,0,190)
     local colors={Lilac=Color3.fromRGB(177,147,239),Teal=Color3.fromRGB(59,208,181),Gold=Color3.fromRGB(255,210,94),Ink=Color3.fromRGB(31,40,65),Cream=Color3.fromRGB(252,247,235),Blue=Color3.fromRGB(90,163,249),Red=Color3.fromRGB(248,143,125)}
@@ -61,7 +61,7 @@ function A.Start(resorts)
     local plaza=part('WELCOME / COSMIC COMMONS',Vector3.new(0,6,75),Vector3.new(32,1,18),colors.Teal)
     sign(plaza,'COSMIC COMMONS\nBuild a home. Adventure together. Evolve your crew.')
     local home=part('RETURN HOME',Vector3.new(-23,6,78),Vector3.new(8,1,8),colors.Gold)
-    local function homePlayer(p) local s=plot(p) if s then teleport(p,s.Origin+Vector3.new(0,10,-44)) end end
+    local function homePlayer(p) local s=plot(p) if s and p.Character then p.Character:PivotTo(resorts.SpawnCFrame(s)) end end
     prompt(home,'Return to your resort',function(p) if match and match.Team[p] then say(p,'Leave the match before returning home.') else homePlayer(p) end end)
     for _,s in resorts.Plots do
         local dock=Instance.new('Part') dock.Name='CommonsShuttle' dock.Size=Vector3.new(5,.3,5) dock.Position=s.Origin+Vector3.new(17,5.8,-53) dock.Anchored=true dock.Color=colors.Gold dock.Parent=s.Root
@@ -154,32 +154,55 @@ function A.Start(resorts)
     end
     local queuePad=part('STARCORE CAPTURE / QUEUE',Vector3.new(0,6,1),Vector3.new(14,1,8),colors.Gold)
     local arenaLabel=sign(queuePad,'STARCORE CAPTURE\nJoin for 1v1 / 2v2. Train or rescue while waiting.')
+    local function publishRound()
+        local now=os.clock() local countdown=match and math.max(0,math.ceil(match.Started-now)) or 0
+        root:SetAttribute('RoundPhase',match and (countdown>0 and 'Countdown' or 'Playing') or 'Queue')
+        root:SetAttribute('BlueScore',match and match.Score[1] or 0) root:SetAttribute('CoralScore',match and match.Score[2] or 0)
+        for i,flag in flags do
+            local status=match and match.Flags[i]
+            flag:SetAttribute('Dropped',status and status.DroppedAt~=nil or false)
+            flag:SetAttribute('CarrierUserId',status and status.Carrier and status.Carrier.UserId or nil)
+        end
+        local art=root:FindFirstChild('CommonsArt') local board=art and art:FindFirstChild('ArenaScoreboard')
+        local surface=board and board:FindFirstChildOfClass('SurfaceGui') local text=surface and surface:FindFirstChild('Text')
+        if text then text.Text=match and ('STARCORE CAPTURE\nBLUE '..match.Score[1]..'  :  '..match.Score[2]..' CORAL\n'..(countdown>0 and ('START IN '..countdown) or (math.max(0,math.ceil(C.MatchSeconds-(now-match.Started)))..'s / steal · return · capture'))) or ('STARCORE CAPTURE\n1v1 / 2v2\nJoin the entrance pad') end
+        if not match then return end
+        for p in match.Team do
+            p:SetAttribute('ArenaBlueScore',match.Score[1]) p:SetAttribute('ArenaCoralScore',match.Score[2])
+            p:SetAttribute('ArenaPhase',countdown>0 and 'Countdown' or 'Playing') p:SetAttribute('ArenaCountdown',countdown)
+            p:SetAttribute('ArenaLocked',countdown>0)
+        end
+    end
     local function resetFlag(team)
-        local f=match and match.Flags[team] if f then if f.Carrier then f.Carrier:SetAttribute('CarryingStarcore',false) end f.Carrier=nil f.DroppedAt=nil end
+        local f=match and match.Flags[team] if f then if f.Carrier then f.Carrier:SetAttribute('CarryingStarcore',false) end Rules.ResetFlag(match,team) end
         flags[team].Position=bases[team].Position+Vector3.new(0,4,0)
     end
     local function drop(p)
         if not match then return end
-        for i,f in match.Flags do if f.Carrier==p then
-            f.Carrier=nil f.DroppedAt=os.clock() p:SetAttribute('CarryingStarcore',false)
+        local i=Rules.Drop(match,p,os.clock())
+        if i then
+            p:SetAttribute('CarryingStarcore',false)
             local h=hrp(p) flags[i].Position=h and h.Position+Vector3.new(0,1,0) or bases[i].Position+Vector3.new(0,4,0)
-        end end
+        end
     end
     local function clearArenaPlayer(p)
         p:SetAttribute('ArenaTeam',nil) p:SetAttribute('ArenaSeconds',nil) p:SetAttribute('CarryingStarcore',false)
+        for _,key in {'ArenaBlueScore','ArenaCoralScore','ArenaPhase','ArenaCountdown','ArenaLocked'} do p:SetAttribute(key,nil) end
+        local hum=p.Character and p.Character:FindFirstChildOfClass('Humanoid') if hum then hum.WalkSpeed=16 end
         local h=hrp(p) if h and h:FindFirstChild('TagRunner') then h.TagRunner.Enabled=false end
     end
     local function finish(reason)
         if not match then return end
         local old=match
-        resetFlag(1) resetFlag(2) match=nil
+        resetFlag(1) resetFlag(2) match=nil nextRoundAt=os.clock()+8 publishRound()
         for p,team in old.Team do
             clearArenaPlayer(p)
             if p.Parent==Players then
-                if (old.Contribution[p] or 0)>0 and os.clock()-old.Started>=C.MatchMinimum then
-                    local won=old.Score[team]>old.Score[3-team]
-                    reward(p,won and C.WinTokens or C.ParticipationTokens,won and C.WinShards or C.ParticipationShards)
-                end
+                local tokens,shards=Rules.Result(old,p,os.clock())
+                if tokens>0 then reward(p,tokens,shards) end
+                local verdict=old.Score[1]==old.Score[2] and 'DRAW' or old.Score[team]>old.Score[3-team] and 'VICTORY' or 'ROUND COMPLETE'
+                p:SetAttribute('ArenaResult',verdict..' / '..old.Score[1]..' - '..old.Score[2]..'\n+'..tokens..' tokens / +'..shards..' shards'..(tokens==0 and '\nPlay 45s and contribute to earn rewards.' or ''))
+                p:SetAttribute('ArenaResultVersion',(p:GetAttribute('ArenaResultVersion') or 0)+1)
                 homePlayer(p) say(p,reason..' / Blue '..old.Score[1]..' : '..old.Score[2]..' Coral')
             end
         end
@@ -187,11 +210,11 @@ function A.Start(resorts)
     end
     for i,flag in flags do prompt(flag,'Take / return Starcore',function(p)
         local team=match and match.Team[p] if not team then say(p,'Join a match first.') return end
+        if os.clock()<match.Started then return end
         local f=match.Flags[i]
         if team==i then if f.DroppedAt then resetFlag(i) match.Contribution[p]=(match.Contribution[p] or 0)+1 end
-        elseif not f.Carrier then
-            for _,other in match.Flags do if other.Carrier==p then return end end
-            f.Carrier=p f.DroppedAt=nil p:SetAttribute('CarryingStarcore',true) match.Contribution[p]=(match.Contribution[p] or 0)+1
+        elseif Rules.Take(match,p,i,os.clock()) then
+            p:SetAttribute('CarryingStarcore',true)
             say(p,'You have the enemy Starcore! Return to your home base.')
         end
     end) end
@@ -199,18 +222,23 @@ function A.Start(resorts)
         if not match or match.Team[p]~=i then return end
         local own,enemy=match.Flags[i],match.Flags[3-i]
         if own.Carrier or own.DroppedAt then say(p,'Your own Starcore must be home first.') return end
-        if not Rules.CanCapture(match.Team[p],i,own,enemy,p) then return end
-        if os.clock()-(match.LastCapture or 0)<C.CaptureCooldown then return end
-        match.LastCapture=os.clock() match.Score[i]+=1 match.Contribution[p]=(match.Contribution[p] or 0)+2 resetFlag(3-i)
+        if not Rules.Capture(match,p,i,os.clock()) then return end
+        p:SetAttribute('CarryingStarcore',false) resetFlag(3-i) publishRound()
         for player in match.Team do say(player,'CAPTURE! Blue '..match.Score[1]..' : '..match.Score[2]..' Coral') end
     end) end
-    prompt(queuePad,'Join / leave capture queue',function(p)
+    local function leave(p)
+        queue[p]=nil p:SetAttribute('ArenaQueued',false)
+        if match and match.Team[p] then drop(p) match.Team[p]=nil clearArenaPlayer(p) homePlayer(p) end
+    end
+    local function toggleQueue(p)
         if match and match.Team[p] then drop(p) match.Team[p]=nil clearArenaPlayer(p) homePlayer(p) return end
-        queue[p]=not queue[p] or nil say(p,queue[p] and 'Queued! Training and rescue remain available while you wait.' or 'Left the queue.')
-    end)
+        queue[p]=not queue[p] and os.clock() or nil p:SetAttribute('ArenaQueued',queue[p]~=nil)
+        say(p,queue[p] and 'Queued! Training and rescue remain available while you wait.' or 'Left the queue.')
+    end
+    prompt(queuePad,'Join / leave capture queue',toggleQueue)
     local function setupCharacter(p,char)
         local h=char:WaitForChild('HumanoidRootPart',10) if not h then return end
-        if match and match.Team[p] then drop(p) data(p).ProtectedUntil=os.clock()+C.RespawnProtection teleport(p,bases[match.Team[p]].Position+Vector3.new(0,4,0)) end
+        if match and match.Team[p] then drop(p) match.Protected[p]=os.clock()+C.RespawnProtection teleport(p,bases[match.Team[p]].Position+Vector3.new(0,4,0)) end
         local q=Instance.new('ProximityPrompt') q.Name='TagRunner' q.Enabled=p:GetAttribute('ArenaTeam')~=nil q.ActionText='Tag enemy runner' q.HoldDuration=0 q.MaxActivationDistance=7 q.RequiresLineOfSight=true q.Parent=h
         I.Bind(q,function(attacker)
             if not (match and match.Team[p] and match.Team[attacker] and match.Team[p]~=match.Team[attacker] and I.Near(attacker,h,8)) then return false end
@@ -219,10 +247,10 @@ function A.Start(resorts)
             local hit=workspace:Raycast(from.Position,h.Position-from.Position,params)
             return not hit or hit.Instance:IsDescendantOf(char)
         end,function(attacker)
-            if not ready(attacker,'Tag',C.TagCooldown) or os.clock()<(data(p).ProtectedUntil or 0) then return end
-            drop(p) data(p).ProtectedUntil=os.clock()+C.RespawnProtection
+            if not Rules.Tag(match,attacker,p,os.clock()) then return end
+            drop(p)
             teleport(p,bases[match.Team[p]].Position+Vector3.new(0,4,0))
-            match.Contribution[attacker]=(match.Contribution[attacker] or 0)+1 say(p,'Tagged! Brief spawn protection is active.')
+            say(p,'Tagged! Brief spawn protection is active.')
         end)
         local hum=char:FindFirstChildOfClass('Humanoid') if hum then hum.Died:Connect(function() drop(p) end) end
     end
@@ -231,12 +259,14 @@ function A.Start(resorts)
         if p.Character then task.spawn(setupCharacter,p,p.Character) end
     end
     Players.PlayerAdded:Connect(playerAdded) for _,p in Players:GetPlayers() do playerAdded(p) end
-    Players.PlayerRemoving:Connect(function(p) drop(p) queue[p]=nil if state[p] and state[p].Worker then state[p].Worker:Destroy() end state[p]=nil if match then match.Team[p]=nil end end)
+    Players.PlayerRemoving:Connect(function(p) drop(p) queue[p]=nil if state[p] and state[p].Worker then state[p].Worker:Destroy() end state[p]=nil if match then match.Team[p]=nil match.Protected[p]=nil match.Tags[p]=nil match.Contribution[p]=nil end end)
     local remote=Instance.new('RemoteEvent') remote.Name='ResortAdventure' remote.Parent=Replicated
     remote.OnServerEvent:Connect(function(p,action,id)
         if type(action)~='string' or #action>32 or not plot(p) or not ready(p,'Remote',.35) then return end
         local s=plot(p) local pet=p:GetAttribute('EquippedPet') local inMatch=match and match.Team[p]
-        if action=='Home' then if inMatch then drop(p) match.Team[p]=nil clearArenaPlayer(p) end homePlayer(p)
+        if action=='Home' then leave(p) homePlayer(p)
+        elseif action=='Leave' then leave(p)
+        elseif action=='Queue' then if inMatch or queue[p] then leave(p) elseif I.Near(p,queuePad,16) then toggleQueue(p) else say(p,'Visit the Capture arena entrance in the Commons to queue.') end
         elseif action=='Commons' then if not inMatch then teleport(p,origin+Vector3.new(0,10,75)) end
         elseif action=='Job' then
             if inMatch or type(id)~='string' or not Pets.Find(id) or not Pets.Owned(p,id) then return end
@@ -291,20 +321,30 @@ function A.Start(resorts)
         end
     end)
     require(script.Parent.Geometry).DressCommons(root,origin)
+    local palace=require(script.Parent.Geometry).SkyHotel(root,origin)
+    prompt(palace.BoardingLift,'Board the Orbital Palace',function(p)
+        if match and match.Team[p] then return end
+        if (p:GetAttribute('Stage_Observatory') or 0)<3 then say(p,'Complete your Observatory to unlock the floating Orbital Palace.') return end
+        teleport(p,palace.ReturnLift.Position+Vector3.new(0,4,0)) say(p,'Welcome to the Orbital Palace! Your completed resort unlocked this sky deck.')
+    end)
+    prompt(palace.ReturnLift,'Return to Commons',function(p) teleport(p,origin+Vector3.new(0,10,58)) end)
     -- Expose no reward or capture remote: interaction state remains server-owned.
     task.spawn(function()
         while root.Parent do
             task.wait(.2)
             if not match then
-                local waiting={} for p,inQueue in queue do if inQueue and plot(p) then table.insert(waiting,p) end end
-                table.sort(waiting,function(a,b) return a.UserId<b.UserId end)
+                local waiting={} for p,inQueue in queue do local h=hrp(p) local hum=h and p.Character:FindFirstChildOfClass('Humanoid') if inQueue and plot(p) and hum and hum.Health>0 then table.insert(waiting,p) end end
+                table.sort(waiting,function(a,b) return queue[a]==queue[b] and a.UserId<b.UserId or queue[a]<queue[b] end)
                 if #waiting>=2 then queueAt=queueAt or os.clock() else queueAt=nil end
                 arenaLabel.Text='STARCORE CAPTURE / '..#waiting..' queued\n'..(queueAt and ('Starting in '..math.max(0,math.ceil(8-(os.clock()-queueAt)))..'s / up to 2v2') or 'Need 2 players / train while waiting')
-                if #waiting>=4 or (queueAt and os.clock()-queueAt>=8) then
+                root:SetAttribute('QueueCount',#waiting) root:SetAttribute('QueueSeconds',queueAt and math.max(0,math.ceil(8-(os.clock()-queueAt))) or 0)
+                publishRound()
+                if os.clock()>=nextRoundAt and (#waiting>=4 or (queueAt and os.clock()-queueAt>=8)) then
                     queueAt=nil
-                    serial+=1 match={Id=serial,Started=os.clock(),Team={},Score={0,0},Flags={{},{}},Contribution={},LastCapture=0}
+                    serial+=1 match=Rules.New({},os.clock(),C) match.Id=serial
                     local count=#waiting>=4 and 4 or 2
-                    for i=1,count do local p=waiting[i] local team=(i-1)%2+1 match.Team[p]=team queue[p]=nil p:SetAttribute('ArenaTeam',team) local h=hrp(p) if h and h:FindFirstChild('TagRunner') then h.TagRunner.Enabled=true end data(p).ProtectedUntil=os.clock()+C.RespawnProtection teleport(p,bases[team].Position+Vector3.new(0,4,0)) end
+                    for i=1,count do local p=waiting[i] local team=(i-1)%2+1 match.Team[p]=team queue[p]=nil p:SetAttribute('ArenaQueued',false) p:SetAttribute('ArenaTeam',team) local h=hrp(p) if h and h:FindFirstChild('TagRunner') then h.TagRunner.Enabled=true end match.Protected[p]=match.Started+C.RespawnProtection teleport(p,bases[team].Position+Vector3.new(0,4,0)) end
+                    publishRound()
                 end
             else
                 local counts={0,0}
@@ -318,6 +358,7 @@ function A.Start(resorts)
                     elseif f.DroppedAt and os.clock()-f.DroppedAt>C.FlagReturnSeconds then resetFlag(i) end
                 end
                 arenaLabel.Text='STARCORE CAPTURE / '..math.max(0,math.ceil(C.MatchSeconds-(os.clock()-match.Started)))..'s\nBLUE '..match.Score[1]..' : '..match.Score[2]..' CORAL'
+                publishRound()
                 if counts[1]==0 or counts[2]==0 then finish('Match ended: team disconnected') elseif os.clock()-match.Started>=C.MatchSeconds then finish('Round complete') end
             end
             for p,d in state do

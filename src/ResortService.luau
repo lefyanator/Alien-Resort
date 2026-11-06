@@ -8,6 +8,10 @@ local Pets=require(script.Parent.PetService)
 local Extras=require(script.Parent.ResortExtras)
 local Service={Plots={},Assignments={},Started=false}
 local cooldown={}
+function Service.SpawnCFrame(plot)
+    local position=plot.Origin+Vector3.new(0,10,-44)
+    return CFrame.lookAt(position,Vector3.new(180,position.Y,240))
+end
 local function notice(p,message)
     p:SetAttribute('ResortNotice',message)
     p:SetAttribute('NoticeVersion',(p:GetAttribute('NoticeVersion') or 0)+1)
@@ -23,8 +27,10 @@ function Service.Assign(p)
             p:SetAttribute('GuideTitle','Claim your FREE resort')
             p:SetAttribute('GuideDetail','Your own island is ready. Hold the terminal prompt to begin.')
             p:SetAttribute('GuideTarget','ClaimTerminal')
+            p:SetAttribute('GuideStep',1) p:SetAttribute('GuideSteps',6) p:SetAttribute('GuideComplete',false)
+            p:SetAttribute('GuideAction','') p:SetAttribute('NextCost',0)
             plot.Root.ClaimTerminal.ProximityPrompt.ObjectText=p.DisplayName..' / FREE PLOT'
-            if p.Character then p.Character:PivotTo(CFrame.new(plot.Origin+Vector3.new(0,10,-44))) end
+            if p.Character then p.Character:PivotTo(Service.SpawnCFrame(plot)) end
             return plot
         end
     end
@@ -63,8 +69,7 @@ function Service.Start()
         else return end
         if ok then
             plot.Refresh()
-            local spec=Pets.Find(id)
-            notice(p,action=='Shop' and 'Supplies ready!' or (spec.CharacterName..': '..spec.Greeting))
+            if action~='Shop' then local spec=Pets.Find(id) notice(p,spec.CharacterName..': '..spec.Greeting) end
         else notice(p,({funds='Not enough tokens!',owned='Already owned. Equip it from Pets.',active='This boost is still active!',locked='Buy this pet before equipping it.'})[why] or 'Unable to buy this item.') end
     end)
     require(script.Parent.AdventureService).Start(Service)
@@ -75,18 +80,19 @@ function Service.Start()
         local stats=Instance.new('Folder') stats.Name='leaderstats' stats.Parent=p
         local tokens=Instance.new('IntValue') tokens.Name='Tokens' tokens.Parent=stats
         p:SetAttribute('BuiltCount',0) p:SetAttribute('EarnedTotal',0)
-        p:SetAttribute('IncomePerTick',0) p:SetAttribute('OccupiedRooms',0) p:SetAttribute('GuestsServed',0)
+        p:SetAttribute('IncomePerTick',0) p:SetAttribute('OccupiedRooms',0) p:SetAttribute('GuestsServed',0) p:SetAttribute('RoomsCleaned',0)
         p:SetAttribute('GuideTitle','Preparing your resort...') p:SetAttribute('GuideDetail','Loading progress safely.')
         tokens.Changed:Connect(function() local plot=Service.Assignments[p] if plot and plot.Owner==p then plot.Refresh() end end)
         local function spawn(character)
             local hrp=character:WaitForChild('HumanoidRootPart',10) local plot=Service.Assignments[p]
-            if hrp and p.Character==character and plot and not p:GetAttribute('ArenaTeam') then character:PivotTo(CFrame.new(plot.Origin+Vector3.new(0,10,-44))) end
+            if hrp and p.Character==character and plot and not p:GetAttribute('ArenaTeam') then character:PivotTo(Service.SpawnCFrame(plot)) end
         end
         p.CharacterAdded:Connect(spawn) p.CharacterAppearanceLoaded:Connect(Extras.Robot)
         if p.Character then task.spawn(spawn,p.Character) task.spawn(Extras.Robot,p.Character) end
         local data=Progress.Load(p) if not data or p.Parent~=Players then return end
         tokens.Value=data.Tokens
         p:SetAttribute('EarnedTotal',data.Earned) p:SetAttribute('SpeciesDiscovered',data.Species)
+        p:SetAttribute('RoomsCleaned',data.RoomsCleaned) p:SetAttribute('GuestsServed',data.GuestsServed)
         for id,stage in data.Stages do p:SetAttribute('Stage_'..id,stage) end
         for id,owned in data.Owned do p:SetAttribute('Owns'..id,owned) end
         for id,owned in data.Pets do p:SetAttribute('Pet_'..id,owned) end
@@ -104,6 +110,6 @@ function Service.Start()
     task.spawn(function()
         while container.Parent do task.wait(.5) for _,plot in Service.Plots do Pets.Step(plot) end end
     end)
-    print('Alien Resort 0.10.1: Creator Store props, clear HUD and staged service prompts ready.')
+    print('Alien Resort '..Config.Version..': authored resort art and field guide ready.')
 end
 return Service

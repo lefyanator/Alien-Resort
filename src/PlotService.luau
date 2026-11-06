@@ -5,6 +5,7 @@ local Config=require(script.Parent.Config)
 local ExtrasModule=require(script.Parent.ResortExtras)
 local Interaction=require(script.Parent.Interaction)
 local Pets=require(script.Parent.PetService)
+local Opening=require(script.Parent.Opening)
 local Plot={}
 function Plot.New(root,origin)
 local S={Owner=nil,Unlocked={},Generation=0,Occupied=0,Started=false,LandingBusy=false,Root=root,Origin=origin,Sequence=0}
@@ -15,50 +16,33 @@ local function tell(player,message)
 end
 local function money(player) return player:FindFirstChild("leaderstats") and player.leaderstats:FindFirstChild("Tokens") end
 local function balance(player) local tokens=money(player) return tokens and tokens.Value or 0 end
+local function guestEvent(message)
+    if not S.Owner then return end
+    S.Owner:SetAttribute('LastGuestEvent',message)
+    S.Owner:SetAttribute('GuestEventVersion',(S.Owner:GetAttribute('GuestEventVersion') or 0)+1)
+end
 local function objective()
     if not S.Owner then return end
     local p=S.Owner
-    local earned=p:GetAttribute("EarnedTotal") or 0
     local nextUpgrade
     for _,u in Config.Upgrades do if not S.Unlocked[u.Id] then nextUpgrade=u break end end
     local stage=nextUpgrade and (p:GetAttribute("Stage_"..nextUpgrade.Id) or 0) or 0
     local price=nextUpgrade and Extras.StagePrice(nextUpgrade,stage) or 0
-    local title,description,target,cost
-    if earned==0 and S.Occupied==0 then
-        title="Your first guest is arriving"
-        description="Follow the marker to the landing pad. Your guest will walk to the free room."
-        target="LandingPad"
-    elseif earned==0 then
-        title="Your guest has checked in!"
-        description="Occupied rooms earn tokens automatically. Watch the payment countdown above the room."
-        target="StarterRoom"
-    elseif S.Unlocked.Reception and p:GetAttribute('OwnsCleaner') and ((p:GetAttribute('Bond_Pebble') or 0)+(p:GetAttribute('Bond_Jelly') or 0)+(p:GetAttribute('Bond_Slime') or 0)+(p:GetAttribute('Bond_Lava') or 0))==0 then
-        title='Take your pet on its first adventure'
-        description='Open ADVENTURE, travel to the Commons, and finish training to earn Star Shards.'
-        target='CommonsShuttle' cost=0
-    elseif (p:GetAttribute('RoomsCleaned') or 0)>0 and not p:GetAttribute('OwnsCleaner') then
-        title='Hire your cleaning crew' description='Open SHOP: the cleaner keeps all rooms earning while you explore.' target='StarterRoom' cost=80
-    elseif nextUpgrade and balance(p)<price then
-        title="Save for "..nextUpgrade.Name
-        description=nextUpgrade.Description..". Guests are earning the tokens for you."
-        target="StarterRoom" cost=price
-    elseif nextUpgrade then
-        title="Build "..nextUpgrade.Name..": "..Config.StageNames[stage+1]
-        description="Follow the glowing marker. Hold E or tap the build prompt. "..nextUpgrade.Description
-        target=nextUpgrade.Id cost=price
-    else
-        title="Your first resort is complete!"
-        description="Three guest suites, a cafe, lounge and observatory! Enjoy your completed resort."
-        target="" cost=0
-    end
+    local dirtyRoom
     for _,room in {root.StarterRoom,root.Upgrades.Room2,root.Upgrades.Room3} do
-        if room:GetAttribute("Dirty") and not p:GetAttribute("OwnsCleaner") then
-            title="Room needs cleaning!" description="Follow the marker. Hold the clean prompt to prepare for the next guest (+3 tokens)." target="Clean_"..room.Name cost=0 break
-        end
+        if room:GetAttribute('Dirty') then dirtyRoom=room.Name break end
     end
-    p:SetAttribute("GuideTitle",title) p:SetAttribute("GuideDetail",description)
-    p:SetAttribute("GuideTarget",target) p:SetAttribute("NextCost",cost or 0)
-    p:SetAttribute("ResortObjective",title)
+    local bond=0 for _,spec in Config.PetSpecies do bond+=p:GetAttribute('Bond_'..spec.Id) or 0 end
+    local guide=Opening.Guide({Owned=true,Earned=p:GetAttribute('EarnedTotal') or 0,Occupied=S.Occupied,
+        Cleaned=p:GetAttribute('RoomsCleaned') or 0,OwnsCleaner=p:GetAttribute('OwnsCleaner'),
+        Room2=S.Unlocked.Room2,Reception=S.Unlocked.Reception,Observatory=S.Unlocked.Observatory,
+        Bond=bond,DirtyRoom=dirtyRoom,Balance=balance(p),
+        Next=nextUpgrade and {Id=nextUpgrade.Id,Name=nextUpgrade.Name,Stage=stage,Price=price,Description=nextUpgrade.Description}})
+    p:SetAttribute('GuideTitle',guide.Title) p:SetAttribute('GuideDetail',guide.Detail)
+    p:SetAttribute('GuideTarget',guide.Target) p:SetAttribute('NextCost',guide.Cost)
+    p:SetAttribute('GuideStep',guide.Step) p:SetAttribute('GuideSteps',6)
+    p:SetAttribute('GuideAction',guide.Action) p:SetAttribute('GuideComplete',guide.Complete)
+    p:SetAttribute('ResortObjective',guide.Title)
 end
 local function refresh()
     for i,u in Config.Upgrades do
@@ -98,6 +82,15 @@ local function travel(model,position,duration)
     tween:Play() tween.Completed:Wait() connection:Disconnect() value:Destroy()
 end
 local function alive(generation) return S.Owner~=nil and S.Owner.Parent==Players and S.Owner:GetAttribute("ProfileReady") and S.Generation==generation end
+local function guestLabel(guest,species,vip)
+    local badge=Instance.new('BillboardGui') badge.Name='GuestReaction' badge.Adornee=guest.PrimaryPart
+    badge.Size=UDim2.fromOffset(160,36) badge.StudsOffsetWorldSpace=Vector3.new(0,3,0) badge.MaxDistance=28 badge.Parent=guest
+    local text=Instance.new('TextLabel') text.BackgroundTransparency=1 text.Size=UDim2.fromScale(1,1)
+    text.Font=Enum.Font.FredokaOne text.TextSize=12 text.TextWrapped=true text.TextStrokeTransparency=.2
+    text.TextColor3=vip and Color3.fromRGB(255,209,102) or Color3.new(1,1,1)
+    text.Text=(vip and 'VIP ' or '')..species.CharacterName..': Holiday time!' text.Parent=badge
+    return text
+end
 local function payoutAmount()
     local amount=Config.BasePayout+(S.Unlocked.Kiosk and Config.KioskBonus or 0)
     for _,u in Config.Upgrades do if S.Unlocked[u.Id] then amount+=u.Bonus or 0 end end
@@ -108,7 +101,7 @@ end
 local function updateRate()
     if S.Owner then
         S.Owner:SetAttribute("OccupiedRooms",S.Occupied)
-        S.Owner:SetAttribute("IncomePerTick",(function() local total=0 for _,r in {root.StarterRoom,root.Upgrades.Room2,root.Upgrades.Room3} do if r:GetAttribute("Occupied") then local spec=Pets.Find(r:GetAttribute("GuestSpecies")) total+=payoutAmount()+(spec and spec.Bonus or 0) end end return total end)())
+        S.Owner:SetAttribute("IncomePerTick",(function() local total=0 for _,r in {root.StarterRoom,root.Upgrades.Room2,root.Upgrades.Room3} do if r:GetAttribute("Occupied") then local spec=Pets.Find(r:GetAttribute("GuestSpeciesId")) total+=Opening.Payout(payoutAmount(),spec and spec.Bonus or 0,r:GetAttribute('GuestVIP')) end end return total end)())
         objective()
     end
 end
@@ -126,6 +119,7 @@ local function runRoom(roomId,x)
                 local z=room.Floor.Position.Z-origin.Z
                 local approach=z>50 and 62 or -10
                 room:SetAttribute("GuestStatus","Guest arriving")
+                room:SetAttribute('GuestMood','Excited')
                 local landing=Vector3.new(0,9.4,36)
                 local ship=Geometry.UFO(root.Guests,origin+landing+Vector3.new(0,32,0)) activeShip=ship
                 ship:SetAttribute("FlightPhase","Landing")
@@ -136,16 +130,25 @@ local function runRoom(roomId,x)
                 if not alive(generation) then ship:Destroy() break end
                 S.Sequence+=1
                 local species=Pets.Choose(S.Owner,S.Sequence)
+                local vip=Opening.IsVIP(S.Unlocked.Observatory,S.Sequence)
                 local guest=Pets.Create(root.Guests,origin+Vector3.new(0,8.6,26),species.Id) activeGuest=guest
+                guest:SetAttribute('GuestVIP',vip)
+                local reaction=guestLabel(guest,species,vip)
                 room:SetAttribute("GuestSpecies",species.Name)
+                room:SetAttribute('GuestSpeciesId',species.Id) room:SetAttribute('GuestVIP',vip)
                 S.Owner:SetAttribute("SpeciesDiscovered",true)
                 if not S.Owner:GetAttribute("HasSeenGuest") then S.Owner:SetAttribute("HasSeenGuest",true) tell(S.Owner,"First contact! Pebble alien discovered.") end
-                room:SetAttribute("GuestStatus","Walking to room")
+                if vip then guestEvent('VIP '..species.CharacterName..' arrived! Observatory guests pay +20 per payout.') end
+                room:SetAttribute("GuestStatus",vip and 'VIP walking to room' or 'Walking to room')
                 ship:SetAttribute("FlightPhase","Taking off")
-                travel(ship,landing+Vector3.new(0,45,0),3)
-                ship:Destroy()
-                if not alive(generation) then guest:Destroy() break end
-                if S.LandingBusy==landingTicket then S.LandingBusy=false end
+                -- Guests walk immediately while the departing ship clears the shared pad.
+                local ticket=landingTicket
+                task.spawn(function()
+                    local ok,why=pcall(travel,ship,landing+Vector3.new(0,45,0),3)
+                    ship:Destroy() if activeShip==ship then activeShip=nil end
+                    if S.LandingBusy==ticket then S.LandingBusy=false end
+                    if not ok and alive(generation) then warn('AlienResort takeoff: '..tostring(why)) end
+                end)
                 if z>50 then
                     -- Walk around the landing pad, not across arriving ships.
                     travel(guest,Vector3.new(17,7.8,26),1.5)
@@ -158,30 +161,37 @@ local function runRoom(roomId,x)
                 travel(guest,Vector3.new(x,8,z-11),2)
                 travel(guest,Vector3.new(x,8.7,z),1)
                 if not alive(generation) then guest:Destroy() break end
-                room:SetAttribute("GuestStatus","Occupied")
+                room:SetAttribute("GuestStatus",vip and 'VIP relaxing' or 'Enjoying the room')
+                room:SetAttribute('GuestMood',vip and 'Delighted' or 'Happy')
+                reaction.Text=(vip and 'VIP ' or '')..species.CharacterName..': Love this room!'
                 room:SetAttribute("Occupied",true)
                 S.Occupied+=1 updateRate()
-                for _=1,Config.GuestStayPayments do
+                if (S.Owner:GetAttribute('EarnedTotal') or 0)==0 then guestEvent(species.CharacterName..' checked in! Your first payout is in '..Config.IncomeInterval..' seconds.') end
+                for payment=1,Config.GuestStayPayments do
+                    room:SetAttribute('PaymentsLeft',Config.GuestStayPayments-payment+1)
                     room:SetAttribute("NextPaymentAt",workspace:GetServerTimeNow()+Config.IncomeInterval)
                     task.wait(Config.IncomeInterval)
                     if not alive(generation) then break end
                     local tokens=money(S.Owner)
                     if not tokens then break end
-                    local payout=payoutAmount()+species.Bonus
+                    local payout=Opening.Payout(payoutAmount(),species.Bonus,vip)
                     tokens.Value+=payout
                     S.Owner:SetAttribute("EarnedTotal",(S.Owner:GetAttribute("EarnedTotal") or 0)+payout)
                     room:SetAttribute("LastPayout",payout)
                     room:SetAttribute("PaymentVersion",(room:GetAttribute("PaymentVersion") or 0)+1)
                     S.Owner:SetAttribute("LastPayout",payout)
+                    S.Owner:SetAttribute('LastPayoutVIP',vip)
                     S.Owner:SetAttribute("PayoutVersion",(S.Owner:GetAttribute("PayoutVersion") or 0)+1)
                     refresh()
                 end
                 if not alive(generation) then guest:Destroy() break end
                 room:SetAttribute("Occupied",false)
                 S.Occupied=math.max(0,S.Occupied-1) updateRate()
-                room:SetAttribute("GuestStatus","Next guest on the way")
+                room:SetAttribute("GuestStatus","Checking out") room:SetAttribute('PaymentsLeft',0)
                 room:SetAttribute("NextPaymentAt",0)
                 S.Owner:SetAttribute("GuestsServed",(S.Owner:GetAttribute("GuestsServed") or 0)+1)
+                reaction.Text=(vip and 'VIP ' or '')..species.CharacterName..': See you soon!'
+                if vip or S.Owner:GetAttribute('GuestsServed')==1 then guestEvent((vip and 'VIP ' or '')..species.CharacterName..' loved the stay! Clean after checkout to welcome the next guest.') end
                 travel(guest,Vector3.new(x,8,z-11),1)
                 travel(guest,Vector3.new(0,8,approach),2)
                 if z>50 then
@@ -219,7 +229,7 @@ function S.Claim(player)
     if S.Owner then tell(player,S.Owner==player and "This resort is already yours." or "This plot belongs to another player.") return false,"occupied" end
     if not nearby(player,root.ClaimTerminal) then return false,"distance" end
     if not money(player) then return false,"not_ready" end
-    S.Owner=player S.Generation+=1 S.Unlocked={} S.Occupied=0
+    S.Owner=player S.Generation+=1 S.Unlocked={} S.Occupied=0 S.Sequence=0
     player:SetAttribute("OwnsResort",true)
     player:SetAttribute("PlotName",root.Name)
     root.ClaimTerminal.ProximityPrompt.ObjectText=player.DisplayName.." / RESORT"
@@ -263,12 +273,13 @@ function S.Buy(player,id)
     player:SetAttribute("BuiltCount",(player:GetAttribute("BuiltCount") or 0)+1)
     if id=="Room2" then runRoom(2,29) elseif id=="Room3" then runRoom(3,-35) end
     updateRate() refresh() tell(player,entry.Name.." built! "..entry.Description)
+    if id=='Observatory' then guestEvent('VIP bookings unlocked! Every third arrival pays +20 per payout. Visit the Orbital Palace from Commons.') end
     return true
 end
 function S.Reset()
     S.Generation+=1
     if S.Owner then S.Owner:SetAttribute("OwnsResort",false) end
-    S.Owner=nil S.Unlocked={} S.Occupied=0 S.LandingBusy=false
+    S.Owner=nil S.Unlocked={} S.Occupied=0 S.LandingBusy=false S.Sequence=0
     root:SetAttribute("OwnerUserId",nil)
     root.Guests:ClearAllChildren()
     S.Companion=nil

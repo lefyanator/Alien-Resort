@@ -1,0 +1,89 @@
+{
+  "palette": {
+    "ink": "22293F",
+    "plum": "613E94",
+    "orange": "F09A42",
+    "mint": "65E3BA",
+    "cream": "F9E4B6",
+    "pink": "E986C2",
+    "steel": "71849D",
+    "soil": "39334C"
+  },
+  "assets": {
+    "SporeTree": {
+      "objects": [
+        "SporeTree__plum",
+        "SporeTree__orange",
+        "SporeTree__mint",
+        "SporeTree__cream",
+        "SporeTree__soil"
+      ],
+      "triangles": 13432
+    },
+    "ReceptionDesk": {
+      "objects": [
+        "ReceptionDesk__ink",
+        "ReceptionDesk__plum",
+        "ReceptionDesk__orange",
+        "ReceptionDesk__mint",
+        "ReceptionDesk__cream",
+        "ReceptionDesk__steel"
+      ],
+      "triangles": 4712
+    },
+    "CafeCounter": {
+      "objects": [
+        "CafeCounter__ink",
+        "CafeCounter__plum",
+        "CafeCounter__orange",
+        "CafeCounter__mint",
+        "CafeCounter__cream",
+        "CafeCounter__pink",
+        "CafeCounter__steel"
+      ],
+      "triangles": 9964
+    },
+    "SuiteBed": {
+      "objects": [
+        "SuiteBed__ink",
+        "SuiteBed__plum",
+        "SuiteBed__mint",
+        "SuiteBed__cream",
+        "SuiteBed__pink",
+        "SuiteBed__steel"
+      ],
+      "triangles": 2444
+    },
+    "CleanerBot": {
+      "objects": [
+        "CleanerBot__ink",
+        "CleanerBot__plum",
+        "CleanerBot__orange",
+        "CleanerBot__mint",
+        "CleanerBot__cream",
+        "CleanerBot__steel"
+      ],
+      "triangles": 5172
+    },
+    "RobotHelmet": {
+      "objects": [
+        "RobotHelmet__ink",
+        "RobotHelmet__plum",
+        "RobotHelmet__orange",
+        "RobotHelmet__mint",
+        "RobotHelmet__cream",
+        "RobotHelmet__steel"
+      ],
+      "triangles": 3608
+    },
+    "RescueEngine": {
+      "objects": [
+        "RescueEngine__plum",
+        "RescueEngine__orange",
+        "RescueEngine__mint",
+        "RescueEngine__steel"
+      ],
+      "triangles": 2632
+    }
+  }
+}

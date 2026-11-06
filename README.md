@@ -1,6 +1,8 @@
 # Alien Resort — Orbit & Oasis
 
-**Current version: 0.10.1. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
+**Current version: 0.14.0. Open `Alien Resort Tycoon.rbxl` in Roblox Studio and press Play.** This is the single canonical game file. Source in `src/` matches its embedded scripts. Islands are generated when the server starts.
+
+New: 12 original Blender resort assets, clear roof/sign spacing, detailed furniture and robots, readable Commons equipment, colourful menus and a replayable 12-lesson TUTORIAL. See ART_REFINEMENT_STATUS.md for validation and art/review for actual game screenshots.
 
 ## New: Cosmic Commons
 
@@ -9,6 +11,8 @@ Claim your resort, then open **ADVENTURE** or use the gold Commons shuttle besid
 ## Play
 
 Each player is assigned one of four independent floating islands. Hold **E**, use the controller prompt, or tap/hold the touch prompt at your own terminal to claim it. Your free Pebble guest arrives by UFO and earns tokens. Build six upgrades in three stages, clean dirty rooms, and buy permanent amenities or timed boosts. The fifth player waits for a plot to become free.
+
+The six-step opening guides you through your first earnings, cleaning, Moon Pod, Reception and cleaner robot. Completing the Observatory unlocks the floating Palace and VIP guests, who pay 20 extra tokens per payment. See OPENING_STATUS.md for the current test evidence.
 
 Open **PETS** to buy Jelly (120 tokens), Slime (300), and Lava (700). Pebble is free. These are permanent, direct purchases using earned tokens: no Robux or random eggs. Equip one companion to follow your character. Owning a species adds it to your own guest rotation; Jelly/Slime/Lava guests pay an extra 2/5/10 tokens per payout. Owning pets does not add rooms or multiply every species' income.
 
@@ -53,3 +57,11 @@ Read POLISH_STATUS.md for the implemented visual, UI and gameplay changes and th
 ## 0.10.1 — declutter and free props
 
 Read DECLUTTER_STATUS.md for the stage-gated cafe, quieter world labels, Creator Store prop credits and compact icon HUD. art/WorldProps.rbxm is required for the curated props.
+
+## 0.11.0 — Cosmic overhaul milestone
+
+Read OVERHAUL_STATUS.md for implementation evidence and the outstanding acceptance gates from docs/OVERHAUL_BRIEF.md. The full overhaul remains in progress.
+
+## 0.12.0 — alien biomes and floating hotel
+
+ALIEN_WORLD_STATUS.md records the darker biome, alien plants/creatures, staged building silhouettes and unlockable Orbital Palace. Complete your Observatory to visit its sky deck.

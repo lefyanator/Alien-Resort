@@ -14,7 +14,7 @@ for _,name in fs.readDir('src') do
         count+=1
     end
 end
-assert(count==15,'Expected all 15 active scripts')
+assert(count==16,'Expected all 16 active scripts')
 print('PASS: all '..count..' active place scripts match src/.')
 local templates=place:GetService('ReplicatedStorage'):FindFirstChild('PetTemplates')
 local exported=roblox.deserializeModel(fs.readFile('art/PetTemplates.rbxm'))[1]
@@ -41,3 +41,20 @@ for _,model in props:GetChildren() do
     end
 end
 print('PASS: six attributed static Creator Store templates embedded.')
+local kit=place:GetService('ServerStorage'):FindFirstChild('ResortKit')
+local manifest=require('@lune/serde').decode('json',fs.readFile('art/roblox-resort-kit.json'))
+assert(kit and #kit:GetChildren()==12,'Missing resort mesh kit')
+for name,parts in manifest do
+    local model=assert(kit:FindFirstChild(name),'Missing '..name)
+    assert(#model:GetChildren()==#parts,'Wrong mesh count '..name)
+    for _,info in parts do
+        local p=assert(model:FindFirstChild(info.Name))
+        local meshSize=roblox.Vector3.new(unpack(info.MeshSize))
+        assert(tostring(p.MeshContent):find(info.MeshId,1,true) and (p.InitialSize-meshSize).Magnitude<math.max(.0001,meshSize.Magnitude*.000001),'Mesh import metadata mismatch '..p.Name)
+        local expected=roblox.CFrame.new(unpack(info.CFrame))
+        -- Binary place compression quantizes spatial values by a few millionths of a stud.
+        assert((p.Size-roblox.Vector3.new(unpack(info.Size))).Magnitude<.0001 and (p.CFrame.Position-expected.Position).Magnitude<.0001 and (p.CFrame.RightVector-expected.RightVector).Magnitude<.0001 and (p.CFrame.UpVector-expected.UpVector).Magnitude<.0001,'Mesh transforms mismatch '..p.Name)
+    end
+end
+assert(not place:GetService('ServerScriptService'):FindFirstChild('ArtAcceptance') and not place:GetService('ServerScriptService'):FindFirstChild('ArtReviewSetup'),'Test fixtures saved in canonical place')
+print('PASS: 12 Blender resort templates match uploaded meshes, original sizes and transforms; no review fixtures.')

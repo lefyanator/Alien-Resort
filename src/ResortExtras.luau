@@ -54,6 +54,14 @@ function X.Robot(character)
         local p=part(suit,name,size,head.CFrame*offset,color) p.Anchored=false p.Massless=true
         local w=Instance.new('WeldConstraint') w.Part0=head w.Part1=p w.Parent=p return p
     end
+    local helmet=G.Asset(suit,'RobotHelmet',head.CFrame*CFrame.new(0,-1,0))
+    if helmet then
+        for _,v in helmet:GetDescendants() do if v:IsA('BasePart') then
+            v.Anchored=false v.Massless=true v.CanCollide=false
+            local joint=Instance.new('WeldConstraint') joint.Part0=head joint.Part1=v joint.Parent=v
+        end end
+        return
+    end
     weld('Helmet',Vector3.new(2.15,1.85,1.8),CFrame.new(),G.Colors.cream).Shape=Enum.PartType.Ball
     weld('FaceScreen',Vector3.new(1.85,1.15,.35),CFrame.new(0,0,-.77),G.Colors.dark).Shape=Enum.PartType.Ball
     for _,x in {-.45,.45} do local e=weld('Eye',Vector3.new(.3,.32,.1),CFrame.new(x,.12,-.92),G.Colors.teal) e.Material=Enum.Material.Neon end
@@ -69,6 +77,8 @@ function X.New(S,root,refresh)
     local rooms={root.StarterRoom,root.Upgrades.Room2,root.Upgrades.Room3}
     local function dirty(room,value)
         room:SetAttribute('Dirty',value) room:SetAttribute('GuestStatus',value and 'Needs cleaning!' or 'Ready for guests')
+        room:SetAttribute('GuestMood',value and 'Needs care' or '') room:SetAttribute('GuestVIP',false)
+        room:SetAttribute('GuestSpeciesId',nil) room:SetAttribute('GuestSpecies',nil) room:SetAttribute('PaymentsLeft',0)
         room.Floor.CleanPrompt.Enabled=value
         local mess=room:FindFirstChild('GuestMess')
         if mess then mess:Destroy() end
@@ -86,7 +96,11 @@ function X.New(S,root,refresh)
         dirty(room,false)
         local sparkle=Instance.new('Sparkles') sparkle.SparkleColor=G.Colors.teal sparkle.Parent=room.Floor
         game:GetService('Debris'):AddItem(sparkle,2)
-        if manual then p.leaderstats.Tokens.Value+=Config.CleanReward p:SetAttribute('RoomsCleaned',(p:GetAttribute('RoomsCleaned') or 0)+1) end
+        if manual then
+            p.leaderstats.Tokens.Value+=Config.CleanReward p:SetAttribute('RoomsCleaned',(p:GetAttribute('RoomsCleaned') or 0)+1)
+            p:SetAttribute('ResortNotice','Room sparkling! +'..Config.CleanReward..' tokens. The next guest can check in.')
+            p:SetAttribute('NoticeVersion',(p:GetAttribute('NoticeVersion') or 0)+1)
+        end
         refresh() return true
     end
     for _,room in rooms do
@@ -118,7 +132,10 @@ function X.New(S,root,refresh)
             end
         end
         if item.Bonus then p:SetAttribute('IncomePerTick',(p:GetAttribute('IncomePerTick') or 0)+item.Bonus*(p:GetAttribute('OccupiedRooms') or 0)) end
-        p:SetAttribute('ResortNotice',item.Name..' ready!') p:SetAttribute('NoticeVersion',(p:GetAttribute('NoticeVersion') or 0)+1)
+        if not restoring then
+            p:SetAttribute('ResortNotice',id=='Cleaner' and 'Cleaner online! Dirty rooms are now cleaned automatically.' or item.Name..' ready!')
+            p:SetAttribute('NoticeVersion',(p:GetAttribute('NoticeVersion') or 0)+1)
+        end
         refresh() return true
     end
     local cleaner,working=false,false
@@ -127,17 +144,21 @@ function X.New(S,root,refresh)
             task.wait(.5)
             local p=S.Owner
             if p then
-                local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid') if h then h.WalkSpeed=p:GetAttribute('ArenaTeam') and 16 or (X.Boost(p,'Turbo') and 24 or 16) end
+                local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid') if h then h.WalkSpeed=p:GetAttribute('ArenaLocked') and 0 or p:GetAttribute('ArenaTeam') and 16 or (X.Boost(p,'Turbo') and 24 or 16) end
                 for _,room in rooms do room.Floor.CleanPrompt.HoldDuration=X.Boost(p,'Foam') and 1 or Config.CleanSeconds end
                 if p:GetAttribute('OwnsCleaner') and not cleaner then
+                    cleaner=G.Asset(extras,'CleanerBot',CFrame.new(origin+Vector3.new(-10,5.8,-28)))
+                    if not cleaner then
                     cleaner=Instance.new('Model') cleaner.Name='CleanerBot' cleaner.Parent=extras
                     local body=part(cleaner,'Body',Vector3.new(2.6,1.2,2.6),CFrame.new(origin+Vector3.new(-10,6.4,-28)),G.Colors.purple) body.Shape=Enum.PartType.Ball cleaner.PrimaryPart=body
                     part(cleaner,'Face',Vector3.new(1.6,.5,.15),body.CFrame*CFrame.new(0,.3,-1.2),G.Colors.teal)
                     part(cleaner,'Brush',Vector3.new(3,.2,3),body.CFrame*CFrame.new(0,-.5,0),G.Colors.dark)
+                    end
                 end
                 if cleaner and not working then
                     for _,room in rooms do if room:GetAttribute('Dirty') then
                         working=true local generation=S.Generation local owner=p
+                        room:SetAttribute('GuestStatus','Cleaner on the way')
                         local bot=cleaner
                         task.spawn(function()
                             local destination=room.Floor.Position+Vector3.new(-3,1,0)
@@ -161,6 +182,7 @@ function X.New(S,root,refresh)
                             local lane=start.Z-origin.Z>50 and 62 or -10
                             local route={Vector3.new(start.X,6.8+origin.Y,lane+origin.Z),origin+Vector3.new(17,6.8,lane),origin+Vector3.new(17,6.8,north and 62 or -10),Vector3.new(destination.X,6.8+origin.Y,(north and 62 or -10)+origin.Z),destination}
                             for _,pos in route do if not move(pos) then if S.Generation==generation then working=false end return end end
+                            if S.Owner==owner and S.Generation==generation and room:GetAttribute('Dirty') then room:SetAttribute('GuestStatus','Cleaner working (6 seconds)') end
                             task.wait(6)
                             if S.Owner==owner and S.Generation==generation then finish(room,owner,false) end
                             if S.Generation==generation then working=false end
